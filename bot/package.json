@@ -1,0 +1,10 @@
+{
+  "name": "cavfi-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CavFi keeper: fills limit orders, keeps pool prices in line, posts to Telegram",
+  "type": "module",
+  "main": "cavfi-bot.mjs",
+  "scripts": { "start": "node cavfi-bot.mjs" },
+  "dependencies": { "ethers": "5.7.2" }
+}

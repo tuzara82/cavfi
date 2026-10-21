@@ -1,0 +1,23 @@
+{
+  "name": "CavFi — DogeOS DEX",
+  "short_name": "CavFi",
+  "description": "Swap, pool, farm and launch meme tokens on the DogeOS testnet.",
+  "id": "/",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#11101A",
+  "theme_color": "#11101A",
+  "categories": ["finance"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Swap", "url": "/#swap", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Launchpad", "url": "/#launch", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Stats", "url": "/#stats", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}

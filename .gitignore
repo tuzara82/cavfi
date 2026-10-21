@@ -1,0 +1,18 @@
+# secrets: never commit
+.env
+**/.env
+bot/bot-key.dpapi
+contracts/cache/
+# generated / local
+node_modules/
+contracts/out/
+contracts/broadcast/
+contracts/lib/
+bot/bot-state.json
+bot/bot.lock
+bot/logs/
+site/_app.js
+site/_body.html
+site/_extra.css
+site/addresses.backup.json
+*.log
