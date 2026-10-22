@@ -515,6 +515,26 @@ a.item{color:var(--ink);text-decoration:none}
 .lx-com p{margin:4px 0 0;font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
 @media (max-width:420px){.lx-hold{grid-template-columns:20px minmax(0,1fr) 60px 46px}}
 
+/* ---- first steps ---- */
+.ob-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:18px;display:grid;gap:12px}
+.ob-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ob-head h2{margin:0;font:400 24px var(--display)}
+.ob-head small{color:var(--muted);font-size:13px}
+.ob-bar{height:8px;border-radius:99px;background:var(--well);overflow:hidden}
+.ob-bar span{display:block;height:100%;background:var(--chestnut);border-radius:99px;transition:width .4s}
+.ob-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;counter-reset:ob}
+.ob-step{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--well);counter-increment:ob}
+.ob-step .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--mono);background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.ob-step .n::before{content:counter(ob)}
+.ob-step.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.ob-step.done .n::before{content:"✓"}
+.ob-step.next{outline:2px solid var(--chestnut);outline-offset:-2px;background:var(--chestnut-soft)}
+.ob-step b{display:block;font-size:14.5px}
+.ob-step small{display:block;color:var(--muted);font-size:12.5px;line-height:1.35}
+.ob-step.done b{color:var(--muted);text-decoration:line-through}
+.ob-step .btn{white-space:nowrap}
+@media (max-width:520px){.ob-step{grid-template-columns:28px minmax(0,1fr)}.ob-step .btn{grid-column:2;justify-self:start}}
+
 /* ---- stats ---- */
 #viewStats>*{width:100%;max-width:780px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -692,6 +712,11 @@ a.item{color:var(--ink);text-decoration:none}
         </svg>
         <span class="hm-pet">tap me</span>
       </button>
+    </section>
+    <section class="ob-card" id="obCard" hidden aria-labelledby="obH">
+      <div class="ob-head"><div><h2 id="obH">New to CavFi? Start here</h2><small id="obSub"></small></div><button class="icon-btn" id="obHide" aria-label="Hide the first steps">✕</button></div>
+      <div class="ob-bar" aria-hidden="true"><span id="obFill"></span></div>
+      <ol class="ob-list" id="obList"></ol>
     </section>
     <div class="hm-ticker" id="hmTicker" aria-label="Pool prices"><div class="hm-track" id="hmTrack"><span class="hm-tk muted">Reading pool prices…</span></div></div>
     <section class="hm-grid" aria-label="Choose where to go">
@@ -1396,6 +1421,7 @@ async function refreshAll(){
   if (A.limit){ loadLimitOrders(); limCheckAllowance(); }
   if (A.social) loadRef();
   if (st.view === 'portfolio') loadPortfolio();
+  if (st.view === 'home') loadOnboarding();
   await Promise.all([refreshSwap(), refreshLiq(), loadPools().then(loadEarn)]);
 }
 function renderShell(){
@@ -1439,7 +1465,7 @@ function setView(v){
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home') loadStats(sx.loaded);
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
-  if (v === 'home'){ loadHomeExtra(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
+  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
   if (v === 'portfolio') loadPortfolio();
   if (v === 'launch'){ loadLaunches(); if (!sx.loaded) loadStats(); renderLaunch(); }
 }
@@ -4015,6 +4041,51 @@ $('brandHome').addEventListener('click', e => { e.preventDefault(); setView('hom
     c.addEventListener('pointerleave', () => { c.style.removeProperty('--rx'); c.style.removeProperty('--ry'); });
   });
 })();
+
+/* ================= FIRST STEPS (onboarding) =================
+   A checklist on the home page that ticks itself as the wallet does each step. */
+const OB_KEY = 'cavfi.firststeps.hidden';
+const ob = { bal:null, usdt:null, at:0 };
+async function loadOnboarding(){
+  if (!st.account || !onRightChain()){ ob.bal = null; ob.usdt = null; return renderOnboarding(); }
+  try{
+    const [d, u] = await Promise.all([st.provider.getBalance(st.account), A.usdt ? new E.Contract(A.usdt, ERC20_ABI, st.provider).balanceOf(st.account) : ZERO]);
+    ob.bal = d; ob.usdt = u;
+    if (A.badges && bd.mask == null){ try{ bd.mask = (await bdC().badgesOf(st.account)).toNumber(); }catch(e){} }
+  }catch(e){}
+  renderOnboarding();
+}
+function obSteps(){
+  const acts = st.account ? readActivity() : [];
+  const swapped = acts.some(a => /^Swapped/i.test(a.text)) || (bd.mask != null && (bd.mask & 1));
+  const anyBadge = (bd.mask != null && bd.mask > 0) || bd.herald;
+  return [
+    {done: !!window.ethereum, t: 'Get a wallet', d: 'Install MetaMask (or Rabby, Trust, Coinbase Wallet) in your browser or phone.', btn: !window.ethereum ? ['Get MetaMask', 'https://metamask.io/download/'] : null},
+    {done: !!st.account, t: 'Connect it', d: 'CavFi never holds your funds. You sign every action in your wallet.', act: !st.account ? ['Connect wallet', () => connect()] : null},
+    {done: onRightChain(), t: 'Switch to DogeOS testnet', d: 'One click adds the network (chain 6281971) to your wallet.', act: st.account && !onRightChain() ? ['Switch network', () => switchChain()] : null},
+    {done: !!ob.bal && ob.bal.gt(0), t: 'Get free test DOGE', d: 'The DogeOS faucet sends DOGE for gas and swaps. It has no real value.', btn: ['Open faucet', 'https://faucet.testnet.dogeos.com']},
+    {done: !!ob.usdt && ob.usdt.gt(0), t: 'Claim 1,000 cUSDT', d: 'CavFi\'s own test dollar, free once an hour.', act: onRightChain() && A.usdt ? ['Claim cUSDT', () => $('claimUsdt').click()] : null},
+    {done: !!swapped, t: 'Make your first swap', d: 'Swap a little DOGE for KingS. The CavFi bot then sends you the Royal Swapper badge.', act: ['Go to Swap', () => { setView('swap'); window.scrollTo({top:0, behavior:'smooth'}); }]},
+    {done: !!anyBadge, t: 'Earn a Royal Court badge', d: 'Launch a meme token, stake, add liquidity or vote, then claim the badge in your wallet panel.', act: st.account ? ['See badges', () => openAccount()] : null},
+  ];
+}
+function renderOnboarding(){
+  const card = $('obCard'); if (!card) return;
+  let hidden = false; try{ hidden = localStorage.getItem(OB_KEY) === '1'; }catch(e){}
+  const steps = obSteps(), done = steps.filter(x => x.done).length, all = done === steps.length;
+  card.hidden = hidden || all;
+  if (card.hidden) return;
+  const next = steps.findIndex(x => !x.done);
+  $('obSub').textContent = `${done} of ${steps.length} done · about 3 minutes, all free on testnet`;
+  $('obFill').style.width = (done / steps.length * 100).toFixed(0) + '%';
+  $('obList').innerHTML = steps.map((x, i) => {
+    const btn = x.done ? '' : x.btn ? `<a class="btn${i === next ? ' primary' : ''}" href="${x.btn[1]}" target="_blank" rel="noopener">${x.btn[0]}</a>` : x.act ? `<button class="btn${i === next ? ' primary' : ''}" data-ob="${i}">${x.act[0]}</button>` : '';
+    return `<li class="ob-step${x.done ? ' done' : ''}${i === next ? ' next' : ''}"><span class="n" aria-hidden="true"></span><span><b>${x.t}</b><small>${x.d}</small></span>${btn}<span class="sr">${x.done ? 'done' : 'to do'}</span></li>`;
+  }).join('');
+}
+$('obList').addEventListener('click', e => { const b = e.target.closest('[data-ob]'); if (!b) return; const s = obSteps()[+b.dataset.ob]; if (s && s.act) s.act[1](); });
+$('obHide').addEventListener('click', () => { try{ localStorage.setItem(OB_KEY, '1'); }catch(e){} renderOnboarding(); });
+setInterval(() => { if (st.view === 'home' && !document.hidden) loadOnboarding(); }, 15000);
 
 /* ================= installable app (PWA) ================= */
 let installEvt = null;
