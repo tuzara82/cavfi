@@ -473,6 +473,42 @@ a.item{color:var(--ink);text-decoration:none}
 /* ---- portfolio ---- */
 #viewPortfolio>*{width:100%;max-width:780px}
 .pf-body{display:grid;gap:14px}
+/* faucet */
+.fc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.fc-gate{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fc-card{align-content:start}
+.fc-p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.45}
+.fc-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.fc-row .pf-nm{display:grid;min-width:0}.fc-row .pf-nm small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-bal{font:500 14px var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.btn.fc-sm{padding:7px 11px;font-size:13px;white-space:nowrap;text-decoration:none}
+.fc-acts{display:flex;flex-wrap:wrap;gap:8px}
+/* nft */
+.nf-body{display:grid;gap:14px}
+.nf-top{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px}
+.nf-mint{grid-template-columns:150px minmax(0,1fr);align-items:start;gap:16px}
+.nf-hero svg{width:150px;height:150px;border-radius:18px;display:block;box-shadow:0 18px 40px -24px rgba(80,30,10,.6)}
+.nf-mbody{display:grid;gap:10px;min-width:0}
+.nf-prog{height:8px;border-radius:99px;background:var(--well);overflow:hidden}.nf-prog span{display:block;height:100%;background:var(--chestnut);border-radius:99px}
+.nf-qty{display:flex;align-items:center;gap:12px}.nf-qty .btn{width:38px;height:38px;padding:0;font-size:18px}.nf-qty b{font:500 20px var(--mono);min-width:20px;text-align:center}
+.nf-rew{align-content:start}
+.nf-rew .pf-figs b small{font:500 11px var(--mono);color:var(--muted)}
+.nf-earn{display:flex;align-items:center;gap:10px;background:var(--chestnut-soft);border-radius:12px;padding:10px 12px}
+.nf-earn span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}.nf-earn b{flex:1;font:500 16px var(--mono)}
+.nf-note{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
+.nf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.nf-card{border:1px solid var(--line);border-radius:16px;padding:8px;display:grid;gap:6px;background:var(--surface);align-content:start}
+.nf-card.rare{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.nf-art{position:relative}.nf-art svg{display:block;width:100%;height:auto;aspect-ratio:1;border-radius:11px}
+.nf-tag{position:absolute;top:6px;left:6px;background:var(--ok);color:#fff;font:700 10px var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:3px 6px;border-radius:6px}
+.nf-meta{display:flex;justify-content:space-between;align-items:baseline;gap:6px}.nf-meta b{font-size:13.5px}
+.nf-w{font:600 12px var(--mono);color:var(--chestnut)}
+.nf-tr{color:var(--muted);font-size:11.5px;line-height:1.35;min-height:2.7em}
+.nf-own{color:var(--muted);font:500 11.5px var(--mono)}
+.nf-card .btn{justify-self:stretch}
+@media (max-width:760px){.fc-grid,.nf-top{grid-template-columns:1fr}}
+@media (max-width:460px){.nf-mint{grid-template-columns:1fr}.nf-hero svg{width:120px;height:120px;margin-inline:auto}.nf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fc-row{grid-template-columns:auto minmax(0,1fr) auto}.fc-row>.btn{grid-column:2/-1;justify-self:start}}
+@media (max-width:640px){nav{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;max-width:100%}nav::-webkit-scrollbar{display:none}nav button{flex:none}}
 .pf-total span{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .pf-total b{display:block;font:400 40px var(--display);margin:2px 0}
 .pf-total small{color:var(--muted);font-size:12.5px}
@@ -674,6 +710,8 @@ a.item{color:var(--ink);text-decoration:none}
       <button id="nav-farm" data-view="farm">Farms</button>
       <button id="nav-launch" data-view="launch">Launch</button>
       <button id="nav-stats" data-view="stats">Stats</button>
+      <button id="nav-nft" data-view="nft">NFTs</button>
+      <button id="nav-faucet" data-view="faucet">Faucet</button>
       <button id="nav-pf" data-view="portfolio">Portfolio</button>
     </nav>
     <div class="spacer"></div>
@@ -744,6 +782,11 @@ a.item{color:var(--ink);text-decoration:none}
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
         <b>Stats</b><small>Volume, fees, prices and every recent trade.</small>
         <span class="hm-fig"><span>Volume 24h</span><strong id="hmFigStats">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </button>
+      <button class="hm-card" data-go="nft">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 9l2.5-5 3 3.5L12 3l1.5 4.5 3-3.5L19 9z"/><rect x="4" y="11" width="16" height="10" rx="3"/></svg></span>
+        <b>Cavaliers NFT</b><small>Mint a crowned Cavalier with on-chain art, then stake it to earn KingS.</small>
+        <span class="hm-fig"><span>Minted</span><strong id="hmFigNft">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
       </button>
     </section>
   </div>
@@ -966,6 +1009,16 @@ a.item{color:var(--ink);text-decoration:none}
     <div id="pfBody" class="pf-body"></div>
   </div>
 
+  <!-- ===================== FAUCET ===================== -->
+  <div class="view" id="viewFaucet" hidden>
+    <div class="fc-grid" id="fcBody"></div>
+  </div>
+
+  <!-- ===================== NFTs ===================== -->
+  <div class="view" id="viewNft" hidden>
+    <div class="nf-body" id="nfBody"></div>
+  </div>
+
   <!-- ===================== STATS ===================== -->
   <div class="view" id="viewStats" hidden>
     <div class="sx-bar">
@@ -1091,7 +1144,7 @@ a.item{color:var(--ink);text-decoration:none}
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 const NET = {
   name:'DogeOS Testnet', explorer:'https://blockscout.testnet.dogeos.com',
@@ -1101,7 +1154,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -1421,6 +1474,8 @@ async function refreshAll(){
   if (A.limit){ loadLimitOrders(); limCheckAllowance(); }
   if (A.social) loadRef();
   if (st.view === 'portfolio') loadPortfolio();
+  if (st.view === 'faucet') loadFaucet();
+  if (st.view === 'nft') loadNft();
   if (st.view === 'home') loadOnboarding();
   await Promise.all([refreshSwap(), refreshLiq(), loadPools().then(loadEarn)]);
 }
@@ -1438,11 +1493,18 @@ function renderShell(){
 /* ================= views ================= */
 function setView(v){
   st.view = v;
-  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio';
+  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft';
   document.querySelector('.lede').hidden = v === 'home';
   document.querySelectorAll('nav button').forEach(b => b.toggleAttribute('aria-current', b.dataset.view === v));
   document.querySelectorAll('nav button[aria-current]').forEach(b => b.setAttribute('aria-current','page'));
-  if (v === 'portfolio'){
+  { const nv = document.querySelector('nav'), cur = nv && nv.querySelector('button[aria-current]'); if (nv && cur && nv.scrollWidth > nv.clientWidth) nv.scrollLeft = Math.max(0, cur.offsetLeft - nv.offsetLeft - 24); }
+  if (v === 'faucet'){
+    $('ledeH').innerHTML = 'Fill the royal <em>bowl</em>.';
+    $('ledeP').textContent = 'Free test tokens for the DogeOS testnet, all in one place. They have no real value, so try everything.';
+  } else if (v === 'nft'){
+    $('ledeH').innerHTML = 'Knight a <em>Cavalier</em>.';
+    $('ledeP').textContent = 'CavFi Cavaliers: crowned spaniels with art and traits stored fully on-chain. Mint one, then stake it to earn KingS. Rarer crowns earn more.';
+  } else if (v === 'portfolio'){
     $('ledeH').innerHTML = 'Your royal <em>treasury</em>.';
     $('ledeP').textContent = 'Everything your wallet holds on CavFi in one place: tokens, liquidity, stakes, votes, orders and rewards.';
   } else if (v === 'launch'){
@@ -1461,12 +1523,14 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'launch' ? '#launch' : v === 'portfolio' ? '#portfolio' : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'launch' ? '#launch' : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home') loadStats(sx.loaded);
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
-  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
+  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); nfHomeFig(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
   if (v === 'portfolio') loadPortfolio();
+  if (v === 'faucet') loadFaucet();
+  if (v === 'nft') loadNft();
   if (v === 'launch'){ loadLaunches(); if (!sx.loaded) loadStats(); renderLaunch(); }
 }
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
@@ -4106,6 +4170,274 @@ $('installBtn').addEventListener('click', async () => {
   }
 });
 
+/* ================= FAUCET =================
+   One page with every free testnet token: DOGE and the official DogeOS tokens come from
+   faucet.testnet.dogeos.com, cUSDT/cUSDC from CavFi's own test stablecoins (1,000 an hour). */
+const fc = { data:null, loading:false, busy:{} };
+async function loadFaucet(){
+  if (fc.loading) return;
+  if (!st.account || !onRightChain()){ fc.data = null; return renderFaucet(); }
+  fc.loading = true; renderFaucet();
+  try{
+    const list = TOKENS.filter(t => !t.wrapped);
+    const bals = await Promise.all(list.map(t => balanceOf(t).catch(() => null)));
+    const next = {};
+    await Promise.all([A.usdt, A.usdc].filter(Boolean).map(a => new E.Contract(a, STABLE_ABI, st.provider).nextClaimAt(st.account).then(v => next[lk(a)] = v.toNumber()).catch(() => {})));
+    let chainNow = Math.floor(Date.now()/1000);
+    try{ chainNow = (await st.provider.getBlock('latest')).timestamp; }catch(e){}
+    fc.data = {bals: Object.fromEntries(list.map((t, i) => [lk(t.address), bals[i]])), next, skew: chainNow - Math.floor(Date.now()/1000)};
+  }catch(e){ fc.data = null; }
+  fc.loading = false; renderFaucet();
+}
+function renderFaucet(){
+  const box = $('fcBody'); if (!box) return;
+  const d = fc.data, g = walletGate();
+  const bal = t => { if (!d || !d.bals[lk(t.address)]) return '–'; return fmt(d.bals[lk(t.address)], t.decimals, 4); };
+  const now = Math.floor(Date.now()/1000) + (d && d.skew || 0);
+  const wait = a => { const n = d && d.next[lk(a)]; if (!n || n <= now) return ''; const m = Math.ceil((n - now) / 60); return m >= 60 ? `in ${Math.floor(m/60)}h ${m%60}m` : `in ${m} min`; };
+  const doge = TOKENS[0], kings = TOKENS.find(t => t.king);
+  const official = TOKENS.filter(t => FAUCET_TOKENS.some(f => same(f.address, t.address)));
+  const own = TOKENS.filter(t => t.cavfi);
+  const row = (t, act) => `<div class="fc-row">${coin(t)}<span class="pf-nm"><b>${esc(t.symbol)}</b><small>${esc(t.cavfi ? 'CavFi test dollar · 6 decimals' : t.name)}</small></span><span class="fc-bal">${bal(t)}</span>${act || ''}</div>`;
+  const watchBtn = t => `<button class="btn fc-sm" data-fc="watch" data-a="${t.address}">Add to wallet</button>`;
+  box.innerHTML = `
+    ${g ? `<div class="empty-card fc-gate">${st.account ? 'Switch to DogeOS testnet' : 'Connect your wallet'} to see your balances and claim. <button class="btn primary" data-fc="gate">${g.label}</button></div>` : ''}
+    <section class="sx-card fc-card">
+      <div class="sx-head"><h2>1 · DOGE for gas</h2><span>official DogeOS faucet</span></div>
+      <p class="fc-p">Every transaction on DogeOS pays a little DOGE for gas. Get free test DOGE first, then come back here.</p>
+      ${row(doge, `<a class="btn primary fc-sm" href="https://faucet.testnet.dogeos.com" target="_blank" rel="noopener">Open faucet ↗</a>`)}
+      <div class="fc-acts"><button class="btn" data-fc="net">Add DogeOS network to wallet</button></div>
+    </section>
+    <section class="sx-card fc-card">
+      <div class="sx-head"><h2>2 · CavFi stablecoins</h2><span>1,000 every hour</span></div>
+      <p class="fc-p">cUSDT and cUSDC are CavFi's own test dollars. Claim them straight from here, no captcha.</p>
+      ${own.map(t => { const w = wait(t.address), busy = fc.busy[lk(t.address)];
+        return row(t, `<button class="btn primary fc-sm" data-fc="claim" data-a="${t.address}" ${w || busy || g || !d ? 'disabled' : ''}>${busy ? 'Claiming…' : w ? 'Next ' + w : 'Claim 1,000'}</button>`); }).join('') || '<div class="empty-card">Not deployed on this network.</div>'}
+    </section>
+    <section class="sx-card fc-card">
+      <div class="sx-head"><h2>3 · DogeOS test tokens</h2><span>same faucet as DOGE</span></div>
+      <p class="fc-p">The DogeOS faucet also hands out USDT, USDC, USD1, WETH and LBTC. They all trade on CavFi.</p>
+      ${official.map(t => row(t, watchBtn(t))).join('')}
+    </section>
+    <section class="sx-card fc-card">
+      <div class="sx-head"><h2>4 · KingS</h2><span>the CavFi crown token</span></div>
+      <p class="fc-p">KingS is not on a faucet: swap a little DOGE for it, or earn it on Farms and by staking a Cavalier NFT.</p>
+      ${kings ? row(kings, `<button class="btn primary fc-sm" data-fc="swap">Swap for KingS</button>`) : ''}
+      <div class="fc-acts">${kings ? watchBtn(kings) : ''}<button class="btn" data-fc="farm">Go to Farms</button><button class="btn" data-fc="nft">Cavaliers NFT</button></div>
+    </section>`;
+}
+async function fcClaim(addr){
+  const t = TOKENS.find(x => same(x.address, addr)); if (!t) return;
+  if (!st.account){ await connect(); if (!st.account) return; }
+  if (!onRightChain()){ await switchChain(); return; }
+  fc.busy[lk(addr)] = true; renderFaucet();
+  try{
+    const tx = await new E.Contract(t.address, STABLE_ABI, st.signer).faucet();
+    toast(`Claiming 1,000 ${t.symbol}… ${txLink(tx.hash)}`);
+    await tx.wait();
+    toast(`1,000 test ${t.symbol} added to your wallet.`, 'ok');
+  }catch(e){ toast(errMsg(e), 'bad'); }
+  fc.busy[lk(addr)] = false; loadFaucet();
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-fc]'); if (!b) return;
+  const a = b.dataset.fc;
+  if (a === 'gate'){ const g = walletGate(); if (g && g.act) g.act(); }
+  else if (a === 'claim') fcClaim(b.dataset.a);
+  else if (a === 'watch') watchToken(TOKENS.find(t => same(t.address, b.dataset.a)));
+  else if (a === 'net') switchChain();
+  else if (a === 'swap'){ st.tin = TOKENS[0]; st.tout = TOKENS.find(t => t.king) || st.tout; setView('swap'); renderSwap(); window.scrollTo({top:0, behavior:'smooth'}); }
+  else if (a === 'farm' || a === 'nft'){ setView(a); window.scrollTo({top:0, behavior:'smooth'}); }
+});
+
+/* ================= CAVFI CAVALIERS (NFT) =================
+   KingCavaliers: ERC-721 with on-chain SVG art. The art is redrawn here from each token's
+   dna with the exact same rules as the contract (checked by the e2e test), so the gallery
+   needs one call per 50 tokens instead of one per token. Staked Cavaliers stay in the
+   wallet but are locked; they earn KingS by weight (rarer crown = more weight). */
+const NFT_ABI = [
+  'function mint(uint256 n) payable returns (uint256)', 'function price() view returns (uint256)', 'function totalMinted() view returns (uint256)',
+  'function maxSupply() view returns (uint256)', 'function page(uint256 start, uint256 n) view returns (address[] owners, uint256[] dnas, bool[] isStaked)',
+  'function stake(uint256[] ids)', 'function unstake(uint256[] ids)', 'function claim()', 'function earned(address) view returns (uint256)',
+  'function weightOf(address) view returns (uint256)', 'function totalWeight() view returns (uint256)', 'function rewardRate() view returns (uint256)',
+  'function periodFinish() view returns (uint256)', 'function svg(uint256) view returns (string)',
+  'event Minted(address indexed to, uint256 indexed id, uint256 dna)',
+];
+const nf = { info:null, all:[], loading:false, busy:'', qty:1, tab:'mine', at:0 };
+const nfC = signer => new E.Contract(A.nft, NFT_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const NF_COAT = ['Blenheim', 'Tricolour', 'Black & Tan', 'Ruby'], NF_CROWN = ['None', 'Bronze', 'Silver', 'Gold', 'Diamond'];
+const NF_ACC = ['None', 'Bow tie', 'Scarf', 'Monocle', 'Shades'], NF_EYES = ['Bright', 'Wink', 'Sleepy'];
+function nfTraits(dna){
+  const d = BigInt(dna.toString());
+  const c = Number(d % 100n), k = Number((d >> 16n) % 100n), a = Number((d >> 24n) % 100n), e = Number((d >> 32n) % 10n);
+  const t = {
+    coat: c < 40 ? 0 : c < 65 ? 1 : c < 85 ? 2 : 3,
+    bg: Number((d >> 8n) % 6n),
+    crown: k < 50 ? 0 : k < 80 ? 1 : k < 93 ? 2 : k < 99 ? 3 : 4,
+    acc: a < 55 ? 0 : a < 70 ? 1 : a < 82 ? 2 : a < 92 ? 3 : 4,
+    eyes: e < 7 ? 0 : e < 9 ? 1 : 2,
+  };
+  t.weight = [1, 2, 3, 5, 10][t.crown] + (t.acc ? 1 : 0) + (t.coat === 3 ? 1 : 0);
+  return t;
+}
+function nfSvg(dna){
+  const t = nfTraits(dna);
+  const head = ['#A84A1E', '#2A2530', '#2A2530', '#9C3B1A'][t.coat], blaze = ['#FFF4E6', '#FFF4E6', '#C9773A', '#B8552C'][t.coat];
+  const bg = ['#F6E7D8', '#DCEBF5', '#E3F0DC', '#F7DDE2', '#E6E0F5', '#F5E6C8'][t.bg];
+  const eyes = t.eyes === 1
+    ? '<circle cx="25.6" cy="31.5" r="3" fill="#1B1A2E"/><circle cx="26.6" cy="30.4" r=".95" fill="#fff"/><path d="M35.6 31.6 q2.8 -2 5.6 0" stroke="#1B1A2E" stroke-width="1.6" fill="none" stroke-linecap="round"/>'
+    : t.eyes === 2
+    ? '<path d="M22.8 31.6 q2.8 2 5.6 0 M35.6 31.6 q2.8 2 5.6 0" stroke="#1B1A2E" stroke-width="1.6" fill="none" stroke-linecap="round"/>'
+    : '<circle cx="25.6" cy="31.5" r="3" fill="#1B1A2E"/><circle cx="38.4" cy="31.5" r="3" fill="#1B1A2E"/><circle cx="26.6" cy="30.4" r=".95" fill="#fff"/><circle cx="39.4" cy="30.4" r=".95" fill="#fff"/>';
+  const acc = ['',
+    '<path d="M26 52 L32 54.5 L26 57 Z M38 52 L32 54.5 L38 57 Z" fill="#C0392B"/><circle cx="32" cy="54.5" r="1.4" fill="#8E2A1F"/>',
+    '<path d="M20 50 Q32 57 44 50 L44 54 Q32 61 20 54 Z" fill="#2E86AB"/><path d="M38 54 l3 7 l3 -1 l-2 -7 Z" fill="#2E86AB"/>',
+    '<circle cx="38.4" cy="31.5" r="4.4" fill="none" stroke="#E2B23C" stroke-width="1"/><path d="M42.8 32 q1 6 -1 10" stroke="#E2B23C" stroke-width=".6" fill="none"/>',
+    '<rect x="21" y="28.5" width="9.5" height="5.5" rx="2" fill="#1B1A2E"/><rect x="33.5" y="28.5" width="9.5" height="5.5" rx="2" fill="#1B1A2E"/><path d="M30.5 30.5 h3" stroke="#1B1A2E" stroke-width="1.2"/>'][t.acc];
+  let crown = '';
+  if (t.crown){
+    const col = ['', '#B87333', '#C9CED6', '#E2B23C', '#9FE3F0'][t.crown], gem = t.crown === 4 ? '#FFFFFF' : '#C0392B';
+    crown = `<path d="M21 15 L23.5 5.5 L28.5 11 L32 3.5 L35.5 11 L40.5 5.5 L43 15 Z" fill="${col}"/><rect x="21" y="13.5" width="22" height="3.2" rx="1" fill="${col}"/><circle cx="32" cy="9.5" r="1.3" fill="${gem}"/>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="${bg}"/>`
+    + `<path d="M17 21 C7 23 5 36 7 45 C8.5 52 15 56 20 51 C22.5 48.5 22.5 44 22 40 L22 25 Z" fill="${head}"/>`
+    + `<path d="M47 21 C57 23 59 36 57 45 C55.5 52 49 56 44 51 C41.5 48.5 41.5 44 42 40 L42 25 Z" fill="${head}"/>`
+    + `<path d="M19 26 C19 17.5 45 17.5 45 26 L45.5 37 C45.5 47 39.5 53 32 53 C24.5 53 18.5 47 18.5 37 Z" fill="${head}"/>`
+    + `<path d="M29.6 18.5 C30.6 17.6 33.4 17.6 34.4 18.5 L35.4 31 C39.5 33.5 41.3 39.5 39.6 44.5 C38 49.5 26 49.5 24.4 44.5 C22.7 39.5 24.5 33.5 28.6 31 Z" fill="${blaze}"/>`
+    + (t.coat === 1 ? '<circle cx="24.5" cy="36" r="2.2" fill="#C9773A"/><circle cx="39.5" cy="36" r="2.2" fill="#C9773A"/>' : '')
+    + eyes
+    + '<ellipse cx="32" cy="39.6" rx="3.3" ry="2.4" fill="#1B1A2E"/><path d="M32 42 v2.6 M28.6 45.6 q3.4 2.4 6.8 0" stroke="#1B1A2E" stroke-width="1.3" fill="none" stroke-linecap="round"/>'
+    + acc + crown + '</svg>';
+}
+let nfSeq = 0;
+async function nfHomeFig(){ const f = $('hmFigNft'); if (!f) return; if (!A.nft){ f.textContent = 'soon'; return; } try{ const c = nfC(); const [n, m] = await Promise.all([c.totalMinted(), c.maxSupply()]); f.textContent = `${n} / ${m}`; }catch(e){} }
+async function loadNft(force){
+  if (!A.nft){ nf.info = null; return renderNft(); }
+  if (nf.loading) return;
+  if (!force && nf.info && Date.now() - nf.at < 4000) return renderNft();
+  const seq = ++nfSeq; nf.loading = true; renderNft();
+  try{
+    const c = nfC();
+    const [price, minted, max, tw, rate, fin, blk] = await Promise.all([c.price(), c.totalMinted(), c.maxSupply(), c.totalWeight(), c.rewardRate(), c.periodFinish(), c.provider.getBlock('latest').catch(() => null)]);
+    const n = minted.toNumber(), all = [];
+    for (let s = 1; s <= n; s += 50){
+      const [o, d, k] = await c.page(s, 50);
+      o.forEach((own, i) => all.push({id: s + i, owner: own, dna: d[i], staked: k[i], t: nfTraits(d[i])}));
+    }
+    let mine = null;
+    if (st.account && onRightChain()){
+      const [earned, w, bal] = await Promise.all([c.earned(st.account), c.weightOf(st.account), st.provider.getBalance(st.account)]);
+      mine = {earned, weight: w.toNumber(), bal};
+    }
+    if (seq !== nfSeq) return;
+    nf.all = all; nf.at = Date.now();
+    nf.info = {price, minted: n, max: max.toNumber(), totalWeight: tw.toNumber(), rate, finish: fin.toNumber(), mine, skew: blk ? blk.timestamp - Math.floor(Date.now()/1000) : 0};
+    const f = $('hmFigNft'); if (f) f.textContent = `${n} / ${max.toNumber()}`;
+  }catch(e){ if (seq === nfSeq) nf.info = {error: true}; }
+  if (seq === nfSeq){ nf.loading = false; renderNft(); }
+}
+function nfCard(x, mineView){
+  const t = x.t, rare = t.crown >= 3 ? ' rare' : '';
+  const act = mineView ? (x.staked
+      ? `<button class="btn fc-sm" data-nf="unstake" data-id="${x.id}" ${nf.busy ? 'disabled' : ''}>Unstake</button>`
+      : `<button class="btn primary fc-sm" data-nf="stake" data-id="${x.id}" ${nf.busy ? 'disabled' : ''}>Stake</button>`)
+    : `<small class="nf-own">${st.account && same(x.owner, st.account) ? 'yours' : short(x.owner)}</small>`;
+  return `<div class="nf-card${rare}">
+    <div class="nf-art">${nfSvg(x.dna)}${x.staked ? '<span class="nf-tag">staked</span>' : ''}</div>
+    <div class="nf-meta"><b>Cavalier #${x.id}</b><span class="nf-w" title="Staking weight">×${t.weight}</span></div>
+    <small class="nf-tr">${NF_COAT[t.coat]} · ${t.crown ? NF_CROWN[t.crown] + ' crown' : 'no crown'}${t.acc ? ' · ' + NF_ACC[t.acc] : ''}</small>
+    ${act}
+  </div>`;
+}
+function renderNft(){
+  const box = $('nfBody'); if (!box) return;
+  if (!A.nft){ box.innerHTML = '<div class="empty-card">The Cavaliers collection is not deployed on this network yet.</div>'; return; }
+  const i = nf.info;
+  if (!i){ box.innerHTML = '<div class="empty-card">Reading the collection…</div>'; return; }
+  if (i.error){ box.innerHTML = '<div class="empty-card">Could not read the collection. <button class="link-btn" data-nf="refresh">Try again</button></div>'; return; }
+  const g = walletGate(), me = i.mine;
+  const mine = st.account ? nf.all.filter(x => same(x.owner, st.account)) : [];
+  const unstaked = mine.filter(x => !x.staked), stakedN = mine.length - unstaked.length;
+  const now = Math.floor(Date.now()/1000) + (i.skew || 0), live = i.finish > now;
+  const perDay = live ? fl(i.rate, 18) * 86400 : 0;
+  const myDay = live && me && i.totalWeight ? perDay * me.weight / i.totalWeight : 0;
+  const left = i.max - i.minted, priceN = fl(i.price, 18);
+  const q = Math.max(1, Math.min(5, nf.qty, left || 1));
+  const cost = i.price.mul(q);
+  const short_ = me && me.bal && me.bal.lt(cost);
+  const mintLabel = left <= 0 ? 'Sold out' : nf.busy === 'mint' ? 'Minting…' : g ? g.label : short_ ? 'Not enough DOGE' : `Mint ${q} for ${sxNum(priceN * q)} DOGE`;
+  const list = nf.tab === 'mine' ? mine : nf.all.slice().reverse().slice(0, 60);
+  const counts = k => { const m = {}; nf.all.forEach(x => m[x.t[k]] = (m[x.t[k]] || 0) + 1); return m; };
+  const cr = counts('crown');
+  box.innerHTML = `
+    <div class="nf-top">
+      <section class="sx-card nf-mint">
+        <div class="nf-hero">${nf.all.length ? nfSvg(nf.all[nf.all.length - 1].dna) : nfSvg('123456789012345678901234567890')}</div>
+        <div class="nf-mbody">
+          <div class="sx-head"><h2>Mint a Cavalier</h2><span>${i.minted} / ${i.max} minted</span></div>
+          <div class="nf-prog" aria-hidden="true"><span style="width:${(i.minted / i.max * 100).toFixed(2)}%"></span></div>
+          <p class="fc-p">${sxNum(priceN)} DOGE each, up to 5 at a time. Coat, crown, accessory and eyes are rolled on-chain when you mint.</p>
+          <div class="nf-qty" role="group" aria-label="How many">
+            <button class="btn" data-nf="dec" aria-label="One less">−</button><b id="nfQty">${q}</b><button class="btn" data-nf="inc" aria-label="One more">+</button>
+          </div>
+          <button class="cta" data-nf="mint" ${left <= 0 || nf.busy || short_ ? 'disabled' : ''}>${mintLabel}</button>
+        </div>
+      </section>
+      <section class="sx-card nf-rew">
+        <div class="sx-head"><h2>Stake & earn</h2><span>${live ? 'rewards running' : 'no rewards running'}</span></div>
+        <div class="pf-figs">
+          <div><span>Pool / day</span><b>${sxNum(perDay)} KingS</b></div>
+          <div><span>Your weight</span><b>${me ? me.weight : '–'}${me && i.totalWeight ? ` <small>${(me.weight / i.totalWeight * 100).toFixed(1)}%</small>` : ''}</b></div>
+          <div><span>You / day</span><b>${me ? sxNum(myDay) : '–'}</b></div>
+        </div>
+        <div class="nf-earn"><span>Earned</span><b>${me ? sxNum(fl(me.earned, 18)) : '–'} KingS</b>
+          <button class="btn primary" data-nf="claim" ${!me || me.earned.isZero() || nf.busy ? 'disabled' : ''}>${nf.busy === 'claim' ? 'Claiming…' : 'Claim'}</button></div>
+        <div class="fc-acts">
+          <button class="btn" data-nf="stakeall" ${!unstaked.length || nf.busy ? 'disabled' : ''}>Stake all (${unstaked.length})</button>
+          <button class="btn" data-nf="unstakeall" ${!stakedN || nf.busy ? 'disabled' : ''}>Unstake all (${stakedN})</button>
+        </div>
+        <p class="nf-note">Staked Cavaliers stay in your wallet but can't be transferred until you unstake. Weight: no crown 1 · bronze 2 · silver 3 · gold 5 · diamond 10, +1 with an accessory, +1 for a Ruby coat.${live ? ` Rewards end ${new Date(i.finish * 1000).toLocaleDateString()}.` : ''}</p>
+      </section>
+    </div>
+    <section class="sx-card">
+      <div class="sx-head">
+        <div class="chips" role="group" aria-label="Which Cavaliers">
+          <button class="chip" data-nf="tab" data-t="mine" aria-pressed="${nf.tab === 'mine'}">Yours (${mine.length})</button>
+          <button class="chip" data-nf="tab" data-t="all" aria-pressed="${nf.tab === 'all'}">Latest mints</button>
+        </div>
+        <span>${NF_CROWN.map((n, k) => k ? `${n} ${cr[k] || 0}` : '').filter(Boolean).join(' · ')}</span>
+      </div>
+      ${list.length ? `<div class="nf-grid">${list.map(x => nfCard(x, nf.tab === 'mine')).join('')}</div>`
+        : `<div class="empty-card">${nf.tab === 'mine' ? (st.account ? 'No Cavaliers yet. Mint your first one above.' : 'Connect your wallet to see your Cavaliers.') : 'Nobody has minted yet. Be the first.'}</div>`}
+    </section>`;
+}
+async function nfSend(kind, fn, okMsg){
+  const g = walletGate(); if (g){ if (g.act) g.act(); return; }
+  nf.busy = kind; renderNft();
+  try{
+    const tx = await fn(nfC(true));
+    toast(`Submitted. ${txLink(tx.hash)}`);
+    await tx.wait();
+    toast(okMsg, 'ok');
+  }catch(e){ toast(errMsg(e), 'bad'); }
+  nf.busy = ''; loadNft(true);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-nf]'); if (!b) return;
+  const a = b.dataset.nf, i = nf.info;
+  if (a === 'inc' || a === 'dec'){ nf.qty = Math.max(1, Math.min(5, nf.qty + (a === 'inc' ? 1 : -1))); return renderNft(); }
+  if (a === 'tab'){ nf.tab = b.dataset.t; return renderNft(); }
+  if (a === 'refresh') return loadNft(true);
+  if (a === 'mint' && i){ const q = Math.max(1, Math.min(5, nf.qty)); return nfSend('mint', c => c.mint(q, {value: i.price.mul(q)}), `Minted ${q} Cavalier${q > 1 ? 's' : ''}. Welcome to the court!`).then(() => { nf.tab = 'mine'; renderNft(); }); }
+  if (a === 'claim') return nfSend('claim', c => c.claim(), 'KingS rewards claimed.');
+  const mine = st.account ? nf.all.filter(x => same(x.owner, st.account)) : [];
+  if (a === 'stake') return nfSend('stake', c => c.stake([b.dataset.id]), `Cavalier #${b.dataset.id} is staked and earning KingS.`);
+  if (a === 'unstake') return nfSend('stake', c => c.unstake([b.dataset.id]), `Cavalier #${b.dataset.id} unstaked.`);
+  if (a === 'stakeall'){ const ids = mine.filter(x => !x.staked).map(x => x.id); if (ids.length) nfSend('stake', c => c.stake(ids), `${ids.length} Cavalier${ids.length > 1 ? 's' : ''} staked.`); }
+  if (a === 'unstakeall'){ const ids = mine.filter(x => x.staked).map(x => x.id); if (ids.length) nfSend('stake', c => c.unstake(ids), `${ids.length} Cavalier${ids.length > 1 ? 's' : ''} unstaked.`); }
+});
+setInterval(() => { if (st.view === 'nft' && !nf.busy && document.visibilityState === 'visible') loadNft(); }, 15000);
+
 /* ================= boot ================= */
 (async () => {
   let a = {};
@@ -4115,7 +4447,7 @@ $('installBtn').addEventListener('click', async () => {
   const by = s => TOKENS.find(t => t.symbol === s);
   st.tin = TOKENS[0]; st.tout = by('KingS') || TOKENS[1] || TOKENS[0];
   st.la = by('KingS') || TOKENS[0]; st.lb = by('cUSDT') || by('USDT') || TOKENS[0];
-  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#swap' ? 'swap' : 'home');
+  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#swap' ? 'swap' : 'home');
   renderShell(); renderSwap(); renderLiq(); renderPools();
   if (window.ethereum){
     window.ethereum.request({method:'eth_accounts'}).then(x => { if (x && x[0]) connect(); }).catch(()=>{});
