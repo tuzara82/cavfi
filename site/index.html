@@ -68,6 +68,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 nav{display:flex;gap:4px}
 nav button{background:none;border:0;padding:8px 12px;border-radius:10px;color:var(--muted);font-weight:600}
 nav button[aria-current="page"]{color:var(--ink);background:var(--well)}
+nav a.nav-link{padding:8px 12px;border-radius:10px;color:var(--muted);font-weight:600;text-decoration:none;display:inline-flex;align-items:baseline}
+nav a.nav-link:hover{color:var(--ink)}
+.wallet,.net{white-space:nowrap}
+@media (min-width:641px) and (max-width:1340px){nav{gap:0}nav button,nav a.nav-link{padding:8px 8px}}
 nav button:disabled{cursor:not-allowed;opacity:.6}
 nav small{font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-left:4px;color:var(--gold)}
 .spacer{flex:1}
@@ -369,7 +373,7 @@ a.item{color:var(--ink);text-decoration:none}
   .lx-figs{grid-template-columns:1fr 1fr}
 }
 .tok .lx-av{width:28px;height:28px;border-radius:50%;font-size:11px}
-@media (max-width:640px){nav button{padding:7px 8px}}
+@media (max-width:640px){nav button,nav a.nav-link{padding:7px 8px}}
 
 /* ---- limit orders ---- */
 .mode-tabs{display:flex;gap:4px;background:var(--well);border-radius:12px;padding:3px}
@@ -508,7 +512,7 @@ a.item{color:var(--ink);text-decoration:none}
 .nf-card .btn{justify-self:stretch}
 @media (max-width:760px){.fc-grid,.nf-top{grid-template-columns:1fr}}
 @media (max-width:460px){.nf-mint{grid-template-columns:1fr}.nf-hero svg{width:120px;height:120px;margin-inline:auto}.nf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fc-row{grid-template-columns:auto minmax(0,1fr) auto}.fc-row>.btn{grid-column:2/-1;justify-self:start}}
-@media (max-width:640px){nav{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;max-width:100%}nav::-webkit-scrollbar{display:none}nav button{flex:none}}
+@media (max-width:640px){nav{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;max-width:100%}nav::-webkit-scrollbar{display:none}nav button,nav a.nav-link{flex:none}}
 .pf-total span{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .pf-total b{display:block;font:400 40px var(--display);margin:2px 0}
 .pf-total small{color:var(--muted);font-size:12.5px}
@@ -710,6 +714,7 @@ a.item{color:var(--ink);text-decoration:none}
       <button id="nav-farm" data-view="farm">Farms</button>
       <button id="nav-launch" data-view="launch">Launch</button>
       <button id="nav-stats" data-view="stats">Stats</button>
+      <a id="nav-arena" class="nav-link" href="arena.html">Arena<small>new</small></a>
       <button id="nav-nft" data-view="nft">NFTs</button>
       <button id="nav-faucet" data-view="faucet">Faucet</button>
       <button id="nav-pf" data-view="portfolio">Portfolio</button>

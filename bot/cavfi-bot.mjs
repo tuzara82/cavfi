@@ -31,6 +31,8 @@ const CFG = {
   tgChat: env('TELEGRAM_CHAT_ID', ''),
   tgApi: env('TELEGRAM_API', 'https://api.telegram.org'),
   notifySwapUsd: Number(env('NOTIFY_SWAP_USD', '25')),
+  arena: env('ARENA', '1') === '1',
+  arenaPokeSec: Number(env('ARENA_POKE_SEC', '150')),
   dryRun: env('DRY_RUN', '0') === '1',
   once: process.argv.includes('--once'),
 };
@@ -56,6 +58,10 @@ const ABI = {
   vote: ['function nextApply() view returns (uint256)', 'function totalVotes() view returns (uint256)', 'function applyVotes()',
          'function tallies() view returns (uint256[])'],
   farm: ['function poolInfo(uint256) view returns (address lpToken, uint256 allocPoint, uint256, uint256, uint256)', 'function totalAllocPoint() view returns (uint256)', 'function poolLength() view returns (uint256)'],
+  arena: ['function poke()', 'function settle() returns (uint256)', 'function settleable() view returns (bool ready, uint256 id)',
+          'function currentRound() view returns (uint256 id, uint64 start, uint64 end, uint64 stakingEndsAt, uint256 secondsLeft, uint256 pot, uint16 feeBps, bool live)',
+          'function roundTokens(uint256) view returns (address[] tokens, address[] pairs)',
+          'event Settled(uint256 indexed id, uint8 winnerMask, uint256 pot, uint256 fee, bool rolledOver, address settler, uint256 tip)'],
   launch: ['event Launched(address indexed token, address indexed creator, string name, string symbol, uint256 target)',
            'event Graduated(address indexed token, address indexed pair, uint256 doge, uint256 amount, uint256 liquidity)'],
 };
@@ -436,6 +442,45 @@ async function applyVotes(){
   }catch(e){ log('apply votes failed:', (e.reason || e.message || '').slice(0, 100)); }
 }
 
+// ------------------------------------------------------------------ 5. CavFi Arena
+// Rounds only get prices when someone calls poke(): the start price is the average of samples
+// taken in a round's first 10 minutes, the end price of those in its last 10 minutes, and a token
+// needs 3 samples in each window to win. The bot pokes every ARENA_POKE_SEC inside those windows
+// only (each poke costs an L1 data fee), and settles finished rounds for the KingS tip.
+const WINDOW = 600;
+let arenaLastPoke = 0;
+async function arena(){
+  if (!CFG.arena || !A.arena || !wallet || me === ethers.constants.AddressZero) return;
+  const c = new ethers.Contract(A.arena, ABI.arena, wallet);
+  const [[ready, sid], cur] = await Promise.all([c.settleable(), c.currentRound()]);
+  const t = (await provider.getBlock('latest')).timestamp;
+  if (ready){
+    try{
+      const tx = await send(`arena settle round #${sid}`, () => c.settle());
+      arenaLastPoke = t;
+      if (tx){
+        const rc = await provider.getTransactionReceipt(tx.hash);
+        const ev = rc.logs.map(l => { try{ return c.interface.parseLog(l); }catch(e){ return null; } }).find(x => x && x.name === 'Settled');
+        if (ev && !ev.args.pot.isZero()){
+          const [toks] = await c.roundTokens(ev.args.id);
+          const wins = [];
+          for (let i = 0; i < toks.length; i++) if ((ev.args.winnerMask >> i) & 1) wins.push((await token(toks[i])).symbol);
+          const pot = fmtN(fl(ev.args.pot, 18));
+          await tg(ev.args.rolledOver
+            ? `🏟️ <b>Arena round #${ev.args.id}</b>: nobody backed ${wins.length ? esc(wins.join(' + ')) : 'a winner'}. The pot of ${pot} KingS rolls into the next round.`
+            : `🏆 <b>Arena round #${ev.args.id}</b>: ${esc(wins.join(' + '))} rose the most against DOGE. Backers share ${pot} KingS.\n<a href="${txUrl(tx.hash)}">transaction</a>`);
+        }
+      }
+    }catch(e){ log('arena settle failed:', (e.reason || e.message || '').slice(0, 100)); }
+    return;
+  }
+  const id = cur.id.toNumber(), start = Number(cur.start.toString()), end = Number(cur.end.toString());
+  const inWindow = id === 0 || !cur.live || t < start + WINDOW || t + WINDOW >= end;
+  if (!inWindow || t - arenaLastPoke < CFG.arenaPokeSec) return;
+  try{ await send('arena poke', () => c.poke()); arenaLastPoke = t; }
+  catch(e){ log('arena poke failed:', (e.reason || e.message || '').slice(0, 100)); }
+}
+
 // ------------------------------------------------------------------ 3. notifications
 async function notify(){
   const head = await provider.getBlockNumber();
@@ -498,6 +543,7 @@ async function main(){
   else { wallet = provider; me = ethers.constants.AddressZero; }
   if (me === ethers.constants.AddressZero && !CFG.dryRun){ CFG.fillLimits = false; CFG.rebalance = false; }
   log(`CavFi bot on chain ${CFG.chainId} · wallet ${me === ethers.constants.AddressZero ? 'none (notify only)' : me}`);
+  log(`arena: ${CFG.arena && A.arena ? `on (poke every ${CFG.arenaPokeSec}s in the price windows)` : 'off'}`);
   log(`limit fills: ${CFG.fillLimits ? 'on' : 'off'} · rebalance: ${CFG.rebalance ? `on (≥${CFG.minDev*100}% off, ≤ ${usd(CFG.maxUsd)} a trade)` : 'off'} · telegram: ${CFG.tgToken && CFG.tgChat ? 'on' : 'off'}${CFG.dryRun ? ' · DRY RUN' : ''}`);
   if (me !== ethers.constants.AddressZero) log('balance', fmtN(fl(await provider.getBalance(me), 18)), 'DOGE');
   await tg(`🐶 <b>CavFi bot started</b>${me !== ethers.constants.AddressZero ? `\nwallet ${short(me)}` : ''}`);
@@ -508,6 +554,7 @@ async function main(){
       await fillLimits();
       await rebalance();
       await applyVotes();
+      await arena();
       await weeklyTopTen();
       await heralds();
       await notify();

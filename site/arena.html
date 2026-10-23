@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CavFi Arena</title>
+<meta name="description" content="CavFi Arena: every hour, back the token you think rises most against DOGE. Winners split the KingS pot.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<!--
+  Standalone CavFi Arena page. To merge into site/index.html:
+    1. Skip arena-base.css (index.html already has these rules).
+    2. Copy arena.css into index.html's <style>.
+    3. Copy <section id="viewArena"> into <main> next to the other views, and add an
+       "Arena" button to <nav> the same way the Launch and NFTs buttons are wired.
+    4. Copy arena.js. Point getAccount/getSigner (top of the file) at the wallet that
+       index.html already manages, and call CavArena.show() when the view opens.
+-->
+<link rel="stylesheet" href="arena-base.css">
+<link rel="stylesheet" href="arena.css">
+</head>
+<body>
+<header class="wrap">
+  <div class="bar">
+    <a class="brand" href="./" aria-label="CavFi home">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="var(--cream)" stroke="var(--gold)" stroke-width="2"/>
+        <path d="M17 41 L14 22 L24 30 L32 17 L40 30 L50 22 L47 41 Z" fill="var(--gold)"/>
+        <rect x="17" y="43" width="30" height="5" rx="2" fill="var(--chestnut)"/>
+        <circle cx="32" cy="34" r="3" fill="var(--chestnut)"/>
+      </svg>
+      <b>Cav<span>Fi</span></b>
+    </a>
+    <nav aria-label="Main">
+      <a href="./">App</a>
+      <a href="arena.html" aria-current="page">Arena</a>
+    </nav>
+    <span class="spacer"></span>
+    <span class="net" id="net"><i class="dot"></i>DogeOS <small>testnet</small></span>
+    <button class="wallet" id="walletBtn" type="button">Connect wallet</button>
+  </div>
+</header>
+
+<main class="wrap">
+<!-- ===================== ARENA VIEW ===================== -->
+<section class="view" id="viewArena" aria-labelledby="arTitle">
+  <div class="lede">
+    <h1 id="arTitle">The <em>Arena</em></h1>
+    <p>Every hour, back the token you think will rise most against DOGE. Everyone who backed the winner splits the pot.</p>
+  </div>
+
+  <div class="banner" id="arNoDeploy" hidden>
+    The Arena contract isn't in <code>addresses.json</code> yet. Once it's deployed this page goes live.
+    To preview a deployment, open <code>arena.html?arena=0x…</code>.
+  </div>
+
+  <div class="card ar-clock">
+    <div class="ar-clock-l">
+      <div class="ar-clock-top">
+        <span class="ar-rid" id="arRoundId">Round —</span>
+        <span class="ar-status" id="arStatus"><i class="dot"></i><span>Loading</span></span>
+      </div>
+      <div class="ar-count" id="arCount">--:--</div>
+      <div class="ar-sub" id="arCountSub">Connecting to DogeOS…</div>
+      <div class="ar-track" aria-hidden="true">
+        <div class="ar-zone s" id="arZoneS"></div>
+        <div class="ar-zone e" id="arZoneE"></div>
+        <div class="ar-fill" id="arFill"></div>
+      </div>
+      <div class="ar-track-lbl"><span>Start price</span><span>Staking open</span><span>End price</span></div>
+    </div>
+    <div class="ar-clock-r">
+      <dl class="ar-figs">
+        <div class="pot"><dt>Pot</dt><dd id="arPot">—</dd><small id="arPotSub">KingS</small></div>
+        <div><dt>Fee</dt><dd id="arFee">—</dd></div>
+        <div><dt>Min stake</dt><dd id="arMinFig">—</dd></div>
+      </dl>
+      <button class="ar-btn gold" id="arSettle" type="button" hidden>Settle</button>
+    </div>
+  </div>
+
+  <div class="ar-grid" id="arTokens" aria-label="Tokens in this round"></div>
+
+  <div class="ar-cols">
+    <div class="card" id="arForm">
+      <div class="card-head"><h2>Place a stake</h2><span class="ar-k" id="arFormRound"></span></div>
+      <div class="chips ar-pick" id="arPick" role="group" aria-label="Token to back"></div>
+      <div class="leg">
+        <div class="leg-top"><label for="arAmt">Amount</label><span class="bal" id="arBal">Balance —</span></div>
+        <div class="leg-mid">
+          <input class="amt" id="arAmt" inputmode="decimal" placeholder="0" autocomplete="off" spellcheck="false">
+          <span class="tok"><span class="coin king">K</span>KingS</span>
+        </div>
+        <div class="leg-bot"><span id="arMin">Min —</span><button class="max" id="arMax" type="button">MAX</button></div>
+      </div>
+      <dl class="details" id="arDetails"></dl>
+      <button class="cta" id="arCta" type="button" disabled>Connect wallet</button>
+    </div>
+
+    <div class="card" id="arBets">
+      <div class="card-head"><h2>My bets</h2><button class="ar-btn solid" id="arClaimAll" type="button" hidden>Claim all</button></div>
+      <div class="ar-bets-list" id="arBetList"><div class="empty">Connect your wallet to see your bets.</div></div>
+    </div>
+  </div>
+
+  <div class="card ar-steps" aria-label="How a round works">
+    <div><b>1</b><span>Start price</span><p>The first 10 minutes set each token's start price: an average of on-chain samples.</p></div>
+    <div><b>2</b><span>Back a token</span><p>Stake KingS on one or more tokens. Staking closes 10 minutes before the end.</p></div>
+    <div><b>3</b><span>End price</span><p>The last 10 minutes set the end price. Tokens need 3 samples in each window to win.</p></div>
+    <div><b>4</b><span>Settle &amp; claim</span><p>Biggest rise wins. If nobody backed it, the pot rolls into the next round.</p></div>
+  </div>
+</section>
+<!-- =================== /ARENA VIEW ===================== -->
+</main>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="arena.js"></script>
+<script>window.CavArena.show();</script>
+</body>
+</html>
