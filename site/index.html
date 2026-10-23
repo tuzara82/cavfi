@@ -168,6 +168,16 @@ main{max-width:1120px;margin:0 auto;padding-block:40px 64px;display:grid;grid-te
 .fact span{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
 .fact b{font:500 13px var(--mono);overflow-wrap:anywhere}
 .note{max-width:470px;font-size:12.5px;color:var(--muted);text-align:center;margin:0}
+.site-foot{border-top:1px solid var(--line);padding:22px 16px calc(28px + env(safe-area-inset-bottom,0px));margin-top:8px}
+.sf-in{max-width:1120px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:14px 28px;flex-wrap:wrap}
+.sf-l{display:grid;gap:4px}
+.sf-brand{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px}
+.sf-brand svg{width:22px;height:22px}
+.sf-sub{color:var(--muted);font-size:12.5px}
+.sf-links{display:flex;flex-wrap:wrap;gap:6px 18px}
+.sf-links a{color:var(--muted);font-size:13px;font-weight:600;text-decoration:none}
+.sf-links a:hover{color:var(--chestnut)}
+.sf-note{max-width:1120px;margin:12px auto 0;color:var(--muted);font-size:11.5px}
 
 /* modal */
 .scrim{position:fixed;inset:0;background:rgba(10,8,16,.45);display:grid;place-items:center;z-index:50;padding:16px}
@@ -1078,6 +1088,22 @@ a.item{color:var(--ink);text-decoration:none}
   </div>
   <p class="note">CavFi is an interface: trades and deposits execute directly in the router smart contract. All tokens here are testnet tokens with no value. cUSDT and cUSDC are CavFi's own test stablecoins.</p>
 </main>
+
+<footer class="site-foot" aria-label="About CavFi">
+  <div class="sf-in">
+    <div class="sf-l">
+      <span class="sf-brand"><svg aria-hidden="true"><use href="#king"/></svg>CavFi © 2026. All rights reserved.</span>
+      <span class="sf-sub">Built on DogeOS · Arena built with Noah · testnet only, tokens have no value</span>
+    </div>
+    <nav class="sf-links" aria-label="Footer links">
+      <a href="https://github.com/tuzara82/cavfi" target="_blank" rel="noopener">Open source</a>
+      <a href="https://github.com/tuzara82/cavfi/blob/main/contracts/SECURITY.md" target="_blank" rel="noopener">Security review</a>
+      <a href="https://blockscout.testnet.dogeos.com" target="_blank" rel="noopener">Explorer</a>
+      <a href="https://faucet.testnet.dogeos.com" target="_blank" rel="noopener">DogeOS faucet</a>
+    </nav>
+  </div>
+  <p class="sf-note">Contracts are open source and self-reviewed (Slither, fuzz and invariant tests), not externally audited. Use at your own risk.</p>
+</footer>
 
 <div class="settings" id="settings" hidden style="position:fixed">
   <div style="display:grid;gap:8px">
