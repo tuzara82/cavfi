@@ -49,6 +49,8 @@
     inited: false,
     pickedIdx: null,
     tokens: [], // [{ address, symbol }]
+    symbolCache: {}, // address (lowercase) -> symbol
+    roundTokensCache: {}, // round id string -> symbol[] (aligned to roundTokens index)
     round: null,
     board: null,
     spots: null,
@@ -317,7 +319,9 @@
             var erc = new ethers.Contract(rt.tokens[i], ERC20_ABI, state.readProvider);
             sym = sanitizeSymbol(await erc.symbol());
           } catch (e) { sym = rt.tokens[i].slice(0, 6); }
-          tokenList.push({ address: rt.tokens[i], symbol: sym || rt.tokens[i].slice(0, 6) });
+          sym = sym || rt.tokens[i].slice(0, 6);
+          state.symbolCache[rt.tokens[i].toLowerCase()] = sym;
+          tokenList.push({ address: rt.tokens[i], symbol: sym });
         }
         state.tokens = tokenList;
         state.board = await state.arena.board(round.id);
@@ -458,14 +462,17 @@
     var feeFrac = feeBps / 10000;
 
     var changes = state.tokens.map(function (_, i) { return tokenChangePct(i); });
-    var bestChange = Math.max.apply(null, changes.filter(function (c) { return c != null; }).concat([-Infinity]));
+    var validChanges = changes.filter(function (c) { return c != null; });
+    var bestChange = Math.max.apply(null, validChanges.concat([-Infinity]));
+    var allTied = validChanges.length > 0 && validChanges.every(function (c) { return Math.abs(c - validChanges[0]) < 0.0005; });
+    var hasLeader = validChanges.length > 0 && !allTied;
 
     state.tokens.forEach(function (tok, i) {
       var tokenPot = state.board ? state.board.pots[i] : ethers.BigNumber.from(0);
       var tokenPotN = Number(ethers.utils.formatUnits(tokenPot, 18));
       var share = potN > 0 ? (tokenPotN / potN) * 100 : 0;
       var change = changes[i];
-      var isLead = change != null && change === bestChange && bestChange !== -Infinity;
+      var isLead = hasLeader && change != null && Math.abs(change - bestChange) < 0.0005;
 
       var payoutMult = (!tokenPot.isZero() && potN > 0)
         ? ((potN * (1 - feeFrac)) / tokenPotN)
@@ -665,6 +672,31 @@
 
   // ------------------------------------------------------------------ my bets
 
+  async function getRoundTokenSymbols(id) {
+    var idKey = id.toString();
+    if (state.roundTokensCache[idKey]) return state.roundTokensCache[idKey];
+    var symbols = [];
+    try {
+      var rt = await state.arena.roundTokens(id);
+      for (var i = 0; i < rt.tokens.length; i++) {
+        var addr = rt.tokens[i];
+        var key = addr.toLowerCase();
+        var sym = state.symbolCache[key];
+        if (!sym) {
+          sym = addr.slice(0, 6);
+          try {
+            var erc = new ethers.Contract(addr, ERC20_ABI, state.readProvider);
+            sym = sanitizeSymbol(await erc.symbol()) || sym;
+          } catch (e) { /* keep fallback */ }
+          state.symbolCache[key] = sym;
+        }
+        symbols.push(sym);
+      }
+    } catch (e) { /* leave symbols empty, caller falls back to index */ }
+    state.roundTokensCache[idKey] = symbols;
+    return symbols;
+  }
+
   function betResultLabel(info) {
     var r = info.round;
     if (!r.settled) {
@@ -697,6 +729,7 @@
         return;
       }
       var infos = await Promise.all(ids.map(function (id) { return state.arena.betInfo(id, state.account); }));
+      var symbolLists = await Promise.all(ids.map(function (id) { return getRoundTokenSymbols(id); }));
 
       // Sync current round's "my stake" into the token cards.
       state.myBetStakes = null;
@@ -713,10 +746,12 @@
         var id = ids[i];
         var info = infos[i];
         var tag = betResultLabel(info);
+        var symbols = symbolLists[i];
         var stakesHtml = info.stakes.map(function (s, si) {
           if (s.isZero()) return '';
           var isWin = ((info.round.winnerMask >> si) & 1) === 1;
-          return '<span class="ar-stk' + (info.round.settled && isWin ? ' win' : '') + '">#' + si + ' · ' + fmt(s, 18, 0) + '</span>';
+          var label = (symbols && symbols[si]) || ('#' + si);
+          return '<span class="ar-stk' + (info.round.settled && isWin ? ' win' : '') + '">' + label + ' · ' + fmt(s, 18, 0) + '</span>';
         }).join('');
         var canClaim = info.claimableAmount && !info.claimableAmount.isZero() && !info.hasClaimed;
         if (canClaim) claimableIds.push(id);
