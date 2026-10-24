@@ -47,6 +47,13 @@ const CFG = {
   questsDelaySec: Number(env('QUESTS_DELAY_SEC', '300')),
   raffle: env('RAFFLE', '1') === '1',
   alerts: env('ALERTS', '1') === '1',
+  predict: env('PREDICT', '1') === '1',
+  predictDaily: env('PREDICT_DAILY', '1') === '1',
+  predictWeekly: env('PREDICT_WEEKLY', '1') === '1',
+  predictPrice: Number(env('PREDICT_PRICE', '0')), // tests only: use this DOGE/USD price instead of the exchanges
+  duels: env('DUELS', '1') === '1',
+  watchMax: Number(env('WATCH_MAX', '3')),
+  gmRemindHour: Number(env('GM_REMIND_HOUR_UTC', '18')),
   dryRun: env('DRY_RUN', '0') === '1',
   once: process.argv.includes('--once'),
 };
@@ -79,7 +86,15 @@ const ABI = {
           'event Staked(uint256 indexed id, address indexed user, uint256 indexed idx, uint256 amount)',
           'function lastSettled() view returns (uint256)', 'function claimable(uint256 id, address user) view returns (uint256)',
           'function getRound(uint256 id) view returns (tuple(uint64 start, uint64 end, uint16 feeBps, uint8 winnerMask, bool settled, uint256 staked, uint256 rollover, uint256 winnerStake, uint256 payout))'],
-  names: ['function namesOf(address[]) view returns (string[])'],
+  names: ['function namesOf(address[]) view returns (string[])', 'function resolve(string) view returns (address)'],
+  gm: ['function info(address) view returns (bool gmToday, bool gnToday, uint256 streak, uint256 best, uint256 gms, uint256 gns, bool pup, uint256 nextDayAt)'],
+  qinfo: ['function info(address) view returns (uint256 streak, uint256 best, uint256 fullDays, uint256 quests, bool badge, uint8 yesterday)'],
+  predict: ['function create(string question, uint256 strike, uint64 closeAt, uint64 resolveAt) returns (uint256)', 'function resolve(uint256 id, uint256 price)',
+            'function oracle() view returns (address)', 'function owner() view returns (address)', 'function count() view returns (uint256)',
+            'function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(string question, uint64 closeAt, uint64 resolveAt, uint8 state, bool yesWon, uint256 strike, uint256 price, uint256 yesPool, uint256 noPool)[] items)',
+            'function yesOf(uint256, address) view returns (uint256)', 'function noOf(uint256, address) view returns (uint256)', 'function claimable(uint256, address) view returns (uint256)'],
+  duel: ['function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(address maker, address taker, address invited, address winner, uint64 roundId, uint8 makerIdx, uint8 takerIdx, uint8 state, uint256 stake)[] items)',
+         'function settle(uint256 id)', 'function cancel(uint256 id)', 'event Settled(uint256 indexed id, address winner, uint256 paid)'],
   dca: ['function count() view returns (uint256)', 'function due(uint256 start, uint256 n) view returns (uint256[])', 'function execute(uint256 id, address[] path) returns (uint256)',
         'function get(uint256 id) view returns (tuple(address owner, bool active, bool nativeIn, bool nativeOut, uint32 buysTotal, uint32 buysLeft, uint32 interval, uint64 nextAt, address tokenIn, address tokenOut, uint256 perBuy, uint256 minOutPerBuy, uint256 spent, uint256 received))',
         'function keeper(address) view returns (bool)'],
@@ -501,6 +516,7 @@ async function arena(){
               (ws.length ? `${ws.length === 1 ? 'One backer takes' : `${ws.length} backers share`} ${fmtN(ws.reduce((x, w) => x + w.amount, 0))} KingS:\n${lines}` : `Backers share ${pot} KingS.`) +
               `\nClaim on <a href="https://cavfi.com/arena.html">cavfi.com/arena.html</a> · <a href="${txUrl(tx.hash)}">transaction</a>`);
             if (ws.length){ (state.arenaWins ||= []).push({id: ev.args.id.toNumber(), at: now(), users: ws.map(w => w.user), sent: 0}); saveState(); }
+            for (const w of ws) await notifyUser(w.user, `🏆 <b>You won Arena round #${ev.args.id}!</b> ${esc(wins.join(' + '))} rose the most. Claim <b>${fmtN(w.amount)} KingS</b> on <a href="https://cavfi.com/arena.html">cavfi.com/arena.html</a>`);
           }
         }
       }
@@ -573,7 +589,7 @@ async function arenaReminders(){
       let names = w.users.map(() => '');
       if (A.names){ try{ names = await new ethers.Contract(A.names, ABI.names, provider).namesOf(w.users); }catch(e){} }
       const open = [];
-      for (let i = 0; i < w.users.length; i++){ const a = fl(await c.claimable(w.id, w.users[i]), 18); if (a > 0) open.push(`• ${/^[a-z0-9-]{3,32}$/.test(names[i] || '') ? names[i] + '.cav' : short(w.users[i])}: ${fmtN(a)} KingS`); }
+      for (let i = 0; i < w.users.length; i++){ const a = fl(await c.claimable(w.id, w.users[i]), 18); if (a > 0) await notifyUser(w.users[i], `💰 You still have <b>${fmtN(a)} KingS</b> to claim from Arena round #${w.id}: <a href="https://cavfi.com/arena.html">cavfi.com/arena.html</a>`); if (a > 0) open.push(`• ${/^[a-z0-9-]{3,32}$/.test(names[i] || '') ? names[i] + '.cav' : short(w.users[i])}: ${fmtN(a)} KingS`); }
       if (!open.length) continue; // everyone claimed: forget this round
       await tg(`💰 <b>Unclaimed Arena winnings</b> from round #${w.id}:\n${open.join('\n')}\nClaim them on <a href="https://cavfi.com/arena.html">cavfi.com/arena.html</a>`);
       w.sent = due;
@@ -602,7 +618,11 @@ async function dcaKeeper(){
         const swapIn = p.perBuy.sub(p.perBuy.mul(10).div(10000));
         const best = await bestRoute(p.tokenIn, p.tokenOut, swapIn);
         if (!best || best.out.lt(p.minOutPerBuy)){ dcaSkip[id] = now() + 600; log(`dca #${id}: price below the plan's floor, retry in 10 min`); continue; }
-        await send(`dca #${id}: buy ${p.buysTotal - p.buysLeft + 1}/${p.buysTotal}`, () => c.execute(id, best.path));
+        const dtx = await send(`dca #${id}: buy ${p.buysTotal - p.buysLeft + 1}/${p.buysTotal}`, () => c.execute(id, best.path));
+        if (dtx && watchersOf(p.owner).length){
+          const ti = await token(p.tokenIn), to = await token(p.tokenOut);
+          await notifyUser(p.owner, `🔁 <b>Auto-buy #${id}</b>: buy ${p.buysTotal - p.buysLeft + 1} of ${p.buysTotal} done, ${fmtN(fl(p.perBuy, ti.decimals))} ${esc(ti.symbol)} → ~${fmtN(fl(best.out, to.decimals))} ${esc(to.symbol)}.`);
+        }
         if (p.buysLeft === 1){
           const ti = await token(p.tokenIn), to = await token(p.tokenOut);
           await tg(`🔁 <b>Auto-buy #${id} finished</b>\n${p.buysTotal} buys of ${fmtN(fl(p.perBuy, ti.decimals))} ${esc(ti.symbol)} → ${esc(to.symbol)} for ${short(p.owner)}.`);
@@ -695,6 +715,8 @@ async function questsDaily(){
     }catch(e){ log('raffle tickets failed:', (e.reason || e.message || '').slice(0, 100)); }
   }
   state.questsDay = day; saveState();
+  for (let i = 0; i < users.length; i++) if (watchersOf(users[i]).length)
+    await notifyUser(users[i], `📜 <b>Daily quests ${new Date(from * 1000).toISOString().slice(0, 10)}</b>: you did ${done[i]} of 3${done[i] === 3 ? ' 🔥 full day' : ''}, and got ${done[i]} raffle ticket${done[i] === 1 ? '' : 's'}.`);
   if (day < last) questsAt = 0; // more days to catch up: next loop continues right away
   if (users.length){
     await tg(`📜 <b>Daily quests, ${new Date(from * 1000).toISOString().slice(0, 10)}</b>\n${users.length} wallet${users.length === 1 ? '' : 's'} did quests, ${done.filter(d => d === 3).length} finished all 3.` +
@@ -718,6 +740,7 @@ async function raffleKeeper(){
   const ws = ev.args.winners.map((w, i) => ({w, p: fl(ev.args.prizes[i], 18)})).filter(x => x.w !== ethers.constants.AddressZero && x.p > 0);
   let names = ws.map(() => '');
   if (A.names && ws.length){ try{ names = await new ethers.Contract(A.names, ABI.names, provider).namesOf(ws.map(x => x.w)); }catch(e){} }
+  for (const x of ws) await notifyUser(x.w, `🎟️ <b>You won ${fmtN(x.p)} KingS in the Royal Raffle</b> (week #${ev.args.id})! The prize is already in your wallet.`);
   await tg(ws.length
     ? `🎟️ <b>Royal Raffle week #${ev.args.id} drawn!</b>\n${ws.map((x, i) => `${['🥇', '🥈', '🥉'][i]} ${/^[a-z0-9-]{3,32}$/.test(names[i] || '') ? names[i] + '.cav' : short(x.w)}: ${fmtN(x.p)} KingS`).join('\n')}\nPrizes are already in their wallets. New week, new tickets: do your daily quests on <a href="https://cavfi.com">cavfi.com</a>`
     : `🎟️ <b>Royal Raffle week #${ev.args.id}</b>: no tickets this week, the pot of ${fmtN(fl(ev.args.pot, 18))} KingS rolls into next week.`);
@@ -749,8 +772,20 @@ async function alertsPoll(){
     const m = u.message; if (!m || !m.text || !m.chat) continue;
     const chat = m.chat.id, parts = m.text.trim().split(/\s+/), cmd = parts[0].toLowerCase().replace(/@.*$/, '');
     const mine = (state.alerts ||= []).filter(a => a.chat === chat);
-    if (cmd === '/start' || cmd === '/help'){
-      await tgReply(chat, `🐶 <b>CavFi price alerts</b>\n/price KingS: current price\n/alert KingS above 0.00003: tell me when KingS goes above $0.00003\n/alert DOGE below 0.05\n/alerts: your alerts\n/cancel 2: remove alert 2\nPrices come from the CavFi pools on the DogeOS testnet (testnet tokens, no real value).`);
+    if (cmd === '/start' && /^w(0x)?[0-9a-fA-F]{40}$/.test(parts[1] || '')){
+      await watchAdd(chat, parts[1].slice(1));
+    } else if (cmd === '/watch'){
+      if (!parts[1]) await tgReply(chat, 'Usage: /watch kingdoge.cav  or  /watch 0x...');
+      else await watchAdd(chat, parts[1]);
+    } else if (cmd === '/unwatch'){
+      const mine2 = (state.watch || []).filter(w => w.chat === chat);
+      const addr = parts[1] ? await resolveWho(parts[1]) : (mine2.length === 1 ? mine2[0].addr : null);
+      if (!addr) await tgReply(chat, mine2.length ? `Which one? ${mine2.map(w => '/unwatch ' + (w.label.endsWith('.cav') ? w.label : w.addr)).join('  ')}` : 'You follow no wallets.');
+      else { state.watch = (state.watch || []).filter(w => !(w.chat === chat && lk(w.addr) === lk(addr))); await tgReply(chat, 'Stopped following that wallet.'); }
+    } else if (cmd === '/me'){
+      await watchSummary(chat);
+    } else if (cmd === '/start' || cmd === '/help'){
+      await tgReply(chat, `🐶 <b>CavFi bot</b>\n<b>Your wallet</b>\n/watch kingdoge.cav (or 0x...): private messages for Arena wins, unclaimed winnings, auto-buys, quests, raffle prizes, predictions, duels and gm streak reminders\n/me: your followed wallets\n/unwatch: stop\n\n<b>Prices</b>\n/price KingS: current price\n/alert KingS above 0.00003: tell me when KingS goes above $0.00003\n/alert DOGE below 0.05\n/alerts: your alerts\n/cancel 2: remove alert 2\n\nEverything runs on the DogeOS testnet (testnet tokens, no real value). Token prices come from the CavFi pools; prediction markets use the DOGE price from Binance.`);
     } else if (cmd === '/price'){
       const t = findToken(parts[1]);
       await tgReply(chat, t ? `${esc(t.symbol)}: <b>${usdStr(ref[lk(t.address)])}</b>${ref[lk(A.wdoge)] && lk(t.address) !== lk(A.wdoge) && ref[lk(t.address)] ? ` (${(ref[lk(t.address)] / ref[lk(A.wdoge)]).toPrecision(4)} DOGE)` : ''}` : 'Unknown token. Try /price KingS, /price DOGE or /price RPUP.');
@@ -780,6 +815,209 @@ async function alertsPoll(){
     } else keep.push(a);
   }
   state.alerts = keep; saveState();
+}
+
+// ------------------------------------------------------------------ 9. Personal notifications (/watch)
+// Anyone can tell the bot which wallets to follow: /watch kingdoge.cav or /watch 0x...  (at most WATCH_MAX a chat).
+// The site's "Telegram alerts" button opens t.me/<bot>?start=w<address>, which does the same in one tap.
+// Followed wallets get a private message for Arena wins, unclaimed winnings, auto-buys, quest results,
+// raffle prizes, prediction results, duel results, and a reminder when their gm streak is about to break.
+const watchersOf = addr => (state.watch || []).filter(w => lk(w.addr) === lk(addr));
+async function notifyUser(addr, html){
+  for (const w of watchersOf(addr)) await tgReply(w.chat, `${html}\n<i>${esc(w.label)}</i> · /unwatch to stop`);
+}
+async function labelOf(addr){
+  if (A.names){ try{ const [n] = await new ethers.Contract(A.names, ABI.names, provider).namesOf([addr]); if (/^[a-z0-9-]{3,32}$/.test(n || '')) return n + '.cav'; }catch(e){} }
+  return short(addr);
+}
+async function resolveWho(s){
+  s = String(s || '').trim().toLowerCase();
+  if (/^(0x)?[0-9a-f]{40}$/.test(s)) return ethers.utils.getAddress(s.startsWith('0x') ? s : '0x' + s);
+  const label = s.replace(/\.cav$/, '');
+  if (A.names && /^[a-z0-9-]{3,32}$/.test(label)){
+    try{ const a = await new ethers.Contract(A.names, ABI.names, provider).resolve(label); if (a !== ethers.constants.AddressZero) return a; }catch(e){}
+  }
+  return null;
+}
+async function watchAdd(chat, who){
+  const addr = await resolveWho(who);
+  if (!addr) return tgReply(chat, 'I could not find that wallet. Use a .cav name (kingdoge.cav) or a 0x address.');
+  const mine = (state.watch ||= []).filter(w => w.chat === chat);
+  if (mine.some(w => lk(w.addr) === lk(addr))) return tgReply(chat, `You already follow ${esc(await labelOf(addr))}. See /me.`);
+  if (mine.length >= CFG.watchMax) return tgReply(chat, `You can follow up to ${CFG.watchMax} wallets. Remove one with /unwatch.`);
+  const label = await labelOf(addr);
+  state.watch.push({chat, addr, label}); saveState();
+  await tgReply(chat, `✅ Following <b>${esc(label)}</b>. I'll message you about Arena wins, unclaimed winnings, auto-buys, quests, raffle prizes, predictions, duels, and when the gm streak is about to break.\nProfile: <a href="https://cavfi.com/u/${encodeURIComponent(label.endsWith('.cav') ? label : addr)}">cavfi.com/u/${esc(label.endsWith('.cav') ? label : short(addr))}</a>\n/me shows a summary, /unwatch stops.`);
+}
+async function watchSummary(chat){
+  const mine = (state.watch || []).filter(w => w.chat === chat);
+  if (!mine.length) return tgReply(chat, 'You follow no wallets yet. Try /watch kingdoge.cav or /watch 0x...');
+  const lines = [];
+  for (const w of mine){
+    const bits = [];
+    if (A.gm){ try{ const g = await new ethers.Contract(A.gm, ABI.gm, provider).info(w.addr); bits.push(`gm streak ${g.streak}${g.gmToday ? ' ✓ today' : ''}`); }catch(e){} }
+    if (A.quests){ try{ const q = await new ethers.Contract(A.quests, ABI.qinfo, provider).info(w.addr); bits.push(`quest streak ${q.streak} · ${q.quests} quests`); }catch(e){} }
+    lines.push(`• <b>${esc(w.label)}</b>${bits.length ? ': ' + bits.join(' · ') : ''}`);
+  }
+  await tgReply(chat, `👤 <b>Your wallets</b>\n${lines.join('\n')}`);
+}
+// gm streak at risk: once a day after GM_REMIND_HOUR_UTC, for followed wallets with a streak and no gm today
+async function gmReminders(){
+  if (!A.gm || !(state.watch || []).length) return;
+  const t = now(), day = Math.floor(t / 86400);
+  if ((t % 86400) / 3600 < CFG.gmRemindHour || state.gmRemindDay === day) return;
+  state.gmRemindDay = day; saveState();
+  const g = new ethers.Contract(A.gm, ABI.gm, provider), seen = new Set();
+  for (const w of state.watch){
+    if (seen.has(lk(w.addr))) continue; seen.add(lk(w.addr));
+    try{
+      const i = await g.info(w.addr);
+      if (i.streak.gt(0) && !i.gmToday) await notifyUser(w.addr, `⏰ <b>Your ${i.streak}-day gm streak ends at midnight UTC.</b> Say gm on <a href="https://cavfi.com">cavfi.com</a> to keep it.`);
+    }catch(e){}
+  }
+}
+
+// ------------------------------------------------------------------ 10. CavFi Predict (DOGE price markets)
+// The bot is the disclosed price oracle: it opens a daily and a weekly YES/NO market on the real DOGE/USD
+// price, and after the resolve time reports the price of the 1-minute DOGEUSDT candle that opens at that
+// moment on Binance (Coinbase DOGE-USD as a fallback). If nobody resolves a market within 7 days of its
+// resolve time, anyone can turn it into a full refund on the contract.
+async function getJson(url){
+  const r = await fetch(url, {headers: {accept: 'application/json', 'user-agent': 'cavfi-bot'}});
+  if (!r.ok) throw new Error(`${new URL(url).host} ${r.status}`);
+  return r.json();
+}
+async function dogeNow(){
+  if (CFG.predictPrice > 0) return CFG.predictPrice;
+  try{ const j = await getJson('https://api.binance.com/api/v3/ticker/price?symbol=DOGEUSDT'); if (+j.price > 0) return +j.price; }catch(e){ log('binance price:', e.message); }
+  const j = await getJson('https://api.exchange.coinbase.com/products/DOGE-USD/ticker');
+  if (+j.price > 0) return +j.price;
+  throw new Error('no DOGE price');
+}
+async function dogeAt(ts){
+  if (CFG.predictPrice > 0) return CFG.predictPrice;
+  try{
+    const j = await getJson(`https://api.binance.com/api/v3/klines?symbol=DOGEUSDT&interval=1m&startTime=${ts * 1000}&limit=1`);
+    if (j[0] && j[0][0] === ts * 1000 && +j[0][1] > 0) return +j[0][1];
+  }catch(e){ log('binance candle:', e.message); }
+  const iso = x => new Date(x * 1000).toISOString();
+  const j = await getJson(`https://api.exchange.coinbase.com/products/DOGE-USD/candles?granularity=60&start=${iso(ts)}&end=${iso(ts + 60)}`);
+  const c = (j || []).find(x => x[0] === ts);
+  if (c && +c[3] > 0) return +c[3];
+  throw new Error('no DOGE candle for ' + iso(ts));
+}
+const to8 = p => ethers.BigNumber.from(Math.round(p * 1e8));
+const from8 = b => Number(b.toString()) / 1e8;
+const sig3 = p => Number(p.toPrecision(3));
+const usdP = p => '$' + (p >= 1 ? p.toFixed(2) : p.toPrecision(3).replace(/0+$/, '').replace(/\.$/, ''));
+const whenStr = ts => new Date(ts * 1000).toLocaleString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC'}) + ', 20:00 UTC';
+let predictAt = 0;
+async function predictKeeper(){
+  if (!CFG.predict || !A.predict || !wallet || me === ethers.constants.AddressZero || now() - predictAt < 60) return;
+  predictAt = now();
+  const c = new ethers.Contract(A.predict, ABI.predict, wallet);
+  const [oracle, owner] = await Promise.all([c.oracle(), c.owner()]);
+  if (lk(oracle) !== lk(me) && lk(owner) !== lk(me)){ log('predict: this wallet is not the oracle, skipping'); CFG.predict = false; return; }
+  const t = (await provider.getBlock('latest')).timestamp;
+  const [ids, items] = await c.page(0, 40);
+  // 1. resolve markets whose time has come (wait a minute so the exchange candle exists)
+  for (let i = 0; i < ids.length; i++){
+    const m = items[i], id = ids[i].toNumber(), at = Number(m.resolveAt.toString());
+    if (m.state !== 1 || t < at + 60 || t > at + 7 * 86400) continue;
+    let price;
+    try{ price = await dogeAt(at); }catch(e){ log(`predict #${id}: price not available yet (${e.message})`); continue; }
+    const tx = await send(`predict #${id}: resolve at $${price}`, () => c.resolve(id, to8(price)));
+    if (!tx) continue;
+    const yes = to8(price).gt(m.strike), pot = fl(m.yesPool.add(m.noPool), 18);
+    const refund = m.yesPool.isZero() || m.noPool.isZero();
+    if (pot > 0) await tg(`🔮 <b>Predict #${id} resolved</b>\n${esc(m.question)}\nDOGE was <b>${usdP(price)}</b> (line ${usdP(from8(m.strike))}): <b>${yes ? 'YES' : 'NO'}</b>.\n` +
+      (refund ? `Only one side was backed, so everyone gets their ${fmtN(pot)} KingS back.` : `${fmtN(pot)} KingS pot goes to the ${yes ? 'YES' : 'NO'} side.`) +
+      ` Claim on <a href="https://cavfi.com/#predict">cavfi.com/#predict</a>`);
+    for (const w of [...new Set((state.watch || []).map(w => lk(w.addr)))]){
+      try{
+        const [y, n] = await Promise.all([c.yesOf(id, w), c.noOf(id, w)]);
+        if (y.isZero() && n.isZero()) continue;
+        const cl = fl(await c.claimable(id, w), 18);
+        await notifyUser(w, `🔮 <b>Predict #${id}: ${yes ? 'YES' : 'NO'}</b> (DOGE ${usdP(price)})\n` +
+          (cl > 0 ? `You can claim <b>${fmtN(cl)} KingS</b> on <a href="https://cavfi.com/#predict">cavfi.com/#predict</a>` : 'Your side lost this time.'));
+      }catch(e){}
+    }
+  }
+  // 2. open new markets: a daily one (20:00 UTC, at least 20 h away, closes 4 h before)
+  //    and a weekly one (Sunday 20:00 UTC, line +5%, closes a day before)
+  const want = [];
+  const d20 = Math.floor(t / 86400) * 86400 + 20 * 3600;
+  if (CFG.predictDaily){ let r = d20; while (r - t < 20 * 3600) r += 86400; want.push({resolveAt: r, closeAt: r - 4 * 3600, k: 1, kind: 'daily'}); }
+  if (CFG.predictWeekly){
+    let r = d20; while (new Date(r * 1000).getUTCDay() !== 0 || r - t < 36 * 3600) r += 86400;
+    want.push({resolveAt: r, closeAt: r - 86400, k: 1.05, kind: 'weekly'});
+  }
+  for (const w of want){
+    if (items.some(m => Number(m.resolveAt.toString()) === w.resolveAt && m.question.startsWith('Weekly') === (w.kind === 'weekly'))) continue;
+    let p; try{ p = await dogeNow(); }catch(e){ log('predict: no DOGE price, not opening a market:', e.message); return; }
+    const strike = sig3(p * w.k);
+    const q = `${w.kind === 'weekly' ? 'Weekly: will' : 'Will'} DOGE be above ${usdP(strike)} on ${whenStr(w.resolveAt)}?`;
+    const tx = await send(`predict: open ${w.kind} market`, () => c.create(q, to8(strike), w.closeAt, w.resolveAt));
+    if (tx) await tg(`🔮 <b>New ${w.kind} prediction</b>\n${esc(q)}\nDOGE now ${usdP(p)}. Back YES or NO with KingS until ${new Date(w.closeAt * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC on <a href="https://cavfi.com/#predict">cavfi.com/#predict</a>\n<i>Testnet tokens. The CavFi bot reports the price from Binance.</i>`);
+  }
+}
+
+// ------------------------------------------------------------------ 11. Arena duels
+// Matched duels are settled as soon as their Arena round is settled; open duels nobody accepted are sent
+// back to their maker once Arena staking for that round has closed. Both are calls anyone could make.
+let duelAt = 0;
+async function duelKeeper(){
+  if (!CFG.duels || !A.duel || !A.arena || !wallet || me === ethers.constants.AddressZero || now() - duelAt < 60) return;
+  duelAt = now();
+  const d = new ethers.Contract(A.duel, ABI.duel, wallet), ar = new ethers.Contract(A.arena, ABI.arena, provider);
+  const [ids, items] = await d.page(0, 60);
+  if (!ids.length) return;
+  const cur = await ar.currentRound(), t = (await provider.getBlock('latest')).timestamp;
+  const settled = {};
+  for (let i = 0; i < ids.length; i++){
+    const x = items[i], id = ids[i].toNumber(), rid = x.roundId.toNumber();
+    if (x.state === 1 && (rid !== cur.id.toNumber() || t >= Number(cur.stakingEndsAt.toString()))){
+      const tx = await send(`duel #${id}: nobody accepted, stake back to the maker`, () => d.cancel(id));
+      if (tx) await notifyUser(x.maker, `⚔️ <b>Duel #${id}</b>: nobody accepted before Arena staking closed. Your ${fmtN(fl(x.stake, 18))} KingS are back in your wallet.`);
+      continue;
+    }
+    if (x.state !== 2) continue;
+    if (settled[rid] == null){ try{ settled[rid] = (await ar.getRound(rid)).settled; }catch(e){ settled[rid] = false; } }
+    if (!settled[rid]) continue;
+    const tx = await send(`duel #${id}: settle`, () => d.settle(id));
+    if (!tx) continue;
+    const rc = await provider.getTransactionReceipt(tx.hash);
+    const ev = rc.logs.map(l => { try{ return d.interface.parseLog(l); }catch(e){ return null; } }).find(e => e && e.name === 'Settled');
+    const [toks] = await ar.roundTokens(rid);
+    const sa = (await token(toks[x.makerIdx])).symbol, sb = (await token(toks[x.takerIdx])).symbol;
+    const [la, lb] = [await labelOf(x.maker), await labelOf(x.taker)], stake = fmtN(fl(x.stake, 18));
+    if (ev && ev.args.winner !== ethers.constants.AddressZero){
+      const makerWon = lk(ev.args.winner) === lk(x.maker);
+      await tg(`⚔️ <b>Duel #${id}</b> (Arena round #${rid}): ${esc(makerWon ? sa : sb)} beat ${esc(makerWon ? sb : sa)}.\n<b>${esc(makerWon ? la : lb)}</b> wins ${fmtN(fl(ev.args.paid, 18))} KingS from ${esc(makerWon ? lb : la)}.`);
+      await notifyUser(ev.args.winner, `⚔️ <b>You won duel #${id}!</b> ${esc(makerWon ? sa : sb)} beat ${esc(makerWon ? sb : sa)}: ${fmtN(fl(ev.args.paid, 18))} KingS are in your wallet.`);
+      await notifyUser(makerWon ? x.taker : x.maker, `⚔️ <b>Duel #${id} lost</b>: ${esc(makerWon ? sa : sb)} beat ${esc(makerWon ? sb : sa)}. Your ${stake} KingS went to ${esc(makerWon ? la : lb)}.`);
+    } else {
+      await tg(`⚔️ <b>Duel #${id}</b> (round #${rid}): ${esc(sa)} vs ${esc(sb)} ended level, both players get their ${stake} KingS back.`);
+      for (const u of [x.maker, x.taker]) await notifyUser(u, `⚔️ <b>Duel #${id}</b> ended level: your ${stake} KingS are back.`);
+    }
+  }
+}
+
+// ------------------------------------------------------------------ 12. Telegram link for the site
+// The site's "Telegram alerts" button needs the bot's username: write it to tg.json next to the site.
+async function writeTgJson(){
+  if (!CFG.tgToken) return;
+  try{
+    const r = await fetch(`${CFG.tgApi}/bot${CFG.tgToken}/getMe`).then(x => x.json());
+    const u = r && r.ok && r.result && r.result.username;
+    if (!u) return;
+    for (const dir of ['site', 'publish']){
+      const f = path.join(HERE, '..', dir, 'tg.json');
+      if (!fs.existsSync(path.dirname(f))) continue;
+      const body = JSON.stringify({bot: u}) + '\n';
+      if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== body){ fs.writeFileSync(f, body); log(`wrote ${dir}/tg.json (@${u})`); }
+    }
+  }catch(e){ log('telegram getMe failed:', e.message); }
 }
 
 // Market noise: on a quiet testnet nobody trades, every Arena token ends a round at +0.00% and the
@@ -906,6 +1144,8 @@ async function main(){
   log(`arena: ${CFG.arena && A.arena ? `on (poke every ${CFG.arenaPokeSec}s in the price windows${CFG.arenaNoise ? `, ${CFG.arenaNoiseTrades} random trades a round` : ''})` : 'off'}`);
   log(`limit fills: ${CFG.fillLimits ? 'on' : 'off'} · rebalance: ${CFG.rebalance ? `on (≥${CFG.minDev*100}% off, ≤ ${usd(CFG.maxUsd)} a trade)` : 'off'} · telegram: ${CFG.tgToken && CFG.tgChat ? 'on' : 'off'}${CFG.dryRun ? ' · DRY RUN' : ''}`);
   if (me !== ethers.constants.AddressZero) log('balance', fmtN(fl(await provider.getBalance(me), 18)), 'DOGE');
+  log(`predict: ${CFG.predict && A.predict ? 'on (bot is the DOGE price oracle)' : 'off'} · duels: ${CFG.duels && A.duel ? 'on' : 'off'} · followed wallets: ${(state.watch || []).length}`);
+  await writeTgJson();
   await tg(`🐶 <b>CavFi bot started</b>${me !== ethers.constants.AddressZero ? `\nwallet ${short(me)}` : ''}`);
   let errors = 0;
   for (;;){
@@ -920,7 +1160,10 @@ async function main(){
       await dcaKeeper();
       await questsDaily();
       await raffleKeeper();
+      await predictKeeper();
+      await duelKeeper();
       await alertsPoll();
+      await gmReminders();
       await weeklyTopTen();
       await heralds();
       await notify();

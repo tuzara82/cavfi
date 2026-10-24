@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>[hidden]{display:none!important} body{margin:0} :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 <script>try{var t=localStorage.getItem('cavfi.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>if(/^\/u\/./.test(location.pathname))location.replace('/#u/'+location.pathname.slice(3).replace(/\/$/,''))</script>
 <title>CavFi</title>
 <meta name="description" content="CavFi: swap, add liquidity, farm and stake on the DogeOS testnet with DOGE, KingS, LBTC, WETH and stablecoins.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -68,13 +69,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .brand b span{color:var(--chestnut)}
 nav{display:flex;gap:4px}
 .bar>nav{min-width:0;overflow-x:auto;scrollbar-width:none}.bar>nav::-webkit-scrollbar{display:none}.bar>nav>*{flex:none}
-@media (max-width:1360px){.bar{gap:14px}nav button,nav a.nav-link{padding:8px 9px}}
+/* desktop: the menu gets its own row under the logo and wallet, so every item is visible */
+@media (min-width:641px){.bar{flex-wrap:wrap;row-gap:4px;padding-bottom:8px}.bar>nav{order:9;flex:1 1 100%;margin-left:-10px}.brand{order:0}.spacer{order:1}.theme-btn{order:2}.net{order:3}.wallet{order:4}}
 nav button{background:none;border:0;padding:8px 12px;border-radius:10px;color:var(--muted);font-weight:600}
 nav button[aria-current="page"]{color:var(--ink);background:var(--well)}
 nav a.nav-link{padding:8px 12px;border-radius:10px;color:var(--muted);font-weight:600;text-decoration:none;display:inline-flex;align-items:baseline}
 nav a.nav-link:hover{color:var(--ink)}
 .wallet,.net{white-space:nowrap}
-@media (min-width:641px) and (max-width:1340px){nav{gap:0}nav button,nav a.nav-link{padding:8px 8px}}
+@media (min-width:641px) and (max-width:1000px){nav{gap:0}nav button,nav a.nav-link{padding:8px 9px}}
 nav button:disabled{cursor:not-allowed;opacity:.6}
 nav small{font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-left:4px;color:var(--gold)}
 .spacer{flex:1}
@@ -655,6 +657,48 @@ a.item{color:var(--ink);text-decoration:none}
 /* ---- stats ---- */
 #viewStats>*,#viewBoard>*{width:100%;max-width:780px}
 .lb-tabs{flex-wrap:wrap}
+/* profile */
+.up-body{display:grid;gap:14px}
+.up-hero{display:grid;grid-template-columns:160px minmax(0,1fr);gap:18px;align-items:center}
+.up-art{width:160px;height:160px;border-radius:20px;overflow:hidden;background:var(--well);display:grid;place-items:center;font-size:64px}
+.up-art svg{width:100%;height:100%;display:block}
+.up-id h2{margin:0;font:400 30px var(--display);overflow-wrap:anywhere}
+.up-id .up-addr{font:500 12.5px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.up-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.up-tags span{background:var(--well);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600}
+.up-figs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.up-figs div{background:var(--well);border-radius:14px;padding:12px;min-width:0}
+.up-figs span{display:block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.up-figs b{font:500 20px var(--mono);overflow-wrap:anywhere}.up-figs small{display:block;color:var(--muted);font-size:12px}
+.up-cavs{display:flex;gap:8px;flex-wrap:wrap}.up-cavs svg{width:64px;height:64px;border-radius:12px;display:block}
+.up-share{display:flex;gap:8px;flex-wrap:wrap}.up-share .btn{text-decoration:none}
+.pr-note a,.up-body .pr-note a{color:var(--chestnut);font-weight:700}
+.up-find{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.up-find input{min-width:0;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:12px;padding:11px 12px;font:500 15px var(--body)}
+@media (max-width:640px){.up-hero{grid-template-columns:96px minmax(0,1fr);gap:12px}.up-art{width:96px;height:96px;border-radius:14px;font-size:40px}.up-id h2{font-size:22px}.up-figs{grid-template-columns:1fr 1fr}}
+/* predict + duels */
+.pr-body{display:grid;gap:14px;margin-top:12px}
+.pr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.pr-q{font:400 19px/1.3 var(--display);margin:0}
+.pr-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.pr-bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--well);gap:2px}
+.pr-bar i{display:block;background:var(--ok);border-radius:999px}.pr-bar i+i{background:var(--bad)}
+.pr-sides{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pr-sides div{background:var(--well);border-radius:12px;padding:9px 10px}
+.pr-sides span{display:block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.pr-sides b{font:500 15px var(--mono)}.pr-sides small{display:block;color:var(--muted);font:500 12px var(--mono)}
+.pr-bet{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.pr-bet input,.du-form input,.du-form select{min-width:0;width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:12px;padding:10px 12px;font:500 15px var(--body)}
+.btn.yes{background:var(--ok);border-color:var(--ok);color:#fff}.btn.no{background:var(--bad);border-color:var(--bad);color:#fff}
+.pr-res{font-weight:700}.pr-res.yes{color:var(--ok)}.pr-res.no{color:var(--bad)}
+.pr-note{font-size:12.5px;color:var(--muted);margin:0}
+.du-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.du-form label{display:grid;gap:5px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.du-form .wide{grid-column:1/-1}
+.du-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.du-row b{font-weight:700}.du-row small{display:block;color:var(--muted);font-size:12.5px}
+.du-row.hl{background:color-mix(in srgb,var(--gold) 14%,transparent);border-radius:12px;padding-inline:10px}
+.du-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:520px){.du-form{grid-template-columns:1fr}.pr-bet{grid-template-columns:1fr 1fr}.pr-bet input{grid-column:1/-1}.du-row{grid-template-columns:1fr}.du-acts{justify-content:flex-start}}
 .lb-pod{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .lb-pod>div{background:var(--well);border-radius:14px;padding:12px;display:grid;gap:4px;min-width:0;text-align:center}
 .lb-pod b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lb-pod span{font-size:22px}.lb-pod small{color:var(--muted);font:500 12.5px var(--mono)}
@@ -797,7 +841,8 @@ a.item{color:var(--ink);text-decoration:none}
       <button id="nav-launch" data-view="launch">Launch</button>
       <button id="nav-stats" data-view="stats">Stats</button>
       <button id="nav-board" data-view="board">Leaderboards</button>
-      <a id="nav-arena" class="nav-link" href="arena.html">Arena<small>new</small></a>
+      <a id="nav-arena" class="nav-link" href="arena.html">Arena</a>
+      <button id="nav-predict" data-view="predict">Predict<small>new</small></button>
       <button id="nav-nft" data-view="nft">NFTs</button>
       <button id="nav-names" data-view="names">Names</button>
       <button id="nav-faucet" data-view="faucet">Faucet</button>
@@ -1191,6 +1236,15 @@ a.item{color:var(--ink);text-decoration:none}
       </section>
 
       <section class="sx-card hp-sec">
+        <h2>Predict, duels, profiles and alerts</h2>
+        <details><summary>How do DOGE price predictions work?</summary><p>On <a href="#predict" data-goview="predict">Predict</a>, each market asks a yes/no question about the real DOGE/USD price, like "Will DOGE be above $0.20 on Sunday, 20:00 UTC?". Back YES or NO with KingS until the market closes. Everyone on the right side shares the whole pot in proportion to their stake, minus a 2% fee, so the pool sizes show the crowd's odds. If only one side was backed, everyone gets their KingS back. Testnet KingS, no real value.</p></details>
+        <details><summary>Who decides the price?</summary><p>The CavFi bot. It opens a daily and a weekly market and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase DOGE-USD if Binance is unavailable). That is a <b>trusted role</b>: the price comes from the bot, not from a decentralized oracle, and you can check it against the exchange yourself. If the bot doesn't report within 7 days, anyone can turn the market into a full refund.</p></details>
+        <details><summary>What is an Arena duel?</summary><p>A one-on-one bet on the current Arena round: pick two of the round's tokens and a KingS stake, for example "RPUP beats KingS, 1,000 KingS". Whoever accepts takes the other token with the same stake. When the Arena round is settled, the token that rose more against DOGE (using the Arena's own start and end prices) wins, and its backer gets both stakes, with no fee. Duels can be accepted only while Arena staking is open. A tie, or too few price samples, refunds both. You can invite one person with a .cav name or address, or share the duel link with anyone.</p></details>
+        <details><summary>What is a profile?</summary><p>Every wallet has a public page at cavfi.com/u/name.cav (or the 0x address): its Living Cavaliers, badges, leaderboard rank, gm and quest streaks, Arena wins, duels, names and raffle tickets, all read from the chain. Share it on X or download it as an image card.</p></details>
+        <details><summary>Can the bot message me on Telegram?</summary><p>Yes. Press <b>Telegram alerts</b> on your profile, or send <code>/watch yourname.cav</code> to the CavFi bot. It messages you about Arena wins, unclaimed winnings, auto-buys, daily quest results, raffle prizes, predictions, duels, and when your gm streak is about to break. It only needs your public address, never a key. <code>/unwatch</code> stops it.</p></details>
+      </section>
+
+      <section class="sx-card hp-sec">
         <h2>Still stuck?</h2>
         <p style="margin:0">Every contract is on <a href="https://github.com/tuzara82/cavfi" target="_blank" rel="noopener">GitHub</a> and every transaction is on the <a href="https://blockscout.testnet.dogeos.com" target="_blank" rel="noopener">explorer</a>. The <a href="#portfolio" data-goview="portfolio">Portfolio</a> page shows everything your wallet has on CavFi in one place. News and new features are posted on <a href="https://x.com/cavdefi" target="_blank" rel="noopener">X @cavdefi</a>.</p>
       </section>
@@ -1218,6 +1272,21 @@ a.item{color:var(--ink);text-decoration:none}
   <!-- ===================== NFTs ===================== -->
   <div class="view" id="viewNft" hidden>
     <div class="nf-body" id="nfBody"></div>
+  </div>
+
+  <!-- ===================== PROFILE ===================== -->
+  <div class="view" id="viewProfile" hidden>
+    <div class="up-body" id="upBody"></div>
+  </div>
+
+  <!-- ===================== PREDICT + DUELS ===================== -->
+  <div class="view" id="viewPredict" hidden>
+    <div class="sx-bar">
+      <div class="chips" id="prTabs" role="group" aria-label="Markets or duels"><button class="chip" data-t="markets" aria-pressed="true">DOGE price</button><button class="chip" data-t="duels" aria-pressed="false">Arena duels</button></div>
+      <span class="sx-status" id="prStatus" aria-live="polite"></span>
+    </div>
+    <div class="pr-body" id="prMarkets"></div>
+    <div class="pr-body" id="prDuels" hidden></div>
   </div>
 
   <!-- ===================== LEADERBOARDS ===================== -->
@@ -1352,7 +1421,7 @@ a.item{color:var(--ink);text-decoration:none}
     <div class="acct-top">
       <div class="acct-addr"><span id="aAddr"></span><button class="btn" id="aCopy">Copy</button></div>
       <div class="acct-bals"><div><span>DOGE</span><b id="aDoge">–</b></div><div><span>KingS</span><b id="aKings">–</b></div></div>
-      <div class="acct-acts"><a class="btn" id="aExplorer" target="_blank" rel="noopener">View on explorer</a><button class="btn" id="aWatch">Add KingS to wallet</button></div>
+      <div class="acct-acts"><a class="btn" id="aProfile" href="#u">My profile</a><a class="btn" id="aExplorer" target="_blank" rel="noopener">View on explorer</a><button class="btn" id="aWatch">Add KingS to wallet</button></div>
       <p class="pool-note" style="padding:0" id="aDiscNote">To disconnect, remove cavfi.com from Connected sites in your wallet.</p>
       <button class="btn" id="aWcOff" hidden>Disconnect WalletConnect</button>
     </div>
@@ -1379,7 +1448,7 @@ a.item{color:var(--ink);text-decoration:none}
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 /* WalletConnect (any mobile wallet by QR code). Free project id from https://cloud.reown.com,
    with cavfi.com in its allowed domains. Empty = the option is hidden. */
@@ -1392,7 +1461,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -1726,6 +1795,7 @@ async function openAccount(){
   const wc = !!(wcProv && window.ethereum === wcProv); $('aWcOff').hidden = !wc; $('aDiscNote').hidden = wc;
   $('aAddr').textContent = st.account;
   $('aExplorer').href = `${NET.explorer}/address/${st.account}`;
+  $('aProfile').href = '#u/' + (myName.name ? myName.name + '.cav' : st.account);
   $('aDoge').textContent = '…'; $('aKings').textContent = '…';
   renderActivity();
   $('acctModal').hidden = false;
@@ -1787,12 +1857,18 @@ function renderShell(){
 /* ================= views ================= */
 function setView(v){
   st.view = v;
-  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewBoard').hidden = v !== 'board'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft'; $('viewNames').hidden = v !== 'names'; $('viewHelp').hidden = v !== 'help';
+  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewBoard').hidden = v !== 'board'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft'; $('viewNames').hidden = v !== 'names'; $('viewHelp').hidden = v !== 'help'; $('viewProfile').hidden = v !== 'profile'; $('viewPredict').hidden = v !== 'predict';
   document.querySelector('.lede').hidden = v === 'home';
   document.querySelectorAll('nav button').forEach(b => b.toggleAttribute('aria-current', b.dataset.view === v));
   document.querySelectorAll('nav button[aria-current]').forEach(b => b.setAttribute('aria-current','page'));
   { const nv = document.querySelector('nav'), cur = nv && nv.querySelector('button[aria-current]'); if (nv && cur && nv.scrollWidth > nv.clientWidth) nv.scrollLeft = Math.max(0, cur.offsetLeft - nv.offsetLeft - 24); }
-  if (v === 'help'){
+  if (v === 'profile'){
+    $('ledeH').innerHTML = 'A royal <em>profile</em>.';
+    $('ledeP').textContent = 'Living Cavaliers, badges, rank, streaks and wins of any CavFi wallet, read from the chain. Share yours.';
+  } else if (v === 'predict'){
+    $('ledeH').innerHTML = 'Call the <em>DOGE</em> price.';
+    $('ledeP').textContent = 'YES or NO markets on the real DOGE price, and one-on-one Arena duels with friends. Played with testnet KingS.';
+  } else if (v === 'help'){
     $('ledeH').innerHTML = 'How the <em>kingdom</em> works.';
     $('ledeP').textContent = 'Short answers about every part of CavFi: swaps, the launchpad, the Arena, names, NFTs, badges and safety.';
   } else if (v === 'names'){
@@ -1826,7 +1902,7 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'help' ? '#faq'  : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.tab === 'duels' ? '#duels' : '#predict') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
   if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
@@ -1836,12 +1912,21 @@ function setView(v){
   if (v === 'faucet') loadFaucet();
   if (v === 'nft') loadNft();
   if (v === 'names') loadNames();
+  if (v === 'profile') loadProfile();
+  if (v === 'predict'){ renderPredict(); loadPredict(); }
   if (v === 'launch'){ loadLaunches(); if (!sx.loaded) loadStats(); renderLaunch(); }
 }
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
 document.addEventListener('click', e => { const a = e.target.closest('[data-goview]'); if (!a) return; e.preventDefault(); setView(a.dataset.goview); window.scrollTo({top:0, behavior:'smooth'}); });
 const LX_HASH = /^#t\/(0x[0-9a-fA-F]{40})$/;
-window.addEventListener('hashchange', () => { const m = location.hash.match(LX_HASH); if (m){ setView('launch'); openLaunch(E.utils.getAddress(m[1].toLowerCase())); } else if (location.hash === '#faq') setView('help'); });
+const UP_HASH = /^#u\/([A-Za-z0-9.-]{3,64})$/, DUEL_HASH = /^#duel\/(\d+)$/;
+function routePredict(h){ const m = h.match(DUEL_HASH); pr.hl = m ? Number(m[1]) : null; pr.scrolled = false; pr.tab = m || h === '#duels' ? 'duels' : 'markets'; setView('predict'); }
+window.addEventListener('hashchange', () => { const h = location.hash, m = h.match(LX_HASH), u = decodeURIComponent(h).match(UP_HASH);
+  if (m){ setView('launch'); openLaunch(E.utils.getAddress(m[1].toLowerCase())); }
+  else if (u){ if (st.view !== 'profile' || u[1].toLowerCase() !== up.id) openProfile(u[1]); }
+  else if (h === '#u'){ up.id = ''; setView('profile'); }
+  else if (h === '#predict' || h === '#duels' || DUEL_HASH.test(h)) routePredict(h);
+  else if (h === '#faq') setView('help'); });
 
 /* ================= price guard =================
    Builds a market price in USD for every token from all pools (anchored on the
@@ -3017,7 +3102,7 @@ async function loadStats(quiet){
     sx.err = 'Could not read the DogeOS RPC right now. ' + (e && e.message ? e.message.slice(0, 80) : '');
   }
   sx.loading = false;
-  if (seq === sxSeq){ renderStats(); renderHome(); if (st.view === 'swap') renderSwapChart(); if (st.view === 'board'){ if (A.launch && !lx.loaded) await loadLaunches(); loadBoard(); } }
+  if (seq === sxSeq){ renderStats(); renderHome(); if (st.view === 'swap') renderSwapChart(); if (st.view === 'profile' && !board.rows) loadBoard(); if (st.view === 'board'){ if (A.launch && !lx.loaded) await loadLaunches(); loadBoard(); } }
 }
 setInterval(() => { if ((st.view === 'stats' || st.view === 'home' || st.view === 'swap' || st.view === 'board') && !document.hidden && !sx.loading) loadStats(true); else if (st.view === 'stats') renderStatsStatus(); }, 30000);
 
@@ -3201,6 +3286,7 @@ async function loadBoard(){
   }catch(e){ board.err = 'Could not build the leaderboard right now.'; }
   board.loading = false;
   renderBoard();
+  if (st.view === 'profile') renderProfile();
 }
 const LB_TABS = {
   pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
@@ -3224,17 +3310,17 @@ function renderBoard(){
   const rows = board.rows.filter(r => T.key(r) > 0).sort((a, b) => T.key(b) - T.key(a));
   if (!rows.length){ $('lbPod').innerHTML = ''; box.innerHTML = `<div class="empty-card">Nobody here yet for the last ${board.range === '30d' ? '30' : '7'} days. Be the first.</div>`; return; }
   const nameOf = r => (board.names || {})[r.addr] || short(E.utils.getAddress(r.addr));
-  $('lbPod').innerHTML = rows.slice(0, 3).map((r, i) => `<div class="p${i + 1}"><span>${['🥇', '🥈', '🥉'][i]}</span><b>${esc(nameOf(r))}</b><small>${T.val(r)}</small></div>`).join('');
+  $('lbPod').innerHTML = rows.slice(0, 3).map((r, i) => `<div class="p${i + 1}"><span>${['🥇', '🥈', '🥉'][i]}</span><b><a href="#u/${esc((board.names || {})[r.addr] || r.addr)}">${esc(nameOf(r))}</a></b><small>${T.val(r)}</small></div>`).join('');
   const me = lk(st.account || ''), top = rows.slice(0, 20), myIdx = rows.findIndex(r => r.addr === me);
   if (board.tab !== 'pts'){
     const cols = {swap: ['Swaps', r => r.swaps, 'Volume', r => sxUsd(r.swapUsd)], arena: ['Rounds won', r => r.arenaWins || '–', 'KingS staked', r => sxNum(r.arenaK)],
       quest: ['gm / gn', r => r.gms || '–', 'Quests', r => r.quests || '–'], launch: ['Launched', r => r.launches + (r.grads ? ` · ${r.grads}🎓` : ''), 'Launchpad volume', r => sxUsd(r.launchUsd)],
       ref: ['Bonus points', r => r.refPts ? '+' + r.refPts.toLocaleString('en-US') : '–', 'Invited', r => r.invites || 0]}[board.tab];
-    const tr2 = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="${NET.explorer}/address/${r.addr}" target="_blank" rel="noopener">${esc(nameOf(r))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td><td>${cols[1](r)}</td><td><b>${cols[3](r)}</b></td></tr>`;
+    const tr2 = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="#u/${esc((board.names || {})[r.addr] || r.addr)}" title="Open profile">${esc(nameOf(r))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td><td>${cols[1](r)}</td><td><b>${cols[3](r)}</b></td></tr>`;
     box.innerHTML = `<table><thead><tr><th scope="col">#</th><th scope="col">Wallet</th><th scope="col">${cols[0]}</th><th scope="col">${cols[2]}</th></tr></thead><tbody>${top.map(tr2).join('')}${myIdx >= 20 ? tr2(rows[myIdx], myIdx) : ''}</tbody></table>`;
     return;
   }
-  const tr = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="${NET.explorer}/address/${r.addr}" target="_blank" rel="noopener">${(board.names || {})[r.addr] || short(E.utils.getAddress(r.addr))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td>
+  const tr = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="#u/${esc((board.names || {})[r.addr] || r.addr)}" title="Open profile">${(board.names || {})[r.addr] || short(E.utils.getAddress(r.addr))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td>
     <td>${sxUsd(r.swapUsd)}</td><td class="sx-hide-m">${sxUsd(r.launchUsd)}</td><td class="sx-hide-m">${r.arenaK || r.arenaWins ? sxNum(r.arenaK) + ' KingS' + (r.arenaWins ? ` · ${r.arenaWins}🏆` : '') : '–'}</td><td class="sx-hide-m">${r.launches}${r.grads ? ` · ${r.grads}🎓` : ''}</td><td class="sx-hide-m">${r.refPts ? '+' + r.refPts.toLocaleString('en-US') : '–'}</td><td><b>${r.pts.toLocaleString('en-US')}</b></td></tr>`;
   box.innerHTML = `<table><thead><tr><th scope="col">#</th><th scope="col">Trader</th><th scope="col">Swap volume</th><th scope="col" class="sx-hide-m">Launchpad</th><th scope="col" class="sx-hide-m">Arena</th><th scope="col" class="sx-hide-m">Launches</th><th scope="col" class="sx-hide-m">Invites</th><th scope="col">Points</th></tr></thead><tbody>
     ${top.map(tr).join('')}${myIdx >= 20 ? tr(rows[myIdx], myIdx) : ''}</tbody></table>`;
@@ -5350,6 +5436,366 @@ function renderRaffle(){
 }
 setInterval(() => { if (st.view === 'home' && !document.hidden){ loadQuests(); loadRaffle(); } }, 60000);
 
+/* ================= PROFILES =================
+   A public page for every wallet: #u/name.cav or #u/0x… (cavfi.com/u/… is served by the worker
+   with its own preview tags). Everything is read from the chain. */
+const PRED_ABI = ['function count() view returns (uint256)', 'function bet(uint256 id, bool yes, uint256 amount)', 'function claim(uint256 id) returns (uint256)', 'function expire(uint256 id)',
+  'function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(string question, uint64 closeAt, uint64 resolveAt, uint8 state, bool yesWon, uint256 strike, uint256 price, uint256 yesPool, uint256 noPool)[] items)',
+  'function yesOf(uint256, address) view returns (uint256)', 'function noOf(uint256, address) view returns (uint256)', 'function claimable(uint256, address) view returns (uint256)',
+  'function idsOf(address) view returns (uint256[])', 'function oracle() view returns (address)', 'function FEE_BPS() view returns (uint16)'];
+const DUEL_ABI = ['function create(uint8 makerIdx, uint8 takerIdx, uint256 stake, address invited) returns (uint256)', 'function accept(uint256 id)', 'function cancel(uint256 id)', 'function settle(uint256 id)',
+  'function count() view returns (uint256)', 'function idsOf(address) view returns (uint256[])',
+  'function get(uint256 id) view returns (tuple(address maker, address taker, address invited, address winner, uint64 roundId, uint8 makerIdx, uint8 takerIdx, uint8 state, uint256 stake))',
+  'function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(address maker, address taker, address invited, address winner, uint64 roundId, uint8 makerIdx, uint8 takerIdx, uint8 state, uint256 stake)[] items)'];
+const ARENA_RD_ABI = ['function currentRound() view returns (uint256 id, uint64 start, uint64 end, uint64 stakingEndsAt, uint256 secondsLeft, uint256 pot, uint16 feeBps, bool live)',
+  'function roundTokens(uint256) view returns (address[] tokens, address[] pairs)',
+  'function getRound(uint256 id) view returns (tuple(uint64 start, uint64 end, uint16 feeBps, uint8 winnerMask, bool settled, uint256 staked, uint256 rollover, uint256 winnerStake, uint256 payout))'];
+const prC = signer => new E.Contract(A.predict, PRED_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const duC = signer => new E.Contract(A.duel, DUEL_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const arRdC = () => new E.Contract(A.arena, ARENA_RD_ABI, onRightChain() ? st.provider : RP());
+let tgBot = null;
+fetch('tg.json', {cache: 'no-store'}).then(r => r.ok ? r.json() : null).then(j => { if (j && /^[A-Za-z0-9_]{5,32}$/.test(j.bot || '')) tgBot = j.bot; if (st.view === 'profile') renderProfile(); }).catch(() => {});
+const tgLink = addr => tgBot ? `https://t.me/${tgBot}?start=w${lk(addr).slice(2)}` : '';
+async function nameToAddr(s){
+  s = String(s || '').trim().toLowerCase();
+  if (/^0x[0-9a-f]{40}$/.test(s)) return E.utils.getAddress(s);
+  const l = s.replace(/\.cav$/, '');
+  if (A.names && nmValid(l)){ try{ const a = await nmC().resolve(l); if (a !== E.constants.AddressZero) return a; }catch(e){} }
+  return null;
+}
+const up = { id:'', addr:null, data:null, loading:false, err:'', seq:0 };
+function openProfile(id){ up.id = String(id || '').toLowerCase(); up.addr = null; up.data = null; up.err = ''; setView('profile'); window.scrollTo({top:0}); }
+function profileId(addr, name){ return name || E.utils.getAddress(addr); }
+async function loadProfile(){
+  if (!up.id){ renderProfile(); return; }
+  const seq = ++up.seq; up.loading = true; renderProfile();
+  try{
+    const addr = await nameToAddr(up.id);
+    if (seq !== up.seq) return;
+    if (!addr){ up.err = /^0x/.test(up.id) ? 'That is not a valid address.' : `${up.id.replace(/\.cav$/, '')}.cav is not registered yet.`; up.loading = false; renderProfile(); return; }
+    up.addr = addr;
+    const d = {addr, names: [], primary: '', cavs: [], gm: null, q: null, champ: false, badges: 0, tickets: 0, duels: {won: 0, played: 0}, preds: {won: 0, played: 0}};
+    const jobs = [];
+    if (A.names) jobs.push(nmC().nameOf(addr).then(n => { if (nmValid(n)) d.primary = n + '.cav'; }).catch(() => {}),
+      nmC().labelsOf(addr).then(([ls]) => { d.names = ls.filter(nmValid).map(l => l + '.cav'); }).catch(() => {}));
+    if (A.gm) jobs.push(gmC().info(addr).then(i => { d.gm = i; }).catch(() => {}));
+    if (A.quests) jobs.push(questsC().info(addr).then(i => { d.q = i; }).catch(() => {}));
+    if (A.champion) jobs.push(champC().balanceOf(addr, 1).then(b => { d.champ = !b.isZero(); }).catch(() => {}));
+    if (A.badges) jobs.push(bdC().badgesOf(addr).then(m => { d.badges = m.toNumber(); }).catch(() => {}));
+    if (A.raffle) jobs.push(raffleC().current().then(c => raffleC().ticketsOf(c.id, addr)).then(t => { d.tickets = t.toNumber(); }).catch(() => {}));
+    if (A.duel) jobs.push((async () => { const ids = await duC().idsOf(addr); const ds = await Promise.all(ids.slice(-50).map(i => duC().get(i)));
+      for (const x of ds) if (x.state === 3){ d.duels.played++; if (same(x.winner, addr)) d.duels.won++; } })().catch(() => {}));
+    if (A.predict) jobs.push((async () => { const c = prC(), ids = await c.idsOf(addr);
+      d.preds.ids = await Promise.all(ids.slice(-50).map(async i => ({i: i.toNumber(), y: await c.yesOf(i, addr), n: await c.noOf(i, addr)}))); })().catch(() => {}));
+    if (A.nft) jobs.push((async () => {
+      if (!nf.all.length){ const c = nfC(), n = (await c.totalMinted()).toNumber(), all = [];
+        for (let s = 1; s <= n; s += 50){ const [o, dn, k] = await c.page(s, 50); o.forEach((own, i) => all.push({id: s + i, owner: own, dna: dn[i], staked: k[i], t: nfTraits(dn[i])})); }
+        nf.all = all; }
+      d.cavs = nf.all.filter(x => same(x.owner, addr)).sort((a, b) => b.t.weight - a.t.weight);
+    })().catch(() => {}));
+    await Promise.all(jobs);
+    if (d.preds.ids && d.preds.ids.length && A.predict){ // which predictions this wallet got right
+      try{ const total = (await prC().count()).toNumber(); const [ids, items] = await prC().page(0, Math.min(total, 200)); const by = {}; ids.forEach((id, k) => by[id.toNumber()] = items[k]);
+        d.preds.played = 0; for (const p of d.preds.ids){ const m = by[p.i]; if (!m || m.state !== 2) continue; d.preds.played++; if ((m.yesWon ? p.y : p.n).gt(0)) d.preds.won++; } }catch(e){}
+    }
+    if (seq !== up.seq) return;
+    d.life = {name: d.primary, streak: d.gm ? d.gm.streak.toNumber() : 0, pup: d.gm ? d.gm.pup : false, champ: d.champ, quest: d.q ? d.q.badge : false};
+    up.data = d;
+    if (d.primary && /^0x/.test(up.id)){ up.id = d.primary; try{ history.replaceState(null, '', '#u/' + d.primary); }catch(e){} }
+  }catch(e){ up.err = 'Could not read this profile right now. Try again in a minute.'; }
+  if (seq !== up.seq) return;
+  up.loading = false; renderProfile();
+  if (sx.loaded) loadBoard(); else loadStats();
+}
+function profileRank(addr){
+  if (!board.rows) return null;
+  const i = board.rows.findIndex(r => r.addr === lk(addr));
+  return i < 0 ? {rank: null, pts: 0, arenaWins: 0} : {rank: i + 1, pts: board.rows[i].pts, arenaWins: board.rows[i].arenaWins};
+}
+function profileCount(d){ return (d.badges ? [...Array(8)].reduce((n, _, k) => n + ((d.badges >> k) & 1), 0) : 0) + (d.champ ? 1 : 0) + (d.gm && d.gm.pup ? 1 : 0) + (d.q && d.q.badge ? 1 : 0); }
+function renderProfile(){
+  const box = $('upBody'); if (!box) return;
+  const find = `<section class="sx-card"><div class="sx-head"><h2>Find a profile</h2><span>any .cav name or 0x address</span></div>
+    <form class="up-find" id="upFind"><input id="upIn" placeholder="borislav.cav or 0x…" autocomplete="off" spellcheck="false" aria-label="Name or address"><button class="btn primary">Open</button></form>
+    ${st.account ? `<p class="pr-note"><a href="#u/${esc(myName.name ? myName.name + '.cav' : st.account)}">Open my profile</a></p>` : ''}</section>`;
+  if (!up.id){ box.innerHTML = find; return; }
+  if (up.err){ box.innerHTML = `<div class="empty-card">${esc(up.err)}</div>` + find; return; }
+  const d = up.data;
+  if (!d){ box.innerHTML = `<div class="empty-card">Reading ${esc(up.id)} from the chain…</div>`; return; }
+  const id = profileId(d.addr, d.primary), mine = st.account && same(st.account, d.addr);
+  const rk = profileRank(d.addr), url = `https://cavfi.com/u/${encodeURIComponent(id)}`;
+  const top = d.cavs[0];
+  const art = top ? nfSvg(top.dna, d.life) : '<span aria-hidden="true">👑</span>';
+  const tags = [d.gm && d.gm.pup ? '🐶 Early Pup' : '', d.champ ? '🏆 Arena Champion' : '', d.q && d.q.badge ? '⭐ Questmaster' : '', d.cavs.length ? `🐾 ${d.cavs.length} Cavalier${d.cavs.length === 1 ? '' : 's'}` : ''].filter(Boolean);
+  const tg = tgLink(d.addr);
+  box.innerHTML = `<section class="sx-card">
+      <div class="up-hero"><div class="up-art">${art}</div>
+        <div class="up-id"><h2>${esc(d.primary || short(d.addr))}${mine ? ' <b class="you">you</b>' : ''}</h2>
+          <div class="up-addr">${d.addr}</div>
+          ${tags.length ? `<div class="up-tags">${tags.map(t => `<span>${esc(t)}</span>`).join('')}</div>` : ''}
+          ${badgeDots(d.badges)}</div></div>
+      <div class="up-figs">
+        <div><span>Leaderboard · 7d</span><b>${rk ? (rk.rank ? '#' + rk.rank : '–') : '…'}</b><small>${rk ? rk.pts.toLocaleString('en-US') + ' pts' : 'counting'}</small></div>
+        <div><span>gm streak</span><b>${d.gm ? d.gm.streak.toString() : '–'}</b><small>best ${d.gm ? d.gm.best.toString() : '–'} · ${d.gm ? d.gm.gms.toString() : 0} gm total</small></div>
+        <div><span>Quest streak</span><b>${d.q ? d.q.streak.toString() : '–'}</b><small>${d.q ? d.q.quests.toString() : 0} quests · ${d.q ? d.q.fullDays.toString() : 0} full days</small></div>
+        <div><span>Arena wins · 7d</span><b>${rk ? rk.arenaWins : '…'}</b><small>${d.champ ? 'Champion badge' : 'no Champion badge yet'}</small></div>
+        <div><span>Duels won</span><b>${d.duels.won}</b><small>of ${d.duels.played} settled</small></div>
+        <div><span>Predictions right</span><b>${d.preds.won}</b><small>of ${d.preds.played} resolved</small></div>
+        <div><span>Raffle tickets</span><b>${d.tickets}</b><small>this week</small></div>
+        <div><span>Badges</span><b>${profileCount(d)}</b><small>soulbound</small></div>
+      </div>
+      <div class="up-share">
+        <button class="btn" data-up="copy">Copy link</button>
+        <a class="btn" href="https://x.com/intent/post?text=${encodeURIComponent(`${mine ? 'My' : (d.primary || short(d.addr)) + "'s"} CavFi profile on DogeOS 👑 ${rk && rk.rank ? `#${rk.rank} on the leaderboard, ` : ''}${d.gm ? d.gm.streak.toString() : 0}-day gm streak`)}&url=${encodeURIComponent(url)}" target="_blank" rel="noopener">Post on X</a>
+        <button class="btn" data-up="png">Download card</button>
+        ${tg ? `<a class="btn primary" href="${tg}" target="_blank" rel="noopener" title="The CavFi bot messages you about this wallet">Telegram alerts</a>` : ''}
+        <a class="btn" href="${NET.explorer}/address/${d.addr}" target="_blank" rel="noopener">Explorer</a>
+      </div>
+    </section>
+    ${d.cavs.length > 1 ? `<section class="sx-card"><div class="sx-head"><h2>Cavaliers</h2><span>${d.cavs.length}</span></div><div class="up-cavs">${d.cavs.slice(0, 24).map(x => `<span title="Cavalier #${x.id}">${nfSvg(x.dna, d.life)}</span>`).join('')}</div></section>` : ''}
+    ${d.names.length ? `<section class="sx-card"><div class="sx-head"><h2>Names</h2></div><div class="up-tags">${d.names.map(n => `<span>${esc(n)}${n === d.primary ? ' · primary' : ''}</span>`).join('')}</div></section>` : ''}
+    ${!top && mine ? `<div class="empty-card">Mint a <a href="#nft" data-goview="nft">Cavalier</a> and it shows here, living: halo for your gm streak, trophy, star and your name.</div>` : ''}
+    ${find}`;
+}
+document.addEventListener('submit', async e => {
+  if (e.target.id !== 'upFind') return; e.preventDefault();
+  const v = $('upIn').value.trim(); if (!v) return;
+  location.hash = '#u/' + v.toLowerCase();
+});
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-up]'); if (!b || !up.data) return;
+  const d = up.data, id = profileId(d.addr, d.primary), url = `https://cavfi.com/u/${encodeURIComponent(id)}`;
+  if (b.dataset.up === 'copy'){ try{ await navigator.clipboard.writeText(url); toast('Profile link copied.', 'ok'); }catch(_){ toast(esc(url)); } }
+  if (b.dataset.up === 'png'){ try{ await profilePng(d); }catch(err){ toast('Could not draw the card in this browser.', 'bad'); } }
+});
+function loadImg(src){ return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+async function profilePng(d){
+  const W = 1200, H = 630, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const bg = g.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#1B1A2E'); bg.addColorStop(1, '#3A2219');
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  g.fillStyle = 'rgba(231,183,60,.12)'; g.beginPath(); g.arc(W - 80, 60, 260, 0, Math.PI * 2); g.fill();
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  // Cavalier
+  g.save(); rr(64, 64, 300, 300, 36); g.clip();
+  if (d.cavs[0]){ const img = await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(nfSvg(d.cavs[0].dna, d.life))); g.drawImage(img, 64, 64, 300, 300); }
+  else { g.fillStyle = '#232233'; g.fillRect(64, 64, 300, 300); g.font = '150px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('👑', 214, 220); }
+  g.restore();
+  g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  g.fillStyle = '#E7B73C'; g.font = '700 26px system-ui, sans-serif'; g.fillText('CAVFI PROFILE · DOGEOS TESTNET', 410, 104);
+  let name = d.primary || short(d.addr); g.fillStyle = '#FFF4E2'; let fs = 76; g.font = `400 ${fs}px Gloock, Georgia, serif`;
+  while (g.measureText(name).width > 730 && fs > 36){ fs -= 4; g.font = `400 ${fs}px Gloock, Georgia, serif`; }
+  g.fillText(name, 410, 190);
+  g.fillStyle = '#9C99AF'; g.font = '500 22px ui-monospace, monospace'; g.fillText(d.addr, 410, 232);
+  const tags = [d.gm && d.gm.pup ? 'Early Pup' : '', d.champ ? 'Arena Champion' : '', d.q && d.q.badge ? 'Questmaster' : '', d.cavs.length ? `${d.cavs.length} Cavalier${d.cavs.length === 1 ? '' : 's'}` : ''].filter(Boolean);
+  let x = 410; g.font = '700 22px system-ui, sans-serif';
+  for (const t of tags){ const w = g.measureText(t).width + 32; g.fillStyle = 'rgba(255,244,226,.12)'; rr(x, 262, w, 44, 22); g.fill(); g.fillStyle = '#FFF4E2'; g.fillText(t, x + 16, 292); x += w + 10; }
+  const rk = profileRank(d.addr);
+  const figs = [['Leaderboard 7d', rk && rk.rank ? '#' + rk.rank : '–'], ['gm streak', d.gm ? d.gm.streak.toString() : '0'], ['Quest streak', d.q ? d.q.streak.toString() : '0'],
+    ['Arena wins 7d', rk ? String(rk.arenaWins) : '0'], ['Duels won', String(d.duels.won)], ['Badges', String(profileCount(d))]];
+  figs.forEach(([l, v], k) => { const fx = 64 + (k % 6) * 182, fy = 410;
+    g.fillStyle = 'rgba(255,244,226,.08)'; rr(fx, fy, 170, 130, 22); g.fill();
+    g.fillStyle = '#9C99AF'; g.font = '700 15px system-ui, sans-serif'; g.fillText(l.toUpperCase(), fx + 18, fy + 38, 140);
+    g.fillStyle = '#FFF4E2'; g.font = '500 46px ui-monospace, monospace'; g.fillText(v, fx + 18, fy + 98); });
+  g.fillStyle = '#E7B73C'; g.font = '700 24px system-ui, sans-serif'; g.fillText(`cavfi.com/u/${profileId(d.addr, d.primary)}`.slice(0, 70), 64, 594);
+  g.fillStyle = '#9C99AF'; g.font = '500 20px system-ui, sans-serif'; g.textAlign = 'right'; g.fillText('testnet · no real value', W - 64, 594);
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `cavfi-${(d.primary || d.addr).replace(/[^a-z0-9.-]/gi, '')}.png`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('Card downloaded.', 'ok');
+}
+
+/* ================= PREDICT (DOGE price markets) + ARENA DUELS ================= */
+const pr = { tab:'markets', markets:null, mine:{}, duels:null, round:null, toks:[], busy:'', err:'', at:0, hl:null, names:{}, kbal:null, allowP:null, allowD:null };
+const usd8 = b => { const v = Number(b.toString()) / 1e8; return '$' + (v >= 1 ? v.toFixed(2) : v.toPrecision(3)); };
+const inT = s => { s = Math.max(0, Math.round(s)); return s >= 86400 ? `${Math.floor(s/86400)}d ${Math.floor(s%86400/3600)}h` : s >= 3600 ? `${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m` : `${Math.floor(s/60)}m`; };
+async function loadPredict(){
+  pr.err = '';
+  if (!A.predict && !A.duel){ pr.err = 'Predictions and duels are not deployed on this network yet.'; return renderPredict(); }
+  const me = st.account, jobs = [];
+  jobs.push(RP().getBlock('latest').then(b => { pr.skew = b.timestamp - Math.floor(Date.now()/1000); }).catch(() => {}));
+  if (me && A.kings) jobs.push(new E.Contract(A.kings, ERC20_ABI, onRightChain() ? st.provider : RP()).balanceOf(me).then(b => { pr.kbal = b; }).catch(() => {}));
+  if (me && A.kings && onRightChain()){
+    const k = new E.Contract(A.kings, ERC20_ABI, st.provider);
+    if (A.predict) jobs.push(k.allowance(me, A.predict).then(a => { pr.allowP = a; }).catch(() => {}));
+    if (A.duel) jobs.push(k.allowance(me, A.duel).then(a => { pr.allowD = a; }).catch(() => {}));
+  }
+  if (A.predict) jobs.push((async () => {
+    const c = prC(), n = (await c.count()).toNumber();
+    const [ids, items] = await c.page(0, Math.min(n, 30));
+    pr.markets = ids.map((id, k) => ({id: id.toNumber(), m: items[k]}));
+    pr.mine = {};
+    if (me) await Promise.all(pr.markets.map(async x => { const [y, no, cl] = await Promise.all([c.yesOf(x.id, me), c.noOf(x.id, me), c.claimable(x.id, me)]); pr.mine[x.id] = {y, n: no, cl}; }));
+  })().catch(() => { pr.err = 'Could not read the markets right now.'; }));
+  if (A.duel && A.arena) jobs.push((async () => {
+    const ar = arRdC(), r = await ar.currentRound();
+    pr.round = r;
+    const [toks] = r.id.isZero() ? [[]] : await ar.roundTokens(r.id);
+    pr.toks = await Promise.all(toks.map(async a => { const t = TOKENS.find(x => same(x.address, a)); if (t) return {address: a, symbol: t.symbol};
+      try{ return {address: a, symbol: await new E.Contract(a, ERC20_ABI, RP()).symbol()}; }catch(e){ return {address: a, symbol: short(a)}; } }));
+    const c = duC(), n = (await c.count()).toNumber();
+    const [ids, items] = await c.page(0, Math.min(n, 40));
+    const list = ids.map((id, k) => ({id: id.toNumber(), d: items[k]}));
+    if (pr.hl != null && !list.some(x => x.id === pr.hl) && pr.hl < n){ try{ list.push({id: pr.hl, d: await c.get(pr.hl)}); }catch(e){} }
+    if (me){ const mine = (await c.idsOf(me)).map(i => i.toNumber()).filter(i => !list.some(x => x.id === i)).slice(-20); for (const i of mine) list.push({id: i, d: await c.get(i)}); }
+    pr.duels = list.sort((a, b) => b.id - a.id);
+    // token symbols of past rounds
+    pr.roundToks = pr.roundToks || {};
+    for (const rid of [...new Set(list.map(x => x.d.roundId.toNumber()))]){ if (pr.roundToks[rid]) continue;
+      if (r.id.toNumber() === rid){ pr.roundToks[rid] = pr.toks.map(t => t.symbol); continue; }
+      try{ const [ts] = await ar.roundTokens(rid); pr.roundToks[rid] = await Promise.all(ts.map(async a => { const t = TOKENS.find(x => same(x.address, a)); return t ? t.symbol : await new E.Contract(a, ERC20_ABI, RP()).symbol().catch(() => short(a)); })); }catch(e){} }
+    const who = [...new Set(list.flatMap(x => [x.d.maker, x.d.taker, x.d.invited]).filter(a => a !== E.constants.AddressZero).map(lk))].filter(a => !pr.names[a]);
+    if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); who.forEach((a, k) => { pr.names[a] = nmValid(ns[k]) ? ns[k] + '.cav' : ''; }); }catch(e){} }
+  })().catch(() => { pr.err = pr.err || 'Could not read the duels right now.'; }));
+  await Promise.all(jobs);
+  pr.at = Date.now(); renderPredict();
+}
+const prWho = a => pr.names[lk(a)] || short(a);
+function renderPredict(){
+  document.querySelectorAll('#prTabs .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === pr.tab)));
+  $('prMarkets').hidden = pr.tab !== 'markets'; $('prDuels').hidden = pr.tab !== 'duels';
+  $('prStatus').textContent = st.account && pr.kbal ? `You have ${sxNum(fl(pr.kbal, 18))} KingS` : '';
+  const gate = walletGate();
+  // ---- markets
+  const now = Math.floor(Date.now()/1000) + (pr.skew || 0);   // chain time
+  const disclosure = `<p class="pr-note"><b>How prices are decided:</b> the CavFi bot opens these markets and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase if Binance is down). It is a trusted oracle, not a decentralized one, so you can check every result against the exchange. If it doesn't report within 7 days, anyone can refund the market. Winners share the pot minus a 2% fee. Testnet KingS, no real value.</p>`;
+  if (!A.predict) $('prMarkets').innerHTML = `<div class="empty-card">DOGE price markets are not deployed on this network yet.</div>`;
+  else if (!pr.markets) $('prMarkets').innerHTML = `<div class="empty-card">${pr.err ? esc(pr.err) : 'Reading the markets…'}</div>`;
+  else {
+    const card = x => {
+      const m = x.m, my = pr.mine[x.id], yes = fl(m.yesPool, 18), no = fl(m.noPool, 18), tot = yes + no;
+      const close = Number(m.closeAt.toString()), res = Number(m.resolveAt.toString()), open = m.state === 1 && now < close;
+      const pY = tot ? yes / tot * 100 : 50, mult = s => s > 0 ? (tot * 0.98 / s) : 0;
+      let status;
+      if (m.state === 2) status = `<span class="pr-res ${m.yesWon ? 'yes' : 'no'}">${m.yesWon ? 'YES' : 'NO'} won</span> · DOGE was ${usd8(m.price)} (line ${usd8(m.strike)})`;
+      else if (m.state === 3) status = m.price.isZero() ? 'Refunded: everyone gets their stake back' : `Refunded (only one side was backed) · DOGE was ${usd8(m.price)}`;
+      else if (open) status = `Open · closes in ${inT(close - now)} · decided ${new Date(res * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+      else if (now < res) status = `Closed · decided in ${inT(res - now)}`;
+      else if (now > res + 7 * 86400) status = 'The oracle did not report: anyone can refund it';
+      else status = 'Waiting for the bot to report the price';
+      const mineTxt = my && (my.y.gt(0) || my.n.gt(0)) ? `<p class="pr-note">Your stake: ${my.y.gt(0) ? `<b>${sxNum(fl(my.y, 18))}</b> YES` : ''}${my.y.gt(0) && my.n.gt(0) ? ' · ' : ''}${my.n.gt(0) ? `<b>${sxNum(fl(my.n, 18))}</b> NO` : ''}</p>` : '';
+      let act = '';
+      if (open) act = gate ? `<button class="btn primary" data-pr="gate">${gate.label}</button>`
+        : `<div class="pr-bet"><input inputmode="decimal" placeholder="KingS amount" id="prAmt${x.id}" aria-label="KingS to stake" autocomplete="off"><button class="btn yes" data-pr="bet" data-id="${x.id}" data-side="1" ${pr.busy ? 'disabled' : ''}>YES</button><button class="btn no" data-pr="bet" data-id="${x.id}" data-side="0" ${pr.busy ? 'disabled' : ''}>NO</button></div>`;
+      if (my && my.cl.gt(0)) act += `<button class="btn primary" data-pr="claim" data-id="${x.id}" ${pr.busy ? 'disabled' : ''}>${pr.busy === 'claim' + x.id ? 'Claiming…' : `Claim ${sxNum(fl(my.cl, 18))} KingS`}</button>`;
+      if (m.state === 1 && now > res + 7 * 86400 && !gate) act += `<button class="btn" data-pr="expire" data-id="${x.id}">Refund this market</button>`;
+      return `<section class="sx-card"><div class="sx-head"><span class="pr-meta">#${x.id}${m.question.startsWith('Weekly') ? ' · weekly' : ' · daily'}</span><span class="pr-meta">${sxNum(tot)} KingS pot</span></div>
+        <h3 class="pr-q">${esc(m.question.replace(/^Weekly: w/, 'W'))}</h3>
+        <div class="pr-bar" role="img" aria-label="YES ${pY.toFixed(0)}%, NO ${(100 - pY).toFixed(0)}%"><i style="width:${pY}%"></i><i style="width:${100 - pY}%"></i></div>
+        <div class="pr-sides"><div><span>YES · ${tot ? pY.toFixed(0) + '%' : '–'}</span><b>${sxNum(yes)}</b><small>${yes ? 'pays ×' + mult(yes).toFixed(2) : 'nobody yet'}</small></div><div><span>NO · ${tot ? (100 - pY).toFixed(0) + '%' : '–'}</span><b>${sxNum(no)}</b><small>${no ? 'pays ×' + mult(no).toFixed(2) : 'nobody yet'}</small></div></div>
+        <p class="pr-note">${status}</p>${mineTxt}${act}</section>`;
+    };
+    const live = pr.markets.filter(x => x.m.state === 1), done = pr.markets.filter(x => x.m.state !== 1);
+    const claimables = pr.markets.filter(x => pr.mine[x.id] && pr.mine[x.id].cl.gt(0) && x.m.state !== 1);
+    $('prMarkets').innerHTML = (live.length ? `<div class="pr-grid">${live.map(card).join('')}</div>` : `<div class="empty-card">No open markets right now. The CavFi bot opens a daily and a weekly DOGE market.</div>`)
+      + (claimables.length ? `<div class="sx-head"><h2>To claim</h2></div><div class="pr-grid">${claimables.map(card).join('')}</div>` : '')
+      + (done.filter(x => !claimables.includes(x)).length ? `<div class="sx-head"><h2>Resolved</h2></div><div class="pr-grid">${done.filter(x => !claimables.includes(x)).slice(0, 6).map(card).join('')}</div>` : '')
+      + disclosure;
+  }
+  // ---- duels
+  if (!A.duel){ $('prDuels').innerHTML = `<div class="empty-card">Arena duels are not deployed on this network yet.</div>`; return; }
+  if (!pr.duels || !pr.round){ $('prDuels').innerHTML = `<div class="empty-card">${pr.err ? esc(pr.err) : 'Reading the Arena…'}</div>`; return; }
+  const r = pr.round, rid = r.id.toNumber(), stakingLeft = Number(r.stakingEndsAt.toString()) - now, canStake = rid > 0 && stakingLeft > 0;
+  const symOf = (round, i) => ((pr.roundToks || {})[round] || [])[i] || `token ${i + 1}`;
+  const opts = sel => pr.toks.map((t, i) => `<option value="${i}"${i === sel ? ' selected' : ''}>${esc(t.symbol)}</option>`).join('');
+  const form = `<section class="sx-card"><div class="sx-head"><h2>Start a duel</h2><span>${canStake ? `Arena round #${rid} · staking closes in ${inT(stakingLeft)}` : 'Arena staking is closed right now: the next round opens soon'}</span></div>
+    <p class="pr-note">Pick a token you think will rise more against DOGE than another one this Arena round, and a stake. Whoever accepts takes the other token with the same stake. The winner gets both stakes, no fee.</p>
+    <div class="du-form">
+      <label>My token<select id="duMine">${opts(0)}</select></label>
+      <label>Beats<select id="duOther">${opts(1)}</select></label>
+      <label>Stake (KingS)<input id="duStake" inputmode="decimal" placeholder="1000" autocomplete="off"></label>
+      <label>Invite (optional)<input id="duInvite" placeholder="name.cav or 0x… · empty = anyone" autocomplete="off" spellcheck="false"></label>
+      <div class="wide">${gate ? `<button class="btn primary" data-pr="gate">${gate.label}</button>` : `<button class="btn primary" data-pr="duel" ${!canStake || pr.busy ? 'disabled' : ''}>${pr.busy === 'duel' ? 'Creating…' : 'Create duel'}</button>`}</div>
+    </div></section>`;
+  const me = st.account || '';
+  const row = x => {
+    const d = x.d, rnd = d.roundId.toNumber(), a = symOf(rnd, d.makerIdx), b = symOf(rnd, d.takerIdx), stake = sxNum(fl(d.stake, 18));
+    const mineM = same(d.maker, me), mineT = same(d.taker, me);
+    let what, acts = '';
+    if (d.state === 1){
+      what = `<b>${esc(prWho(d.maker))}</b>: ${esc(a)} beats ${esc(b)} · <b>${stake} KingS</b><small>Round #${rnd}${d.invited !== E.constants.AddressZero ? ` · only for ${esc(prWho(d.invited))}` : ' · open to anyone'} · accept to take ${esc(b)}</small>`;
+      const live = rnd === rid && canStake;
+      if (mineM) acts = `<button class="btn" data-pr="dcopy" data-id="${x.id}">Copy link</button><button class="btn" data-pr="dcancel" data-id="${x.id}" ${pr.busy ? 'disabled' : ''}>Cancel</button>`;
+      else if (live && (d.invited === E.constants.AddressZero || same(d.invited, me))) acts = gate ? `<button class="btn primary" data-pr="gate">${gate.label}</button>` : `<button class="btn primary" data-pr="daccept" data-id="${x.id}" ${pr.busy ? 'disabled' : ''}>${pr.busy === 'daccept' + x.id ? 'Accepting…' : `Accept · ${esc(b)}`}</button>`;
+      else if (!live) acts = `<small>expired, the stake goes back to the maker</small>`;
+    } else if (d.state === 2){
+      what = `<b>${esc(prWho(d.maker))}</b> (${esc(a)}) vs <b>${esc(prWho(d.taker))}</b> (${esc(b)}) · ${stake} KingS each<small>Round #${rnd} · decided when the Arena round settles</small>`;
+    } else if (d.state === 3){
+      const w = d.winner === E.constants.AddressZero ? null : d.winner;
+      what = `${esc(a)} vs ${esc(b)} · ${w ? `<b>${esc(prWho(w))}</b> won ${sxNum(fl(d.stake, 18) * 2)} KingS` : 'level: both stakes returned'}<small>Round #${rnd} · ${esc(prWho(d.maker))} vs ${esc(prWho(d.taker))}</small>`;
+    } else what = `${esc(a)} vs ${esc(b)} · ${stake} KingS<small>Round #${rnd} · cancelled, stake returned</small>`;
+    return `<div class="du-row${pr.hl === x.id ? ' hl' : ''}${mineM || mineT ? ' me' : ''}" id="duel-${x.id}"><div>#${x.id} · ${what}</div><div class="du-acts">${acts}</div></div>`;
+  };
+  const openL = pr.duels.filter(x => x.d.state === 1 && x.d.roundId.toNumber() === rid);
+  const mineL = pr.duels.filter(x => (same(x.d.maker, me) || same(x.d.taker, me)) && !openL.includes(x));
+  const rest = pr.duels.filter(x => !openL.includes(x) && !mineL.includes(x) && x.d.state >= 2).slice(0, 12);
+  $('prDuels').innerHTML = form
+    + `<section class="sx-card"><div class="sx-head"><h2>Open duels</h2><span>round #${rid}</span></div>${openL.length ? openL.map(row).join('') : '<div class="empty-card">No open duels this round. Start one and send the link to a friend.</div>'}</section>`
+    + (mineL.length ? `<section class="sx-card"><div class="sx-head"><h2>Your duels</h2></div>${mineL.map(row).join('')}</section>` : '')
+    + (rest.length ? `<section class="sx-card"><div class="sx-head"><h2>Recent duels</h2></div>${rest.map(row).join('')}</section>` : '')
+    + `<p class="pr-note">Duels use the Arena's own start and end prices for the round. A tie or too few price samples returns both stakes. The CavFi bot settles finished duels and returns stakes of duels nobody accepted; anyone can do the same on the contract.</p>`;
+  if (pr.hl != null){ const el = document.getElementById('duel-' + pr.hl); if (el && !pr.scrolled){ pr.scrolled = true; el.scrollIntoView({block: 'center'}); } }
+}
+$('prTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; pr.tab = b.dataset.t; renderPredict(); try{ history.replaceState(null, '', pr.tab === 'duels' ? '#duels' : '#predict'); }catch(_){} });
+const prAmt = v => { try{ const s = String(v || '').trim().replace(',', '.'); return /^\d*\.?\d+$/.test(s) && Number(s) > 0 ? E.utils.parseUnits(s, 18) : null; }catch(e){ return null; } };
+async function prRun(key, fn, okMsg){
+  pr.busy = key; renderPredict();
+  try{ const tx = await sendTx(fn, 'Waiting for the block…', () => {}); toast(`${okMsg} ${txLink(tx.hash)}`, 'ok', 8000); }
+  catch(err){ toast(errMsg(err), 'bad', 8000); }
+  pr.busy = ''; await loadPredict();
+}
+async function prApprove(spender, have, amt){
+  if (have && have.gte(amt)) return true;
+  try{ await sendTx(() => new E.Contract(A.kings, ERC20_ABI, st.signer).approve(spender, E.constants.MaxUint256), 'Approving…', () => {}); return true; }
+  catch(err){ toast(errMsg(err), 'bad', 8000); return false; }
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-pr]'); if (!b) return;
+  const a = b.dataset.pr, id = Number(b.dataset.id);
+  if (a === 'gate'){ const g = walletGate(); if (g && g.act) g.act(); return; }
+  if (a === 'bet'){
+    const amt = prAmt(($('prAmt' + id) || {}).value);
+    if (!amt) return toast('Type how many KingS to stake.', 'bad');
+    if (pr.kbal && pr.kbal.lt(amt)) return toast('You don\'t have that many KingS. Get some on the Faucet or Swap page.', 'bad');
+    pr.busy = 'bet'; renderPredict();
+    if (!(await prApprove(A.predict, pr.allowP, amt))){ pr.busy = ''; return renderPredict(); }
+    return prRun('bet', () => prC(true).bet(id, b.dataset.side === '1', amt), `Backed ${b.dataset.side === '1' ? 'YES' : 'NO'}.`);
+  }
+  if (a === 'claim') return prRun('claim' + id, () => prC(true).claim(id), 'Claimed.');
+  if (a === 'expire') return prRun('expire', () => prC(true).expire(id), 'Market refunded: claim your stake.');
+  if (a === 'duel'){
+    const mi = Number($('duMine').value), ti = Number($('duOther').value), amt = prAmt($('duStake').value), inv = $('duInvite').value.trim();
+    if (mi === ti) return toast('Pick two different tokens.', 'bad');
+    if (!amt) return toast('Type a KingS stake.', 'bad');
+    if (pr.kbal && pr.kbal.lt(amt)) return toast('You don\'t have that many KingS.', 'bad');
+    let invited = E.constants.AddressZero;
+    if (inv){ invited = await nameToAddr(inv); if (!invited) return toast('Could not find that name or address.', 'bad'); if (same(invited, st.account)) return toast('You can\'t invite yourself.', 'bad'); }
+    pr.busy = 'duel'; renderPredict();
+    if (!(await prApprove(A.duel, pr.allowD, amt))){ pr.busy = ''; return renderPredict(); }
+    pr.busy = 'duel'; renderPredict();
+    try{
+      const tx = await sendTx(() => duC(true).create(mi, ti, amt, invited), 'Creating the duel…', () => {});
+      const rc = await st.provider.getTransactionReceipt(tx.hash);
+      const ev = rc.logs.map(l => { try{ return new E.utils.Interface(['event Created(uint256 indexed id, address indexed maker, uint256 indexed roundId, uint8 makerIdx, uint8 takerIdx, uint256 stake, address invited)']).parseLog(l); }catch(_){ return null; } }).find(Boolean);
+      const did = ev ? ev.args.id.toNumber() : null;
+      if (did != null){ const url = `https://cavfi.com/#duel/${did}`; try{ await navigator.clipboard.writeText(url); }catch(_){} toast(`Duel #${did} created. Link copied: send it to your opponent. ${txLink(tx.hash)}`, 'ok', 10000); pr.hl = did; }
+      else toast(`Duel created. ${txLink(tx.hash)}`, 'ok');
+    }catch(err){ toast(errMsg(err), 'bad', 8000); }
+    pr.busy = ''; return loadPredict();
+  }
+  if (a === 'daccept'){
+    const x = pr.duels.find(q => q.id === id); if (!x) return;
+    if (pr.kbal && pr.kbal.lt(x.d.stake)) return toast(`You need ${sxNum(fl(x.d.stake, 18))} KingS to accept.`, 'bad');
+    pr.busy = 'daccept' + id; renderPredict();
+    if (!(await prApprove(A.duel, pr.allowD, x.d.stake))){ pr.busy = ''; return renderPredict(); }
+    return prRun('daccept' + id, () => duC(true).accept(id), `Duel #${id} accepted. Good luck!`);
+  }
+  if (a === 'dcancel') return prRun('dcancel', () => duC(true).cancel(id), `Duel #${id} cancelled, stake returned.`);
+  if (a === 'dcopy'){ const url = `https://cavfi.com/#duel/${id}`; try{ await navigator.clipboard.writeText(url); toast('Duel link copied.', 'ok'); }catch(_){ toast(esc(url)); } }
+});
+setInterval(() => { if (st.view === 'predict' && !document.hidden && !pr.busy) loadPredict(); }, 30000);
+
+$('aProfile').addEventListener('click', () => { $('acctModal').hidden = true; });
 /* ================= light / dark ================= */
 const THEME_KEY = 'cavfi.theme';
 const MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
@@ -5380,7 +5826,11 @@ paintTheme();
   st.tin = TOKENS[0]; st.tout = by('KingS') || TOKENS[1] || TOKENS[0];
   st.la = by('KingS') || TOKENS[0]; st.lb = by('cUSDT') || by('USDT') || TOKENS[0];
   const lxDeep = location.hash.match(LX_HASH);
-  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#leaderboard' ? 'board' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
+  const upPath = decodeURIComponent(location.pathname).match(/^\/u\/([A-Za-z0-9.-]{3,64})\/?$/), upHash = decodeURIComponent(location.hash).match(UP_HASH);
+  if (upPath || upHash){ up.id = (upPath || upHash)[1].toLowerCase(); setView('profile'); if (upPath) try{ history.replaceState(null, '', '/#u/' + up.id); }catch(e){} }
+  else if (location.hash === '#predict' || location.hash === '#duels' || DUEL_HASH.test(location.hash)) routePredict(location.hash);
+  else if (location.hash === '#u') setView('profile');
+  else setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#leaderboard' ? 'board' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
   if (lxDeep) openLaunch(E.utils.getAddress(lxDeep[1].toLowerCase()));
   if (location.hash === '#send') setTimeout(() => { if (st.account) sdOpen(); }, 1500);
   renderShell(); renderSwap(); renderLiq(); renderPools();

@@ -107,13 +107,39 @@ async function quest(request, env, url){
   }
 }
 
+// Profile pages: cavfi.com/u/borislav.cav serves the site with its own link-preview title, so a shared
+// profile shows the name on X and Telegram. The page itself then opens the profile at /#u/borislav.cav.
+async function profilePage(env, url, id){
+  const r = await env.ASSETS.fetch(new Request(new URL('/', url)));
+  if (!r.ok) return r;
+  const clean = id.toLowerCase().replace(/[^a-z0-9.-]/g, '').slice(0, 64);
+  const who = /^0x[0-9a-f]{40}$/.test(clean) ? clean.slice(0, 6) + '…' + clean.slice(-4) : clean;
+  const title = `${who} on CavFi`, desc = `Living Cavaliers, badges, leaderboard rank, gm and quest streaks and Arena wins of ${who} on CavFi, the DeFi hub on the DogeOS testnet.`;
+  const page = `https://cavfi.com/u/${clean}`;
+  let html = await r.text();
+  const set = (re, val) => { html = html.replace(re, m => m.replace(/content="[^"]*"/, `content="${val}"`)); };
+  set(/<meta property="og:title"[^>]*>/, title); set(/<meta name="twitter:title"[^>]*>/, title);
+  set(/<meta property="og:description"[^>]*>/, desc); set(/<meta name="twitter:description"[^>]*>/, desc);
+  set(/<meta property="og:url"[^>]*>/, page);
+  html = html.replace('<title>CavFi</title>', `<title>${title}</title>`);
+  return new Response(html, {headers: {'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300'}});
+}
+
 export default {
   async fetch(request, env, ctx){
     const url = new URL(request.url);
+    const um = url.pathname.match(/^\/u\/([^/]{3,80})\/?$/);
+    if (um && request.method === 'GET'){ let id = um[1]; try{ id = decodeURIComponent(id); }catch(e){} return profilePage(env, url, id); }
     if (url.pathname === '/api/quest'){
       if (request.method === 'OPTIONS') return new Response(null, {headers: {'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST', 'access-control-allow-headers': 'content-type, x-api-key'}});
       return quest(request, env, url);
     }
-    return env.ASSETS.fetch(request);
+    const res = await env.ASSETS.fetch(request);
+    // _headers is not applied in worker mode: keep the manifest's content type here
+    if (url.pathname.endsWith('.webmanifest') && res.ok){
+      const h = new Headers(res.headers); h.set('content-type', 'application/manifest+json');
+      return new Response(res.body, {status: res.status, headers: h});
+    }
+    return res;
   },
 };
