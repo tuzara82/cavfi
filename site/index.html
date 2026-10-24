@@ -547,6 +547,28 @@ a.item{color:var(--ink);text-decoration:none}
 .pf-nm{min-width:0}.pf-nm b{display:block;font-size:14.5px}.pf-nm small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pf-v{text-align:right}.pf-v b{display:block;font:500 14px var(--mono)}.pf-v small{color:var(--muted);font:500 12px var(--mono)}
 .pf-row .lx-av.coin{width:28px;height:28px;border-radius:50%;font-size:11px}
+.pf-nfa{border-radius:8px;overflow:hidden;width:34px;height:34px}
+.pf-cav{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#A3461E,#1B1A2E);font:700 10px var(--mono)}
+.pf-tag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font:600 11px var(--body);vertical-align:1px;background:var(--line);color:var(--ink)}
+.pf-tag.t-live{background:#1E5FA8;color:#fff}.pf-tag.t-claim{background:var(--ok);color:#fff}.pf-tag.t-won{background:color-mix(in srgb,var(--ok) 22%,transparent)}
+.pf-tag.t-lost{color:var(--muted)}.pf-tag.t-rolled{color:var(--muted)}
+.pf-more{display:block;padding:10px 2px 2px;font-size:13px}
+.hp-sec a,.pf-more,.pf-row~.empty-card a,#pfBody .empty-card a{color:var(--chestnut);font-weight:600}
+.lx-share{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.lx-share .btn{padding:6px 12px;font-size:13px}
+#viewHelp>*{width:100%;max-width:780px}
+.hp-body{display:grid;gap:16px}
+.hp-sec h2{margin:0 0 6px}
+.hp-sec details{border-bottom:1px solid var(--line);padding:2px 0}
+.hp-sec details:last-child{border-bottom:0}
+.hp-sec summary{cursor:pointer;padding:11px 2px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.hp-sec summary::-webkit-details-marker{display:none}
+.hp-sec summary::after{content:"+";color:var(--muted);font-weight:500}
+.hp-sec details[open] summary::after{content:"\2212"}
+.hp-sec details p,.hp-sec details ul{margin:0 2px 12px;color:var(--ink-2,var(--ink));line-height:1.55;font-size:14.5px}
+.hp-sec details ul{padding-left:20px}
+.hp-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px;margin:4px 0 0;padding:0;list-style:none;counter-reset:hp}
+.hp-steps li{border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px;line-height:1.45;counter-increment:hp}
+.hp-steps li::before{content:counter(hp);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--chestnut);color:#fff;font:700 12px var(--body);margin-bottom:6px}
 @media (max-width:640px){ nav{overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap} nav::-webkit-scrollbar{display:none} nav button{flex:none} .pf-figs{grid-template-columns:1fr 1fr} .pf-total b{font-size:32px} }
 
 /* ---- meme extras ---- */
@@ -1052,6 +1074,71 @@ a.item{color:var(--ink);text-decoration:none}
     <div id="pfBody" class="pf-body"></div>
   </div>
 
+
+  <!-- ===================== HOW IT WORKS / FAQ ===================== -->
+  <div class="view" id="viewHelp" hidden>
+    <div class="hp-body">
+      <section class="sx-card hp-sec">
+        <h2>Start in four steps</h2>
+        <ol class="hp-steps">
+          <li><b>Connect a wallet.</b> MetaMask, Rabby, any injected wallet, or WalletConnect on your phone. The site adds the DogeOS testnet for you.</li>
+          <li><b>Get test DOGE</b> from the <a href="https://faucet.testnet.dogeos.com" target="_blank" rel="noopener">DogeOS faucet</a>. It pays for gas.</li>
+          <li><b>Fill the bowl.</b> The <a href="#faucet" data-goview="faucet">Faucet</a> page gives you free test tokens to try everything.</li>
+          <li><b>Play.</b> Swap, add liquidity, launch a meme, back a token in the Arena, claim a .cav name and say gm.</li>
+        </ol>
+      </section>
+
+      <section class="sx-card hp-sec">
+        <h2>Basics</h2>
+        <details open><summary>What is CavFi?</summary><p>A DeFi hub on the DogeOS testnet: a swap with pools and farms, a meme launchpad, the hourly Arena game, .cav names, NFTs, badges and a leaderboard. Everything happens in smart contracts on-chain; the site only reads and sends transactions from your wallet.</p></details>
+        <details><summary>Is any of this real money?</summary><p>No. CavFi runs on the DogeOS testnet, so DOGE and every token here are test tokens with no value. Points and badges have no promised value either. It is a place to try things safely.</p></details>
+        <details><summary>Is it safe?</summary><p>The contracts are open source and self-reviewed (Slither, fuzz and invariant tests), but they are <b>not externally audited</b>. CavFi never asks for your seed phrase or private key: anyone who does is a scammer. Every action is a transaction you see and approve in your wallet.</p></details>
+        <details><summary>What is KingS?</summary><p>KingS is CavFi's own token. Farms and staking pay rewards in KingS, the Arena is played with KingS, and the bot earns small KingS tips for keeping things running.</p></details>
+      </section>
+
+      <section class="sx-card hp-sec">
+        <h2>Trading</h2>
+        <details><summary>How do swaps work?</summary><p>Swaps go through CavFi pools (constant-product, like Uniswap V2). The fee is 0.30% of each swap: liquidity providers get 0.25%, and up to 0.05% can go to the protocol. Set your slippage tolerance in the settings; if the price moves more than that before your transaction lands, it is cancelled instead of filled at a worse price.</p></details>
+        <details><summary>Why do I sometimes see a price warning?</summary><p>The site compares a pool's price with the other CavFi pools. If one pool is far off (usually a thin pool nobody has traded in), it warns you before you swap there.</p></details>
+        <details><summary>How do limit orders work?</summary><p>You lock the tokens you want to sell and choose the minimum you want back. As soon as the pools pay that price, the CavFi bot fills the order (for a 0.1% tip). You can cancel an open order at any time and get your tokens back.</p></details>
+        <details><summary>What does adding liquidity do?</summary><p>You deposit two tokens into a pool and get LP tokens back. You earn 0.25% of every swap through that pool, and you can stake the LP tokens on Farms for KingS. When prices move, your share shifts between the two tokens (impermanent loss).</p></details>
+      </section>
+
+      <section class="sx-card hp-sec">
+        <h2>Launchpad</h2>
+        <details><summary>How does a launch work?</summary><p>Anyone can create a token in one transaction. Each token has a supply of 1 billion: 800 million sell on a bonding curve (the price rises as people buy, with a 1% fee per trade) and 200 million are kept for the pool.</p></details>
+        <details><summary>What is graduation?</summary><p>When the curve sells out, the token graduates: the DOGE it raised and the remaining tokens become a CavFi pool, and the LP tokens are burned so that liquidity can never be pulled. From then on it trades on the normal swap.</p></details>
+        <details><summary>Can graduated memes join the Arena?</summary><p>Yes. Graduated tokens whose pool holds enough DOGE can be added to the Arena from the next round. Thin pools are kept out, because a pool with little DOGE in it is cheap to push around.</p></details>
+        <details><summary>How do I share a token?</summary><p>Open the token on the Launchpad and press <b>Copy link</b> or <b>Post on X</b>. The link opens that token directly.</p></details>
+      </section>
+
+      <section class="sx-card hp-sec">
+        <h2>Arena</h2>
+        <details><summary>How does a round work?</summary><ul>
+          <li>Every round, back the token you think will rise most against DOGE by staking KingS on it.</li>
+          <li>The first 10 minutes set each token's start price and the last 10 minutes set its end price, both as averages of on-chain samples, so a single trade can't decide the result.</li>
+          <li>Staking closes 10 minutes before the end. The biggest rise wins, and everyone who backed the winner splits the pot (minus a small fee shown on the Arena page).</li>
+          <li>If nobody backed the winner, the whole pot rolls into the next round.</li></ul></details>
+        <details><summary>Does the bot affect the result?</summary><p>The CavFi bot records prices and settles rounds (for a 10 KingS tip). To keep prices moving it also makes 3 small random trades in the middle of each round, never in the start or end price windows. Token, direction and timing are random and it never looks at the bets.</p></details>
+        <details><summary>What is the Arena Champion badge?</summary><p>Back a winning token once and claim the soulbound Arena Champion badge from your account panel. The badge contract checks the win in the Arena contract itself.</p></details>
+      </section>
+
+      <section class="sx-card hp-sec">
+        <h2>Names, NFTs and badges</h2>
+        <details><summary>What is a .cav name?</summary><p>A readable name for your wallet, like borislav.cav. It costs 10 DOGE for 3 letters, 5 DOGE for 4 and 1 DOGE for 5 or more, and it is an NFT you own forever with no renewals. Your primary name shows in the wallet button and on the leaderboard.</p></details>
+        <details><summary>What do GM and GN do?</summary><p>Say gm and gn on-chain once a day each (days run on UTC). Each one adds 10 leaderboard points. Say gm 7 days in a row for the soulbound Early Pup badge; missing a day restarts your streak.</p></details>
+        <details><summary>What are the CavFi Cavaliers?</summary><p>An NFT collection of crowned spaniels whose art and traits live fully on-chain. Stake a Cavalier to earn KingS; rarer crowns and accessories carry more weight, so they earn a bigger share.</p></details>
+        <details><summary>How do badges and invites work?</summary><p>Badges are soulbound collectibles for things you have done on CavFi; see them in your account panel. Share your invite link: you get 25% of your invitees' leaderboard points, and 3 invitees who trade earn you the Royal Herald badge.</p></details>
+        <details><summary>How are leaderboard points counted?</summary><p>From your on-chain activity over the last 7 days: swaps, launchpad activity, Arena stakes and wins, GM and GN, plus your invitees' share. The CavFi bot is left out of the board.</p></details>
+      </section>
+
+      <section class="sx-card hp-sec">
+        <h2>Still stuck?</h2>
+        <p style="margin:0">Every contract is on <a href="https://github.com/tuzara82/cavfi" target="_blank" rel="noopener">GitHub</a> and every transaction is on the <a href="https://blockscout.testnet.dogeos.com" target="_blank" rel="noopener">explorer</a>. The <a href="#portfolio" data-goview="portfolio">Portfolio</a> page shows everything your wallet has on CavFi in one place.</p>
+      </section>
+    </div>
+  </div>
+
   <!-- ===================== FAUCET ===================== -->
   <div class="view" id="viewFaucet" hidden>
     <div class="fc-grid" id="fcBody"></div>
@@ -1137,6 +1224,7 @@ a.item{color:var(--ink);text-decoration:none}
       <span class="sf-sub">Built on DogeOS · Arena built with Noah · testnet only, tokens have no value</span>
     </div>
     <nav class="sf-links" aria-label="Footer links">
+      <a href="#faq" data-goview="help">How it works</a>
       <a href="https://github.com/tuzara82/cavfi" target="_blank" rel="noopener">Open source</a>
       <a href="https://github.com/tuzara82/cavfi/blob/main/contracts/SECURITY.md" target="_blank" rel="noopener">Security review</a>
       <a href="https://blockscout.testnet.dogeos.com" target="_blank" rel="noopener">Explorer</a>
@@ -1624,12 +1712,15 @@ function renderShell(){
 /* ================= views ================= */
 function setView(v){
   st.view = v;
-  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft'; $('viewNames').hidden = v !== 'names';
+  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft'; $('viewNames').hidden = v !== 'names'; $('viewHelp').hidden = v !== 'help';
   document.querySelector('.lede').hidden = v === 'home';
   document.querySelectorAll('nav button').forEach(b => b.toggleAttribute('aria-current', b.dataset.view === v));
   document.querySelectorAll('nav button[aria-current]').forEach(b => b.setAttribute('aria-current','page'));
   { const nv = document.querySelector('nav'), cur = nv && nv.querySelector('button[aria-current]'); if (nv && cur && nv.scrollWidth > nv.clientWidth) nv.scrollLeft = Math.max(0, cur.offsetLeft - nv.offsetLeft - 24); }
-  if (v === 'names'){
+  if (v === 'help'){
+    $('ledeH').innerHTML = 'How the <em>kingdom</em> works.';
+    $('ledeP').textContent = 'Short answers about every part of CavFi: swaps, the launchpad, the Arena, names, NFTs, badges and safety.';
+  } else if (v === 'names'){
     $('ledeH').innerHTML = 'Claim your <em>.cav</em> name.';
     $('ledeP').textContent = 'A readable name for your wallet, like borislav.cav. It shows on the leaderboard and in your wallet button instead of 0x… and it is an NFT you own forever.';
   } else if (v === 'faucet'){
@@ -1657,7 +1748,7 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'launch' ? '#launch' : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'launch' ? '#launch' : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'help' ? '#faq' : v === 'launch' && lx.open ? '#t/' + lx.open : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home') loadStats(sx.loaded);
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
@@ -1669,6 +1760,9 @@ function setView(v){
   if (v === 'launch'){ loadLaunches(); if (!sx.loaded) loadStats(); renderLaunch(); }
 }
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+document.addEventListener('click', e => { const a = e.target.closest('[data-goview]'); if (!a) return; e.preventDefault(); setView(a.dataset.goview); window.scrollTo({top:0, behavior:'smooth'}); });
+const LX_HASH = /^#t\/(0x[0-9a-fA-F]{40})$/;
+window.addEventListener('hashchange', () => { const m = location.hash.match(LX_HASH); if (m){ setView('launch'); openLaunch(E.utils.getAddress(m[1].toLowerCase())); } else if (location.hash === '#faq') setView('help'); });
 
 /* ================= price guard =================
    Builds a market price in USD for every token from all pools (anchored on the
@@ -3174,6 +3268,26 @@ let sxRz = 0; window.addEventListener('resize', () => { clearTimeout(sxRz); sxRz
    Everything the connected wallet has on CavFi, valued in USD at the pools' market prices. */
 const pf = { loading:false, data:null };
 const pfUsd = (addr, n) => { const p = guard.ref[lk(addr)]; return p == null ? null : n * p; };
+const PF_ARENA_ABI = ['function userRoundCount(address) view returns (uint256)', 'function userRounds(address,uint256,uint256) view returns (uint256[])',
+  'function betInfo(uint256 id, address user) view returns (tuple(uint64 start, uint64 end, uint16 feeBps, uint8 winnerMask, bool settled, uint256 staked, uint256 rollover, uint256 winnerStake, uint256 payout) round, uint256[] stakes, uint256 claimableAmount, bool hasClaimed)',
+  'function roundTokens(uint256 id) view returns (address[] tokens, address[] pairs)'];
+async function pfLoadBets(){
+  const c = new E.Contract(A.arena, PF_ARENA_ABI, onRightChain() ? st.provider : RP());
+  const n = (await c.userRoundCount(st.account)).toNumber(); if (!n) return [];
+  const ids = await c.userRounds(st.account, Math.max(0, n - 10), 10);
+  return Promise.all([...ids].reverse().map(async id => {
+    const [b, rt] = await Promise.all([c.betInfo(id, st.account), c.roundTokens(id)]);
+    return {id: id.toNumber(), r: b.round, stakes: b.stakes, claim: b.claimableAmount, claimed: b.hasClaimed, tokens: rt.tokens};
+  }));
+}
+const pfSym = a => { const t = tokenByAddr(a, true); if (t) return t.symbol; const x = lxByAddr(a); return x ? x.L.symbol : short(a); };
+function pfBetState(b){
+  const r = b.r, won = b.stakes.some((s, i) => !s.isZero() && (r.winnerMask >> i) & 1), end = Number(r.end.toString()), now = Math.floor(Date.now()/1000);
+  if (!r.settled) return end > now ? ['live', 'live', `ends in ${Math.max(1, Math.round((end - now) / 60))} min`] : ['live', 'settling', 'waiting for the settle'];
+  if (r.winnerStake.isZero()) return ['rolled', 'rolled over', 'nobody backed the winner'];
+  if (!b.claim.isZero()) return ['claim', 'won', 'claim it on the Arena page'];
+  return won ? ['won', 'won', 'claimed'] : ['lost', 'lost', 'another token rose more'];
+}
 async function loadPortfolio(){
   if (pf.loading) return;
   if (!st.account || !onRightChain()){ pf.data = null; return renderPortfolio(); }
@@ -3187,6 +3301,10 @@ async function loadPortfolio(){
     if (A.limit) jobs.push(loadLimitOrders());
     if (A.badges && bd.mask == null) jobs.push(bdC().badgesOf(st.account).then(m => bd.mask = m.toNumber()).catch(() => {}));
     if (A.social) jobs.push(soC().balanceOf(st.account, 1).then(v => bd.herald = !v.isZero()).catch(() => {}));
+    let pfNames = [], pfBets = [];
+    if (A.nft) jobs.push(loadNft(true));
+    if (A.names) jobs.push(nmC().labelsOf(st.account).then(m => { pfNames = m.out.filter(nmValid); }).catch(() => {}));
+    if (A.arena) jobs.push(pfLoadBets().then(b => { pfBets = b; }).catch(() => {}));
     await Promise.all(jobs.map(j => Promise.resolve(j).catch(() => {})));
     // wallet tokens: listed tokens, imported ones, and every launchpad token
     const toks = [...allTokens().filter(t => !t.wrapped || true)];
@@ -3210,8 +3328,12 @@ async function loadPortfolio(){
     const now = Math.floor(Date.now()/1000);
     const orders = lim.orders.filter(x => x.o.status === 1 && x.o.expiry.toNumber() >= now).map(x => ({x, usd: pfUsd(x.o.tokenIn, fl(x.o.amountIn, x.ti.decimals))}));
     const sum = a => a.reduce((s, r) => s + (r.usd || 0), 0);
-    pf.data = {wallet, lps, farms, stakes, pending, pendingUsd: kUsd ? pending * kUsd : null, voteLocked, voteUsd: kUsd ? voteLocked * kUsd : null, orders,
-      totals: {wallet: sum(wallet), lp: sum(lps), staked: sum(farms) + sum(stakes), votes: kUsd ? voteLocked * kUsd : 0, orders: sum(orders)}};
+    const nfts = A.nft ? nf.all.filter(x => same(x.owner, st.account)) : [];
+    const nfEarned = nf.info && nf.info.mine ? fl(nf.info.mine.earned, 18) : 0;
+    const bets = pfBets.map(b => { const k = b.stakes.reduce((x, y) => x.add(y), ZERO); const s = pfBetState(b); return {...b, k: fl(k, 18), c: fl(b.claim, 18), s}; });
+    const arenaK = bets.reduce((x, b) => x + (b.s[0] === 'live' ? b.k : 0) + b.c, 0);
+    pf.data = {wallet, lps, farms, stakes, pending: pending + nfEarned, pendingUsd: kUsd ? (pending + nfEarned) * kUsd : null, voteLocked, voteUsd: kUsd ? voteLocked * kUsd : null, orders, nfts, nfEarned, names: pfNames, bets,
+      totals: {wallet: sum(wallet), lp: sum(lps), staked: sum(farms) + sum(stakes), votes: kUsd ? voteLocked * kUsd : 0, orders: sum(orders), arena: kUsd ? arenaK * kUsd : 0}};
   }catch(e){ pf.data = {error: true}; }
   pf.loading = false;
   renderPortfolio();
@@ -3224,9 +3346,9 @@ function renderPortfolio(){
   const d = pf.data;
   if (!d){ box.innerHTML = '<div class="empty-card">Reading your positions…</div>'; return; }
   if (d.error){ box.innerHTML = '<div class="empty-card">Could not read everything. Try again in a moment.</div>'; return; }
-  const T = d.totals, total = T.wallet + T.lp + T.staked + T.votes + T.orders + (d.pendingUsd || 0);
+  const T = d.totals, total = T.wallet + T.lp + T.staked + T.votes + T.orders + T.arena + (d.pendingUsd || 0);
   const pct = v => total > 0 ? Math.max(0, v / total * 100) : 0;
-  const seg = [['Wallet', T.wallet, 'var(--chestnut)'], ['Liquidity', T.lp, '#1B7A8A'], ['Staked', T.staked, 'var(--ok)'], ['Votes', T.votes, '#8A5A1E'], ['Orders', T.orders, '#1E5FA8'], ['Rewards', d.pendingUsd || 0, 'var(--gold)']].filter(s => s[1] > 0);
+  const seg = [['Wallet', T.wallet, 'var(--chestnut)'], ['Liquidity', T.lp, '#1B7A8A'], ['Staked', T.staked, 'var(--ok)'], ['Votes', T.votes, '#8A5A1E'], ['Orders', T.orders, '#1E5FA8'], ['Arena', T.arena, '#9C2F55'], ['Rewards', d.pendingUsd || 0, 'var(--gold)']].filter(s => s[1] > 0);
   const tok = t => t.meme ? lxAvatar(t.address, t.symbol, t.meme.L.image).replace('lx-av', 'lx-av coin') : coin(t);
   const sec = (title, rows, empty) => `<section class="sx-card"><div class="sx-head"><h2>${title}</h2></div>${rows || `<div class="empty-card">${empty}</div>`}</section>`;
   const line = (icon, name, sub, val, usd) => `<div class="pf-row">${icon}<span class="pf-nm"><b>${name}</b><small>${sub}</small></span><span class="pf-v"><b>${val}</b><small>${usd == null ? '' : sxUsd(usd)}</small></span></div>`;
@@ -3235,7 +3357,7 @@ function renderPortfolio(){
       <div class="pf-total"><span>Total on CavFi</span><b>${sxUsd(total)}</b><small>testnet tokens, valued at CavFi pool prices</small></div>
       <div class="pf-bar" role="img" aria-label="Where your value is">${seg.map(s => `<span style="width:${pct(s[1]).toFixed(2)}%;background:${s[2]}" title="${s[0]} ${sxUsd(s[1])}"></span>`).join('')}</div>
       <div class="pf-legend">${seg.map(s => `<span><i style="background:${s[2]}"></i>${s[0]} <b>${sxUsd(s[1])}</b></span>`).join('')}</div>
-      <div class="pf-figs"><div><span>Rewards to claim</span><b>${sxNum(d.pending)} KingS</b></div><div><span>Badges</span><b>${bd.mask == null ? '–' : BADGES.filter((b, i) => i && (bd.mask >> (i - 1)) & 1).length + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0) + (bd.pup ? 1 : 0)}</b></div><div><span>Open orders</span><b>${d.orders.length}</b></div></div>
+      <div class="pf-figs"><div><span>Rewards to claim</span><b>${sxNum(d.pending)} KingS</b></div><div><span>Badges</span><b>${bd.mask == null ? '–' : BADGES.filter((b, i) => i && (bd.mask >> (i - 1)) & 1).length + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0) + (bd.pup ? 1 : 0)}</b></div><div><span>Open orders</span><b>${d.orders.length}</b></div><div><span>Collectibles</span><b>${d.nfts.length + d.names.length}</b></div></div>
       <div class="pf-acts"><button class="btn" data-pf="farm">Harvest on Farms</button><button class="btn" data-pf="badges">Badges & invite link</button><button class="btn" data-pf="refresh">Refresh</button></div>
     </section>
     ${sec('In your wallet', d.wallet.map(r => line(tok(r.t), esc(r.t.symbol), esc(r.t.meme ? (r.t.meme.L.graduated ? 'launchpad token · on CavFi' : 'launchpad token · on the curve') : r.t.name), sxNum(r.n), r.usd)).join(''), 'No tokens yet. Get some from the DogeOS faucet.')}
@@ -3244,7 +3366,18 @@ function renderPortfolio(){
     ${sec('Staking & farms', [...d.farms.map(({f, usd}) => line('<span class="coin king"><svg aria-hidden="true"><use href="#king"/></svg></span>', `${esc(vtPoolName(f.lp))} LP`, `farm · ${sxNum(fl(f.pending, 18))} KingS to harvest`, fmt(f.userAmt, 18, 6), usd)),
       ...d.stakes.map(({s, usd}) => line(coin(s.t), esc(s.t.symbol), `staking · ${sxNum(fl(s.pending, 18))} KingS to harvest`, fmt(s.userAmt, s.t.decimals, 4), usd))].join(''), 'Nothing staked. Stake tokens or LP on Farms to earn KingS.')}
     ${sec('Votes & orders', [d.voteLocked ? line('<span class="coin king"><svg aria-hidden="true"><use href="#king"/></svg></span>', 'Voting lock', 'KingS locked in KingVote', sxNum(d.voteLocked) + ' KingS', d.voteUsd) : '',
-      ...d.orders.map(({x, usd}) => line(`<span class="pair-coins">${coin(x.ti)}${coin(x.to)}</span>`, `Limit #${x.id}`, `${fmt(x.o.amountIn, x.ti.decimals)} ${esc(x.ti.symbol)} → ≥ ${fmt(x.o.minOut, x.to.decimals)} ${esc(x.to.symbol)}`, 'open', usd))].join(''), 'No locked votes or open limit orders.')}`;
+      ...d.orders.map(({x, usd}) => line(`<span class="pair-coins">${coin(x.ti)}${coin(x.to)}</span>`, `Limit #${x.id}`, `${fmt(x.o.amountIn, x.ti.decimals)} ${esc(x.ti.symbol)} → ≥ ${fmt(x.o.minOut, x.to.decimals)} ${esc(x.to.symbol)}`, 'open', usd))].join(''), 'No locked votes or open limit orders.')}
+    ${A.arena ? sec('Arena bets', d.bets.length ? d.bets.map(b => {
+      const on = b.stakes.map((x, i) => x.isZero() ? '' : `${sxNum(fl(x, 18))} on ${esc(pfSym(b.tokens[i]))}`).filter(Boolean).join(', ');
+      return line('<span class="coin king"><svg aria-hidden="true"><use href="#king"/></svg></span>', `Round #${b.id}<span class="pf-tag t-${b.s[0]}">${b.s[1]}</span>`, `${on} · ${b.s[2]}`,
+        b.c ? `+${sxNum(b.c)} KingS` : `${sxNum(b.k)} KingS`, b.s[0] === 'live' || b.c ? (guard.ref[lk(A.kings)] ? (b.c || b.k) * guard.ref[lk(A.kings)] : null) : null);
+    }).join('') + `<a class="pf-more" href="arena.html">${d.bets.some(b => b.c) ? 'Claim your winnings in the Arena →' : 'Open the Arena →'}</a>` : '', 'No Arena bets yet. <a href="arena.html">Back a token in the Arena</a> to win the pot.') : ''}
+    ${A.nft || A.names ? sec('Collectibles', [
+      ...d.nfts.slice(0, 8).map(x => line(`<span class="coin pf-nfa">${nfSvg(x.dna)}</span>`, `Cavalier #${x.id}`, `${NF_COAT[x.t.coat]} · ${x.t.crown ? NF_CROWN[x.t.crown] + ' crown' : 'no crown'} · ${x.staked ? 'staked, earning KingS' : 'in wallet, not staked'}`, `×${x.t.weight}`, null)),
+      d.nfts.length > 8 ? `<a class="pf-more" href="#nft" data-goview="nft">and ${d.nfts.length - 8} more Cavaliers →</a>` : '',
+      d.nfEarned > 0 ? line('<span class="coin king"><svg aria-hidden="true"><use href="#king"/></svg></span>', 'Cavalier staking', 'KingS earned, claim on the NFTs page', sxNum(d.nfEarned) + ' KingS', null) : '',
+      ...d.names.map(l => line('<span class="coin pf-cav">.cav</span>', `${l}.cav`, l === myName.name ? 'your primary name' : 'name · yours forever', 'NFT', null))].join(''),
+      'No Cavaliers or .cav names yet. <a href="#nft" data-goview="nft">Mint a Cavalier</a> or <a href="#names" data-goview="names">claim a name</a>.') : ''}`;
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-pf]'); if (!b) return;
@@ -3919,6 +4052,7 @@ function renderLaunch(){
   $('lxExplore').hidden = lx.tab !== 'explore' || !!lx.open;
   $('lxCreate').hidden = lx.tab !== 'create' || !!lx.open;
   $('lxDetail').hidden = !lx.open;
+  if (st.view === 'launch'){ try{ history.replaceState(null, '', lx.open ? '#t/' + lx.open : '#launch'); }catch(e){} }
   if (lx.open) return renderLxDetail();
   if (lx.tab === 'create') return renderLxCreate();
   const box = $('lxList');
@@ -3998,12 +4132,14 @@ async function doLxCreate(e){
 
 /* ---- detail ---- */
 function openLaunch(addr){ if ($('lxCForm')) $('lxCForm').innerHTML = ''; lx.cText = ''; lx.open = addr; lx.amt = ''; lx.quote = null; lx.side = 'buy'; renderLaunch(); window.scrollTo({top:0, behavior:'smooth'}); loadLxDetail(); }
+const lxShareUrl = addr => `${location.origin}/#t/${addr}`;
 let lxDSeq = 0;
 async function loadLxDetail(){
   const seq = ++lxDSeq, addr = lx.open; if (!addr) return;
   const c = lxC();
   try{
     const L = await c.info(addr), x = lxByAddr(addr);
+    if (L.creator === E.constants.AddressZero){ if (seq === lxDSeq){ lx.missing = lk(addr); renderLxDetail(); } return; }
     if (x) x.L = L; else lx.list.unshift({address:addr, L});
     if (seq !== lxDSeq) return;
     renderLxDetail();
@@ -4094,12 +4230,13 @@ async function postComment(){
   lx.cBusy = false; renderLxCBtn(); loadLxDetail();
 }
 function renderLxDetail(){
-  const x = lxByAddr(lx.open); if (!x){ $('lxHead').innerHTML = '<p>Loading…</p>'; return; }
+  const x = lxByAddr(lx.open); if (!x){ $('lxHead').innerHTML = lx.missing === lk(lx.open) ? '<p>This token is not on the CavFi launchpad. <button class="link-btn" data-lx="back">See all launches</button></p>' : '<p>Loading…</p>'; return; }
   renderLxSocial(x);
   const {address, L} = x, pr = lxProgress(L), px = lxPrice(L), u = lxDogeUsd();
   $('lxHead').innerHTML = `<div class="lx-h">${lxAvatar(address, L.symbol, L.image, true)}<div style="min-width:0"><h2>${esc(L.name)}${L.graduated ? '<span class="lx-badge">On CavFi</span>' : ''}</h2>
       <small>$${esc(L.symbol)} · by <a href="${NET.explorer}/address/${L.creator}" target="_blank" rel="noopener">${short(L.creator)}</a> · ${lxAge(L.createdAt.toNumber())} · <a href="${NET.explorer}/token/${address}" target="_blank" rel="noopener">contract ↗</a></small></div></div>
     ${L.description ? `<p style="margin:0;overflow-wrap:anywhere">${esc(L.description)}</p>` : ''}
+    <div class="lx-share"><button class="btn" data-lx="share-copy">Copy link</button><a class="btn" href="https://x.com/intent/post?text=${encodeURIComponent(`$${L.symbol} on the CavFi launchpad (DogeOS testnet)`)}&url=${encodeURIComponent(lxShareUrl(address))}" target="_blank" rel="noopener">Post on X</a><a class="btn" href="https://t.me/share/url?url=${encodeURIComponent(lxShareUrl(address))}&text=${encodeURIComponent(`$${L.symbol} on CavFi`)}" target="_blank" rel="noopener">Telegram</a></div>
     <div class="lx-figs"><div><span>Price</span><b>${sxNum(px)} DOGE</b></div><div><span>Market cap</span><b>${lxMcap(L)}</b></div><div><span>${L.graduated ? 'Pool' : 'Raised'}</span><b>${L.graduated ? 'locked' : sxNum(fl(L.realDoge, 18)) + ' / ' + sxNum(fl(L.target, 18)) + ' DOGE'}</b></div></div>
     <span class="lx-prog"><span class="track"><span class="fill${L.graduated ? ' done' : ''}" style="width:${(pr*100).toFixed(1)}%"></span></span>
       <span><span>${L.graduated ? 'Graduated: trading moved to the CavFi pool' : `${sxNum(fl(L.tokensLeft, 18))} tokens left on the curve`}</span><b>${(pr*100).toFixed(1)}%</b></span></span>`;
@@ -4213,6 +4350,8 @@ $('viewLaunch').addEventListener('click', e => {
   else if (a === 'swap') lxToSwap();
   else if (a === 'farm'){ setView('farm'); window.scrollTo({top:0, behavior:'smooth'}); }
   else if (a === 'watch'){ const x = lxByAddr(lx.open); if (x) watchToken({symbol:x.L.symbol.slice(0, 11), address:x.address, decimals:18}); }
+  else if (a === 'back'){ lx.open = null; lx.tab = 'explore'; renderLaunch(); }
+  else if (a === 'share-copy' && lx.open){ const u = lxShareUrl(lx.open); navigator.clipboard.writeText(u).then(() => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy link'; }, 1500); }).catch(() => toast(esc(u))); }
   else if (a === 'max' && lx.bal){
     let v = lx.side === 'buy' ? lx.bal.doge.sub(E.utils.parseEther('0.02')) : lx.bal.tok;
     if (v.lt(0)) v = ZERO; lx.amt = toInput(v, 18); renderLxDetail(); lxQuoteSoon();
@@ -4780,7 +4919,8 @@ paintTheme();
   const by = s => TOKENS.find(t => t.symbol === s);
   st.tin = TOKENS[0]; st.tout = by('KingS') || TOKENS[1] || TOKENS[0];
   st.la = by('KingS') || TOKENS[0]; st.lb = by('cUSDT') || by('USDT') || TOKENS[0];
-  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#swap' ? 'swap' : 'home');
+  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#faq' ? 'help' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
+  { const m = location.hash.match(LX_HASH); if (m) openLaunch(E.utils.getAddress(m[1].toLowerCase())); }
   renderShell(); renderSwap(); renderLiq(); renderPools();
   if (!(await wcRestore()) && window.ethereum){
     window.ethereum.request({method:'eth_accounts'}).then(x => { if (x && x[0]) connect(); }).catch(()=>{});
