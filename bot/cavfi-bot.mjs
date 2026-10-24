@@ -33,6 +33,13 @@ const CFG = {
   notifySwapUsd: Number(env('NOTIFY_SWAP_USD', '25')),
   arena: env('ARENA', '1') === '1',
   arenaPokeSec: Number(env('ARENA_POKE_SEC', '150')),
+  arenaNoise: env('ARENA_NOISE', '1') === '1',
+  arenaNoiseTrades: Number(env('ARENA_NOISE_TRADES', '3')),
+  arenaNoiseMaxDoge: Number(env('ARENA_NOISE_MAX_DOGE', '1')),
+  arenaNoiseMinPct: Number(env('ARENA_NOISE_MIN_PCT', '0.2')) / 100,
+  arenaNoiseMaxPct: Number(env('ARENA_NOISE_MAX_PCT', '0.6')) / 100,
+  arenaNoiseLowDoge: Number(env('ARENA_NOISE_LOW_DOGE', '60')),
+  arenaRemindHours: env('ARENA_REMIND_HOURS', '2,24').split(',').map(Number).filter(x => x > 0),
   dryRun: env('DRY_RUN', '0') === '1',
   once: process.argv.includes('--once'),
 };
@@ -61,7 +68,11 @@ const ABI = {
   arena: ['function poke()', 'function settle() returns (uint256)', 'function settleable() view returns (bool ready, uint256 id)',
           'function currentRound() view returns (uint256 id, uint64 start, uint64 end, uint64 stakingEndsAt, uint256 secondsLeft, uint256 pot, uint16 feeBps, bool live)',
           'function roundTokens(uint256) view returns (address[] tokens, address[] pairs)',
-          'event Settled(uint256 indexed id, uint8 winnerMask, uint256 pot, uint256 fee, bool rolledOver, address settler, uint256 tip)'],
+          'event Settled(uint256 indexed id, uint8 winnerMask, uint256 pot, uint256 fee, bool rolledOver, address settler, uint256 tip)',
+          'event Staked(uint256 indexed id, address indexed user, uint256 indexed idx, uint256 amount)',
+          'function lastSettled() view returns (uint256)', 'function claimable(uint256 id, address user) view returns (uint256)',
+          'function getRound(uint256 id) view returns (tuple(uint64 start, uint64 end, uint16 feeBps, uint8 winnerMask, bool settled, uint256 staked, uint256 rollover, uint256 winnerStake, uint256 payout))'],
+  names: ['function namesOf(address[]) view returns (string[])'],
   launch: ['event Launched(address indexed token, address indexed creator, string name, string symbol, uint256 target)',
            'event Graduated(address indexed token, address indexed pair, uint256 doge, uint256 amount, uint256 liquidity)'],
 };
@@ -466,9 +477,16 @@ async function arena(){
           const wins = [];
           for (let i = 0; i < toks.length; i++) if ((ev.args.winnerMask >> i) & 1) wins.push((await token(toks[i])).symbol);
           const pot = fmtN(fl(ev.args.pot, 18));
-          await tg(ev.args.rolledOver
-            ? `🏟️ <b>Arena round #${ev.args.id}</b>: nobody backed ${wins.length ? esc(wins.join(' + ')) : 'a winner'}. The pot of ${pot} KingS rolls into the next round.`
-            : `🏆 <b>Arena round #${ev.args.id}</b>: ${esc(wins.join(' + '))} rose the most against DOGE. Backers share ${pot} KingS.\n<a href="${txUrl(tx.hash)}">transaction</a>`);
+          if (ev.args.rolledOver){
+            await tg(`🏟️ <b>Arena round #${ev.args.id}</b>: nobody backed ${wins.length ? esc(wins.join(' + ')) : 'a winner'}. The pot of ${pot} KingS rolls into the next round.`);
+          } else {
+            const ws = await arenaWinners(ev.args.id.toNumber(), rc.blockNumber).catch(e => { log('arena winners lookup failed:', e.message); return []; });
+            const lines = ws.map(w => `• ${w.label}: ${fmtN(w.amount)} KingS`).join('\n');
+            await tg(`🏆 <b>Arena round #${ev.args.id}</b>: ${esc(wins.join(' + '))} rose the most against DOGE.\n` +
+              (ws.length ? `${ws.length === 1 ? 'One backer takes' : `${ws.length} backers share`} ${fmtN(ws.reduce((x, w) => x + w.amount, 0))} KingS:\n${lines}` : `Backers share ${pot} KingS.`) +
+              `\nClaim on <a href="https://cavfi.com/arena.html">cavfi.com/arena.html</a> · <a href="${txUrl(tx.hash)}">transaction</a>`);
+            if (ws.length){ (state.arenaWins ||= []).push({id: ev.args.id.toNumber(), at: now(), users: ws.map(w => w.user), sent: 0}); saveState(); }
+          }
         }
       }
     }catch(e){ log('arena settle failed:', (e.reason || e.message || '').slice(0, 100)); }
@@ -479,6 +497,134 @@ async function arena(){
   if (!inWindow || t - arenaLastPoke < CFG.arenaPokeSec) return;
   try{ await send('arena poke', () => c.poke()); arenaLastPoke = t; }
   catch(e){ log('arena poke failed:', (e.reason || e.message || '').slice(0, 100)); }
+}
+
+// Winners of a settled round: every Staked event of that round on a winning token, summed per
+// wallet and valued by the contract's own claimable() (0 once claimed). Logs are read in
+// 9,999-block steps (the DogeOS RPC limit) from the round's start to the settle block.
+const blockCache = {};
+async function blockAt(ts, hi){
+  let lo = Math.max(1, hi - 400000);
+  const T = async b => blockCache[b] ??= (await provider.getBlock(b)).timestamp;
+  if (await T(lo) > ts) return lo;
+  while (hi - lo > 1){ const mid = Math.floor((lo + hi) / 2); if (await T(mid) < ts) lo = mid; else hi = mid; }
+  return lo;
+}
+async function arenaWinners(id, endBlock){
+  const c = new ethers.Contract(A.arena, ABI.arena, provider);
+  const r = await c.getRound(id);
+  if (!r.settled || r.winnerStake.isZero()) return [];
+  const head = endBlock || await provider.getBlockNumber();
+  const from = await blockAt(Number(r.start.toString()) - 60, head);
+  const topic = c.interface.getEventTopic('Staked'), idT = ethers.utils.hexZeroPad(ethers.BigNumber.from(id).toHexString(), 32);
+  const users = new Set();
+  for (let b = from; b <= head; b += 9999){
+    const logs = await provider.getLogs({address: A.arena, fromBlock: b, toBlock: Math.min(head, b + 9998), topics: [topic, idT]});
+    for (const l of logs){ const e = c.interface.parseLog(l); if ((r.winnerMask >> e.args.idx.toNumber()) & 1) users.add(ethers.utils.getAddress(e.args.user)); }
+  }
+  const list = [...users];
+  let names = list.map(() => '');
+  if (A.names && list.length){ try{ names = await new ethers.Contract(A.names, ABI.names, provider).namesOf(list); }catch(e){} }
+  const out = [];
+  for (let i = 0; i < list.length; i++){
+    const amount = fl(await c.claimable(id, list[i]), 18);
+    out.push({user: list[i], amount, label: /^[a-z0-9-]{3,32}$/.test(names[i] || '') ? `${names[i]}.cav` : short(list[i])});
+  }
+  return out.sort((a, b) => b.amount - a.amount);
+}
+// Unclaimed winnings: a reminder in Telegram ARENA_REMIND_HOURS after the round (2 h and 24 h by
+// default) for every winner who still hasn't claimed. Checked every 10 minutes. On first run it
+// also picks up wins from the last 48 rounds, so older unclaimed pots get a reminder too.
+let arenaRemindAt = 0;
+async function arenaReminders(){
+  if (!CFG.arena || !A.arena || now() - arenaRemindAt < 600) return;
+  arenaRemindAt = now();
+  const c = new ethers.Contract(A.arena, ABI.arena, provider);
+  if (!state.arenaWinsScanned){
+    const last = (await c.lastSettled()).toNumber(), have = new Set((state.arenaWins || []).map(w => w.id));
+    for (let id = Math.max(1, last - 47); id <= last; id++){
+      if (have.has(id)) continue;
+      const r = await c.getRound(id);
+      if (!r.settled || r.winnerStake.isZero()) continue;
+      const ws = await arenaWinners(id);
+      if (ws.some(w => w.amount > 0)) (state.arenaWins ||= []).push({id, at: Number(r.end.toString()), users: ws.map(w => w.user), sent: 0});
+    }
+    state.arenaWinsScanned = true; saveState();
+  }
+  const keep = [];
+  for (const w of state.arenaWins || []){
+    const age = (now() - w.at) / 3600, due = CFG.arenaRemindHours.filter(h => age >= h).length;
+    if (due > w.sent){
+      let names = w.users.map(() => '');
+      if (A.names){ try{ names = await new ethers.Contract(A.names, ABI.names, provider).namesOf(w.users); }catch(e){} }
+      const open = [];
+      for (let i = 0; i < w.users.length; i++){ const a = fl(await c.claimable(w.id, w.users[i]), 18); if (a > 0) open.push(`• ${/^[a-z0-9-]{3,32}$/.test(names[i] || '') ? names[i] + '.cav' : short(w.users[i])}: ${fmtN(a)} KingS`); }
+      if (!open.length) continue; // everyone claimed: forget this round
+      await tg(`💰 <b>Unclaimed Arena winnings</b> from round #${w.id}:\n${open.join('\n')}\nClaim them on <a href="https://cavfi.com/arena.html">cavfi.com/arena.html</a>`);
+      w.sent = due;
+    }
+    if (w.sent < CFG.arenaRemindHours.length) keep.push(w);
+  }
+  state.arenaWins = keep; saveState();
+}
+
+// Market noise: on a quiet testnet nobody trades, every Arena token ends a round at +0.00% and the
+// round is a tie. In the middle of each round (never inside the start or end price windows) the bot
+// makes ARENA_NOISE_TRADES small random swaps (0.5-2% of a pool, at most ARENA_NOISE_MAX_DOGE),
+// buying or selling a randomly chosen Arena token against DOGE. Times, token and direction are random
+// and the bot never looks at who staked on what.
+const noise = { round: 0, plan: [] };
+async function arenaNoise(){
+  if (!CFG.arena || !CFG.arenaNoise || !A.arena || !wallet || me === ethers.constants.AddressZero) return;
+  const c = new ethers.Contract(A.arena, ABI.arena, provider);
+  const cur = await c.currentRound();
+  if (!cur.live) return;
+  const id = cur.id.toNumber(), start = Number(cur.start.toString()), end = Number(cur.end.toString());
+  const t = (await provider.getBlock('latest')).timestamp;
+  if (noise.round !== id){
+    noise.round = id;
+    const lo = Math.max(t + 30, start + WINDOW + 60), hi = end - WINDOW - 60;
+    noise.plan = hi > lo ? Array.from({length: CFG.arenaNoiseTrades}, () => lo + Math.random() * (hi - lo)).sort((a, b) => a - b) : [];
+    if (noise.plan.length) log(`arena noise: ${noise.plan.length} random trades planned for round #${id}`);
+  }
+  if (!noise.plan.length || t < noise.plan[0] || t + WINDOW + 30 >= end) return;
+  noise.plan.shift();
+  try{
+    const [toks, pairs] = await c.roundTokens(id);
+    const i = Math.floor(Math.random() * toks.length), tok = toks[i];
+    const pair = new ethers.Contract(pairs[i], ABI.pair, provider);
+    const [r0, r1] = await pair.getReserves();
+    const dogeIs0 = lk(await pair.token0()) === lk(A.wdoge);
+    const rW = dogeIs0 ? r0 : r1, rT = dogeIs0 ? r1 : r0;
+    // small moves only: 0.2-0.6% of the pool moves the price about 0.4-1.2%, under the pool-fix
+    // threshold and inside most people's slippage, so it never fights the rebalancer or a user's swap
+    const pct = CFG.arenaNoiseMinPct + Math.random() * (CFG.arenaNoiseMaxPct - CFG.arenaNoiseMinPct);
+    const bp = Math.max(1, Math.round(pct * 10000));
+    const R = new ethers.Contract(A.router, ABI.router, wallet);
+    const erc = new ethers.Contract(tok, ABI.erc20, wallet);
+    const sym = (await token(tok)).symbol;
+    // buy and sell the same DOGE value, so over time the bot's DOGE doesn't drain into tokens;
+    // when the bot runs low on DOGE it prefers selling the tokens it already holds
+    let dogeSize = rW.mul(bp).div(10000);
+    const cap = ethers.utils.parseEther(String(CFG.arenaNoiseMaxDoge));
+    if (dogeSize.gt(cap)) dogeSize = cap;
+    const sellAmt = rT.mul(dogeSize).div(rW);
+    const canSell = (await erc.balanceOf(me)).gte(sellAmt) && !sellAmt.isZero();
+    const low = fl(await provider.getBalance(me), 18) < CFG.arenaNoiseLowDoge;
+    const sell = canSell && Math.random() < (low ? 0.85 : 0.5);
+    const deadline = t + 600;
+    if (sell){
+      const out = (await R.getAmountsOut(sellAmt, [tok, A.wdoge]))[1];
+      await ensureAllowance(tok, A.router, sellAmt);
+      await send(`arena noise: sell ${(pct*100).toFixed(1)}% of ${sym} pool`, () => R.swapExactTokensForETH(sellAmt, out.mul(97).div(100), [tok, A.wdoge], me, deadline));
+    } else {
+      const dogeIn = dogeSize;
+      const spare = (await provider.getBalance(me)).sub(ethers.utils.parseEther(CFG.gasReserve)).sub(ethers.utils.parseEther('5'));
+      if (dogeIn.gt(spare) || dogeIn.isZero()) { log('arena noise: skipped, bot is low on DOGE'); return; }
+      const out = (await R.getAmountsOut(dogeIn, [A.wdoge, tok]))[1];
+      await send(`arena noise: buy ${sym} with ${fmtN(fl(dogeIn, 18))} DOGE`, () => R.swapExactETHForTokens(out.mul(97).div(100), [A.wdoge, tok], me, deadline, {value: dogeIn}));
+    }
+  }catch(e){ log('arena noise failed:', (e.reason || e.message || '').slice(0, 100)); }
 }
 
 // ------------------------------------------------------------------ 3. notifications
@@ -543,7 +689,7 @@ async function main(){
   else { wallet = provider; me = ethers.constants.AddressZero; }
   if (me === ethers.constants.AddressZero && !CFG.dryRun){ CFG.fillLimits = false; CFG.rebalance = false; }
   log(`CavFi bot on chain ${CFG.chainId} · wallet ${me === ethers.constants.AddressZero ? 'none (notify only)' : me}`);
-  log(`arena: ${CFG.arena && A.arena ? `on (poke every ${CFG.arenaPokeSec}s in the price windows)` : 'off'}`);
+  log(`arena: ${CFG.arena && A.arena ? `on (poke every ${CFG.arenaPokeSec}s in the price windows${CFG.arenaNoise ? `, ${CFG.arenaNoiseTrades} random trades a round` : ''})` : 'off'}`);
   log(`limit fills: ${CFG.fillLimits ? 'on' : 'off'} · rebalance: ${CFG.rebalance ? `on (≥${CFG.minDev*100}% off, ≤ ${usd(CFG.maxUsd)} a trade)` : 'off'} · telegram: ${CFG.tgToken && CFG.tgChat ? 'on' : 'off'}${CFG.dryRun ? ' · DRY RUN' : ''}`);
   if (me !== ethers.constants.AddressZero) log('balance', fmtN(fl(await provider.getBalance(me), 18)), 'DOGE');
   await tg(`🐶 <b>CavFi bot started</b>${me !== ethers.constants.AddressZero ? `\nwallet ${short(me)}` : ''}`);
@@ -555,6 +701,8 @@ async function main(){
       await rebalance();
       await applyVotes();
       await arena();
+      await arenaNoise();
+      await arenaReminders();
       await weeklyTopTen();
       await heralds();
       await notify();
