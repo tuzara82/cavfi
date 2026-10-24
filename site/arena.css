@@ -85,7 +85,7 @@
 .ar-steps p{margin:0;color:var(--muted);font-size:12.5px}
 @media (max-width:820px){
   .ar-clock{grid-template-columns:1fr}
-  .ar-cols{grid-template-columns:1fr}
+  .ar-cols{grid-template-columns:minmax(0,1fr)}
   .ar-steps{grid-template-columns:1fr 1fr}
 }
 @media (max-width:420px){.ar-steps{grid-template-columns:1fr}}
