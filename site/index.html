@@ -653,7 +653,12 @@ a.item{color:var(--ink);text-decoration:none}
 @media (max-width:520px){.ob-step{grid-template-columns:28px minmax(0,1fr)}.ob-step .btn{grid-column:2;justify-self:start}}
 
 /* ---- stats ---- */
-#viewStats>*{width:100%;max-width:780px}
+#viewStats>*,#viewBoard>*{width:100%;max-width:780px}
+.lb-tabs{flex-wrap:wrap}
+.lb-pod{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.lb-pod>div{background:var(--well);border-radius:14px;padding:12px;display:grid;gap:4px;min-width:0;text-align:center}
+.lb-pod b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lb-pod span{font-size:22px}.lb-pod small{color:var(--muted);font:500 12.5px var(--mono)}
+.lb-pod>div.p1{background:color-mix(in srgb,var(--gold) 22%,var(--well))}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .sx-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .sx-status{color:var(--muted);font-size:12.5px}
@@ -791,6 +796,7 @@ a.item{color:var(--ink);text-decoration:none}
       <button id="nav-farm" data-view="farm">Farms</button>
       <button id="nav-launch" data-view="launch">Launch</button>
       <button id="nav-stats" data-view="stats">Stats</button>
+      <button id="nav-board" data-view="board">Leaderboards</button>
       <a id="nav-arena" class="nav-link" href="arena.html">Arena<small>new</small></a>
       <button id="nav-nft" data-view="nft">NFTs</button>
       <button id="nav-names" data-view="names">Names</button>
@@ -1181,7 +1187,7 @@ a.item{color:var(--ink);text-decoration:none}
         <details><summary>What do GM and GN do?</summary><p>Say gm and gn on-chain once a day each (days run on UTC). Each one adds 10 leaderboard points. Say gm 7 days in a row for the soulbound Early Pup badge; missing a day restarts your streak.</p></details>
         <details><summary>What are the CavFi Cavaliers?</summary><p>An NFT collection of crowned spaniels whose art and traits live fully on-chain. Stake a Cavalier to earn KingS; rarer crowns and accessories carry more weight, so they earn a bigger share.</p></details>
         <details><summary>How do badges and invites work?</summary><p>Badges are soulbound collectibles for things you have done on CavFi; see them in your account panel. Share your invite link: you get 25% of your invitees' leaderboard points, and 3 invitees who trade earn you the Royal Herald badge.</p></details>
-        <details><summary>How are leaderboard points counted?</summary><p>From your on-chain activity over the last 7 days: swaps, launchpad activity, Arena stakes and wins, GM and GN, plus your invitees' share. The CavFi bot is left out of the board.</p></details>
+        <details><summary>How are leaderboard points counted?</summary><p>On the Leaderboards page, from your on-chain activity over the last 7 or 30 days: swaps, launchpad activity, Arena stakes and wins, GM and GN, plus your invitees' share. The CavFi bot is left out of the board.</p></details>
       </section>
 
       <section class="sx-card hp-sec">
@@ -1214,12 +1220,30 @@ a.item{color:var(--ink);text-decoration:none}
     <div class="nf-body" id="nfBody"></div>
   </div>
 
+  <!-- ===================== LEADERBOARDS ===================== -->
+  <div class="view" id="viewBoard" hidden>
+    <div class="sx-bar">
+      <div class="chips" id="lbRange" role="group" aria-label="Time range"><button class="chip" data-r="7d" aria-pressed="true">7 days</button><button class="chip" data-r="30d" aria-pressed="false">30 days</button></div>
+      <span class="sx-status" id="lbStatus" aria-live="polite"></span>
+    </div>
+    <section class="sx-card" aria-labelledby="sxBoardH">
+      <div class="sx-head"><h2 id="sxBoardH">Leaderboard</h2><span id="lbNote">points have no value</span></div>
+      <div class="chips lb-tabs" id="lbTabs" role="group" aria-label="Which leaderboard">
+        <button class="chip" data-t="pts" aria-pressed="true">Points</button><button class="chip" data-t="swap">Traders</button><button class="chip" data-t="arena">Arena</button><button class="chip" data-t="quest">Quests & gm</button><button class="chip" data-t="launch">Launchers</button><button class="chip" data-t="ref">Inviters</button>
+      </div>
+      <div class="lb-pod" id="lbPod"></div>
+      <p class="sx-legend" id="lbLegend"></p>
+      <div class="sx-table sx-board" id="sxBoard"></div>
+    </section>
+  </div>
+
   <!-- ===================== STATS ===================== -->
   <div class="view" id="viewStats" hidden>
     <div class="sx-bar">
       <div class="chips" id="sxRange" role="group" aria-label="Time range">
         <button class="chip" data-r="24h" aria-pressed="true">24h</button>
         <button class="chip" data-r="7d" aria-pressed="false">7d</button>
+        <button class="chip" data-r="30d" aria-pressed="false">30d</button>
       </div>
       <span class="sx-status" id="sxStatus" aria-live="polite">Loading…</span>
     </div>
@@ -1243,11 +1267,7 @@ a.item{color:var(--ink);text-decoration:none}
       <div class="sx-head"><h2 id="sxPoolsH">Pools</h2><span id="sxPoolsNote"></span></div>
       <div class="sx-table" id="sxPools"></div>
     </section>
-    <section class="sx-card" aria-labelledby="sxBoardH">
-      <div class="sx-head"><h2 id="sxBoardH">Leaderboard</h2><span>last 7 days · points have no value</span></div>
-      <p class="sx-legend">1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 100 per token launched · 500 more when it graduates · +25% of the points of everyone you invited</p>
-      <div class="sx-table sx-board" id="sxBoard"></div>
-    </section>
+    <section class="sx-card"><div class="sx-head"><h2>Leaderboards</h2><button class="link-btn" data-goview="board">See who leads →</button></div><p class="sx-legend">Points, top traders, Arena winners, quest heroes and top inviters now have their own page.</p></section>
     <section class="sx-card" aria-labelledby="sxRecH">
       <div class="sx-head"><h2 id="sxRecH">Recent swaps</h2><span>latest first</span></div>
       <div id="sxRecent"></div>
@@ -1767,7 +1787,7 @@ function renderShell(){
 /* ================= views ================= */
 function setView(v){
   st.view = v;
-  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft'; $('viewNames').hidden = v !== 'names'; $('viewHelp').hidden = v !== 'help';
+  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewBoard').hidden = v !== 'board'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft'; $('viewNames').hidden = v !== 'names'; $('viewHelp').hidden = v !== 'help';
   document.querySelector('.lede').hidden = v === 'home';
   document.querySelectorAll('nav button').forEach(b => b.toggleAttribute('aria-current', b.dataset.view === v));
   document.querySelectorAll('nav button[aria-current]').forEach(b => b.setAttribute('aria-current','page'));
@@ -1790,6 +1810,9 @@ function setView(v){
   } else if (v === 'launch'){
     $('ledeH').innerHTML = 'Crown your own <em>meme</em>.';
     $('ledeP').textContent = 'Launch a token in one transaction. It trades on a bonding curve, then graduates to a CavFi pool with locked liquidity.';
+  } else if (v === 'board'){
+    $('ledeH').innerHTML = 'The royal <em>rankings</em>.';
+    $('ledeP').textContent = 'Who traded, played and quested the most on CavFi. Counted from on-chain activity; points have no value.';
   } else if (v === 'stats'){
     $('ledeH').innerHTML = 'The kennel <em>ledger</em>.';
     $('ledeP').textContent = 'Live numbers from every CavFi pool, read straight from the DogeOS testnet. No wallet needed.';
@@ -1803,9 +1826,10 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'help' ? '#faq'  : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'help' ? '#faq'  : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
-  if (v === 'stats' || v === 'home') loadStats(sx.loaded);
+  if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
+  if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
   if (v === 'home'){ loadHomeExtra(); loadOnboarding(); nfHomeFig(); loadGm(); loadQuests(); loadRaffle(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
   if (v === 'portfolio') loadPortfolio();
@@ -2907,7 +2931,7 @@ function pick(t){
    number and the measured block time. Volume is valued at today's prices. */
 const SX_SWAP = '0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822';
 const SX_SYNC = '0x1c411e9a96e071241c2f21f7726b17ae89e3cab4c78be50e062b03a9fffbbad1';
-const SX_WINDOW = 7 * 86400, SX_CHUNK = 9000;
+const SX_WINDOW = 30 * 86400, SX_CHUNK = 9000;
 const sx = { range:'24h', pools:[], ref:{}, logs:[], head:0, tHead:0, bt:3, loading:false, loaded:false, err:null, pool:null, at:0, feeOn:false, timer:null };
 const sxKey = () => 'cavfi.stats.v1.' + lk(A.factory);
 const word = (d, i) => BN.from('0x' + d.slice(2 + 64*i, 66 + 64*i));
@@ -2916,12 +2940,12 @@ const tsOf = b => sx.tHead - (sx.head - b) * sx.bt;
 function sxLoadCache(pairs){
   try{
     const c = JSON.parse(localStorage.getItem(sxKey()) || 'null');
-    if (c && c.v === 2 && c.pairs.join() === pairs.join()) return c;
+    if (c && c.v === 3 && c.pairs.join() === pairs.join()) return c;
   }catch(e){}
   return null;
 }
 function sxSaveCache(pairs){
-  const c = {v:2, pairs, to:sx.head, logs:sx.logs};
+  const c = {v:3, pairs, from:sx.from, to:sx.head, logs:sx.logs};
   try{ localStorage.setItem(sxKey(), JSON.stringify(c)); }
   catch(e){ try{ localStorage.removeItem(sxKey()); }catch(_){} }
 }
@@ -2968,14 +2992,20 @@ async function loadStats(quiet){
     sx.head = head; sx.tHead = bh.timestamp;
     const pairs = addrs.map(lk).sort();
     const first = Math.max(0, head - Math.ceil(SX_WINDOW / sx.bt));
-    const cache = sx.loaded ? {to:sx.lastTo, logs:sx.logs} : sxLoadCache(pairs);
+    const cache = sx.loaded ? {from:sx.from, to:sx.lastTo, logs:sx.logs} : sxLoadCache(pairs);
     let logs = cache && !(sx.loaded && sx.pairs !== pairs.join()) ? cache.logs : [];
     let from = cache && logs === cache.logs ? Math.max(first, cache.to + 1) : first;
+    // a cache that starts later than the window (e.g. from the old 7-day window) is filled in backwards
+    if (cache && logs === cache.logs && cache.from != null && cache.from > first){
+      if (!quiet) sx.progress = `Reading ${((cache.from - first)/1000).toFixed(0)}k older blocks…`, renderStatsStatus();
+      logs = (await sxGetLogs(addrs, first, cache.from - 1)).concat(logs);
+    } else if (cache && logs === cache.logs && cache.from == null) { from = first; logs = []; }
     if (from <= head){
-      if (!quiet && !cache) sx.progress = `Reading ${((head - from)/1000).toFixed(0)}k blocks of history…`, renderStatsStatus();
+      if (!quiet && !cache) sx.progress = `Reading ${((head - from)/1000).toFixed(0)}k blocks of history (30 days, once)…`, renderStatsStatus();
       const fresh = await sxGetLogs(addrs, from, head);
       logs = logs.concat(fresh);
     }
+    sx.from = first;
     logs = logs.filter(l => l[0] >= first);
     if (seq !== sxSeq) return;
     sx.pools = pools; sx.logs = logs; sx.lastTo = head; sx.pairs = pairs.join();
@@ -2987,9 +3017,9 @@ async function loadStats(quiet){
     sx.err = 'Could not read the DogeOS RPC right now. ' + (e && e.message ? e.message.slice(0, 80) : '');
   }
   sx.loading = false;
-  if (seq === sxSeq){ renderStats(); renderHome(); if (st.view === 'swap') renderSwapChart(); if (st.view === 'stats'){ if (A.launch && !lx.loaded) await loadLaunches(); loadBoard(); } }
+  if (seq === sxSeq){ renderStats(); renderHome(); if (st.view === 'swap') renderSwapChart(); if (st.view === 'board'){ if (A.launch && !lx.loaded) await loadLaunches(); loadBoard(); } }
 }
-setInterval(() => { if ((st.view === 'stats' || st.view === 'home' || st.view === 'swap') && !document.hidden && !sx.loading) loadStats(true); else if (st.view === 'stats') renderStatsStatus(); }, 30000);
+setInterval(() => { if ((st.view === 'stats' || st.view === 'home' || st.view === 'swap' || st.view === 'board') && !document.hidden && !sx.loading) loadStats(true); else if (st.view === 'stats') renderStatsStatus(); }, 30000);
 
 /* ---- derived numbers ---- */
 const sxPrice = a => sx.ref[lk(a)];
@@ -3011,7 +3041,7 @@ function sxSwaps(){
   }
   return out;
 }
-const sxRangeSec = () => sx.range === '7d' ? 7*86400 : 86400;
+const sxRangeSec = () => sx.range === '30d' ? 30*86400 : sx.range === '7d' ? 7*86400 : 86400;
 /* which side of a pool is "the price": a stablecoin quotes everything, then DOGE */
 function sxSides(p){
   const q1 = p.t1.stable ? 3 : same(p.a1, A.wdoge) ? 2 : 0, q0 = p.t0.stable ? 3 : same(p.a0, A.wdoge) ? 2 : 0;
@@ -3081,17 +3111,19 @@ function niceTicks(lo, hi, n){
 const LX_LAUNCHED = E.utils.id('Launched(address,address,string,string,uint256)');
 const AR_STAKED = E.utils.id('Staked(uint256,address,uint256,uint256)'), AR_CLAIMED = E.utils.id('Claimed(uint256,address,uint256)');
 const GM_GM = E.utils.id('GM(address,uint256,uint256)'), GM_GN = E.utils.id('GN(address,uint256)'), Q_DAY = E.utils.id('QuestDay(address,uint32,uint8,uint32)');
-const board = { rows:null, loading:false, err:null, at:0 };
+const board = { rows:null, loading:false, err:null, at:0, range:'7d', tab:'pts' };
+const boardSec = () => board.range === '30d' ? 30 * 86400 : 7 * 86400;
 let txFrom = {}; try{ txFrom = JSON.parse(localStorage.getItem('cavfi.txfrom') || '{}') || {}; }catch(e){ txFrom = {}; }
 async function loadBoard(){
   if (board.loading || !sx.loaded) return;
-  board.loading = true;
+  board.loading = true; renderBoard();
   try{
     const rp = RP(), contracts = new Set([A.router, A.limit, A.launch, A.farm, A.stake].filter(Boolean).map(lk));
     const pairSet = new Set(sx.pools.map(p => lk(p.address)));
     // 1. swaps: one entry per transaction, valued at its first hop, credited to the final recipient
     const byTx = {};
-    for (const s of sxSwaps()){ (byTx[s.tx] ||= []).push(s); }
+    const since = sx.tHead - boardSec();
+    for (const s of sxSwaps()){ if (s.t >= since) (byTx[s.tx] ||= []).push(s); }
     const need = [];
     const trades = Object.entries(byTx).map(([tx, hops]) => {
       hops.sort((a, b) => a.li - b.li);
@@ -3108,7 +3140,7 @@ async function loadBoard(){
     for (const t of trades){ const w = t.who || txFrom[t.tx]; if (!w) continue; const r = row(w); r.swapUsd += t.usd; r.swaps++; }
     // 2. launchpad: curve trades, launches and graduations in the window
     if (A.launch){
-      const first = Math.max(0, sx.head - Math.ceil(SX_WINDOW / sx.bt));
+      const first = Math.max(0, sx.head - Math.ceil(boardSec() / sx.bt));
       const logs = [];
       const ranges = []; for (let b = first; b <= sx.head; b += SX_CHUNK) ranges.push([b, Math.min(sx.head, b + SX_CHUNK - 1)]);
       let i = 0;
@@ -3125,7 +3157,7 @@ async function loadBoard(){
     }
     // 3. Arena: KingS staked (1 point per 1,000) and rounds won (a claim = a win, 100 points)
     if (A.arena){
-      const first = Math.max(0, sx.head - Math.ceil(SX_WINDOW / sx.bt));
+      const first = Math.max(0, sx.head - Math.ceil(boardSec() / sx.bt));
       const ranges = []; for (let b = first; b <= sx.head; b += SX_CHUNK) ranges.push([b, Math.min(sx.head, b + SX_CHUNK - 1)]);
       const logs = []; let i = 0;
       await Promise.all([0,1,2,3].map(async () => { while (i < ranges.length){ const [a, z] = ranges[i++];
@@ -3139,7 +3171,7 @@ async function loadBoard(){
     }
     // 4. gm / gn: 10 points each
     if (A.gm){
-      const first = Math.max(0, sx.head - Math.ceil(SX_WINDOW / sx.bt));
+      const first = Math.max(0, sx.head - Math.ceil(boardSec() / sx.bt));
       const ranges = []; for (let b = first; b <= sx.head; b += SX_CHUNK) ranges.push([b, Math.min(sx.head, b + SX_CHUNK - 1)]);
       let i = 0;
       await Promise.all([0,1,2,3].map(async () => { while (i < ranges.length){ const [a, z] = ranges[i++];
@@ -3148,7 +3180,7 @@ async function loadBoard(){
     }
     // 5. daily quests recorded by the bot: 20 points per quest
     if (A.quests){
-      const first = Math.max(0, sx.head - Math.ceil(SX_WINDOW / sx.bt));
+      const first = Math.max(0, sx.head - Math.ceil(boardSec() / sx.bt));
       const ranges = []; for (let b = first; b <= sx.head; b += SX_CHUNK) ranges.push([b, Math.min(sx.head, b + SX_CHUNK - 1)]);
       let i = 0;
       await Promise.all([0,1,2,3].map(async () => { while (i < ranges.length){ const [a, z] = ranges[i++];
@@ -3162,7 +3194,7 @@ async function loadBoard(){
     board.rows = Object.values(P).map(r => ({...r, refPts: Math.round(r.refPts || 0), pts: Math.round(base(r) + (r.refPts || 0))}))
       .filter(r => r.pts > 0).sort((a, b) => b.pts - a.pts);
     const me = lk(st.account || '');
-    try{ if (A.names){ const ad = board.rows.slice(0, 20).map(r => r.addr); if (board.rows.some(r => r.addr === me)) ad.push(me);
+    try{ if (A.names){ const ad = [...new Set(Object.values(LB_TABS).flatMap(T => board.rows.filter(r => T.key(r) > 0).sort((a, b) => T.key(b) - T.key(a)).slice(0, 20).map(r => r.addr)))]; if (board.rows.some(r => r.addr === me)) ad.push(me);
       const ns = await nmC().namesOf(ad); board.names = {}; ad.forEach((a, k) => { if (nmValid(ns[k])) board.names[a] = ns[k] + '.cav'; }); } }catch(e){}
     board.badges = await boardBadges([...new Set([...board.rows.slice(0, 20).map(r => r.addr), ...(board.rows.some(r => r.addr === me) ? [me] : [])])]);
     board.err = null; board.at = Date.now();
@@ -3170,15 +3202,42 @@ async function loadBoard(){
   board.loading = false;
   renderBoard();
 }
+const LB_TABS = {
+  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
+  swap:  {key: r => r.swapUsd, legend: 'Ranked by swap volume, valued at today\'s CavFi pool prices.', val: r => sxUsd(r.swapUsd)},
+  arena: {key: r => r.arenaWins * 1e12 + r.arenaK, legend: 'Ranked by Arena rounds won, then by KingS staked.', val: r => r.arenaWins ? `${r.arenaWins} 🏆` : sxNum(r.arenaK) + ' KingS'},
+  quest: {key: r => r.quests * 2 + r.gms, legend: 'Ranked by daily quests done (recorded by the bot after each day), then by gm and gn.', val: r => `${r.quests} quests`},
+  launch:{key: r => r.grads * 1e9 + r.launches * 1e6 + r.launchUsd, legend: 'Ranked by tokens that graduated, then tokens launched, then launchpad volume.', val: r => `${r.launches} launched`},
+  ref:   {key: r => r.invites || 0, legend: 'Ranked by people invited with an invite link (Badges & invite link in your account).', val: r => `${r.invites || 0} invited`},
+};
+$('lbTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; board.tab = b.dataset.t; renderBoard(); });
+$('lbRange').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b || b.dataset.r === board.range) return; board.range = b.dataset.r; board.rows = null; renderBoard(); loadBoard(); });
 function renderBoard(){
   const box = $('sxBoard'); if (!box) return;
-  if (!board.rows){ box.innerHTML = `<div class="empty-card">${board.err || 'Counting points…'}</div>`; return; }
-  if (!board.rows.length){ box.innerHTML = '<div class="empty-card">No activity in the last 7 days yet.</div>'; return; }
-  const me = lk(st.account || ''), top = board.rows.slice(0, 20), myIdx = board.rows.findIndex(r => r.addr === me);
+  document.querySelectorAll('#lbTabs .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === board.tab)));
+  document.querySelectorAll('#lbRange .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.r === board.range)));
+  const T = LB_TABS[board.tab];
+  $('lbLegend').textContent = T.legend;
+  $('lbNote').textContent = `last ${board.range === '30d' ? '30' : '7'} days · points have no value`;
+  $('lbStatus').textContent = board.loading ? 'Counting…' : sx.loaded ? `Block ${sx.head.toLocaleString('en-US')}` : 'Loading…';
+  if (!board.rows){ $('lbPod').innerHTML = ''; box.innerHTML = `<div class="empty-card">${board.err || (sx.loaded ? 'Counting points…' : 'Reading the chain…')}</div>`; return; }
+  const rows = board.rows.filter(r => T.key(r) > 0).sort((a, b) => T.key(b) - T.key(a));
+  if (!rows.length){ $('lbPod').innerHTML = ''; box.innerHTML = `<div class="empty-card">Nobody here yet for the last ${board.range === '30d' ? '30' : '7'} days. Be the first.</div>`; return; }
+  const nameOf = r => (board.names || {})[r.addr] || short(E.utils.getAddress(r.addr));
+  $('lbPod').innerHTML = rows.slice(0, 3).map((r, i) => `<div class="p${i + 1}"><span>${['🥇', '🥈', '🥉'][i]}</span><b>${esc(nameOf(r))}</b><small>${T.val(r)}</small></div>`).join('');
+  const me = lk(st.account || ''), top = rows.slice(0, 20), myIdx = rows.findIndex(r => r.addr === me);
+  if (board.tab !== 'pts'){
+    const cols = {swap: ['Swaps', r => r.swaps, 'Volume', r => sxUsd(r.swapUsd)], arena: ['Rounds won', r => r.arenaWins || '–', 'KingS staked', r => sxNum(r.arenaK)],
+      quest: ['gm / gn', r => r.gms || '–', 'Quests', r => r.quests || '–'], launch: ['Launched', r => r.launches + (r.grads ? ` · ${r.grads}🎓` : ''), 'Launchpad volume', r => sxUsd(r.launchUsd)],
+      ref: ['Bonus points', r => r.refPts ? '+' + r.refPts.toLocaleString('en-US') : '–', 'Invited', r => r.invites || 0]}[board.tab];
+    const tr2 = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="${NET.explorer}/address/${r.addr}" target="_blank" rel="noopener">${esc(nameOf(r))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td><td>${cols[1](r)}</td><td><b>${cols[3](r)}</b></td></tr>`;
+    box.innerHTML = `<table><thead><tr><th scope="col">#</th><th scope="col">Wallet</th><th scope="col">${cols[0]}</th><th scope="col">${cols[2]}</th></tr></thead><tbody>${top.map(tr2).join('')}${myIdx >= 20 ? tr2(rows[myIdx], myIdx) : ''}</tbody></table>`;
+    return;
+  }
   const tr = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="${NET.explorer}/address/${r.addr}" target="_blank" rel="noopener">${(board.names || {})[r.addr] || short(E.utils.getAddress(r.addr))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td>
     <td>${sxUsd(r.swapUsd)}</td><td class="sx-hide-m">${sxUsd(r.launchUsd)}</td><td class="sx-hide-m">${r.arenaK || r.arenaWins ? sxNum(r.arenaK) + ' KingS' + (r.arenaWins ? ` · ${r.arenaWins}🏆` : '') : '–'}</td><td class="sx-hide-m">${r.launches}${r.grads ? ` · ${r.grads}🎓` : ''}</td><td class="sx-hide-m">${r.refPts ? '+' + r.refPts.toLocaleString('en-US') : '–'}</td><td><b>${r.pts.toLocaleString('en-US')}</b></td></tr>`;
   box.innerHTML = `<table><thead><tr><th scope="col">#</th><th scope="col">Trader</th><th scope="col">Swap volume</th><th scope="col" class="sx-hide-m">Launchpad</th><th scope="col" class="sx-hide-m">Arena</th><th scope="col" class="sx-hide-m">Launches</th><th scope="col" class="sx-hide-m">Invites</th><th scope="col">Points</th></tr></thead><tbody>
-    ${top.map(tr).join('')}${myIdx >= 20 ? tr(board.rows[myIdx], myIdx) : ''}</tbody></table>`;
+    ${top.map(tr).join('')}${myIdx >= 20 ? tr(rows[myIdx], myIdx) : ''}</tbody></table>`;
 }
 /* ---- render ---- */
 function renderStatsStatus(){
@@ -3204,18 +3263,18 @@ function renderStats(){
   $('sxTvl').textContent = sxUsd(tvl);
   $('sxTvlSub').textContent = `${sx.pools.length} pools`;
   $('sxVol').textContent = sxUsd(vol);
-  const canPrev = R === '24h';                       // we keep 7 days, so only 24h has a full previous period
-  $('sxVolSub').textContent = canPrev && vPrev > 0 ? `${vol >= vPrev ? '▲' : '▼'} ${Math.abs((vol/vPrev - 1)*100).toFixed(0)}% vs previous 24h` : canPrev ? 'no swaps the day before' : 'last 7 days';
+  const canPrev = R !== '30d';                       // we keep 30 days, so 24h and 7d have a full previous period
+  $('sxVolSub').textContent = canPrev && vPrev > 0 ? `${vol >= vPrev ? '▲' : '▼'} ${Math.abs((vol/vPrev - 1)*100).toFixed(0)}% vs previous ${R}` : canPrev ? `no swaps in the ${R} before` : 'last 30 days';
   $('sxFee').textContent = sxUsd(vol * 0.003);
   $('sxFeeSub').textContent = sx.feeOn ? `${sxUsd(vol*0.0025)} to LPs · ${sxUsd(vol*0.0005)} protocol` : '0.3% to liquidity providers';
   $('sxSw').textContent = cur.length.toLocaleString('en-US');
   $('sxSwSub').textContent = cur.length ? `avg ${sxUsd(vol / cur.length)} per swap` : 'no swaps yet';
 
   // volume bars
-  const nb = R === '7d' ? 28 : 24, w = rs / nb, start = Math.floor(now / w) * w + w;   // the last bucket holds "now"
+  const nb = R === '30d' ? 30 : R === '7d' ? 28 : 24, w = rs / nb, start = Math.floor(now / w) * w + w;   // the last bucket holds "now"
   const buckets = [...Array(nb)].map((_, i) => ({t0: start - (nb - i) * w, t1: start - (nb - i - 1) * w, v:0, n:0}));
   for (const s of cur){ const i = Math.floor((s.t - buckets[0].t0) / w); if (i >= 0 && i < nb){ buckets[i].v += s.usd || 0; buckets[i].n++; } }
-  sxBarChart($('sxVolChart'), buckets, R === '7d');
+  sxBarChart($('sxVolChart'), buckets, R !== '24h', R === '30d' ? 5 : 4);
 
   // price
   const sel = $('sxPool');
@@ -3231,7 +3290,7 @@ function renderStats(){
     const first = pts[0] && pts[0].v, last = pts.length && pts[pts.length-1].v;
     const ch = first ? (last / first - 1) * 100 : 0;
     $('sxPxNow').innerHTML = `1 ${esc(s(base))} = ${sxNum(last)} ${esc(s(quote))}<small>${first ? (ch >= 0 ? '▲ ' : '▼ ') + Math.abs(ch).toFixed(2) + '% in ' + R : ''}</small>`;
-    sxLineChart($('sxPxChart'), pts, now - rs, now, s(quote), R === '7d');
+    sxLineChart($('sxPxChart'), pts, now - rs, now, s(quote), R !== '24h');
   } else { $('sxPxNow').innerHTML = '&nbsp;'; $('sxPxChart').innerHTML = '<div class="sx-empty">No pools yet.</div>'; }
 
   // pools table
@@ -3247,29 +3306,31 @@ function renderStats(){
   // recent
   const rec = swaps.slice(-12).reverse();
   $('sxRecent').innerHTML = rec.length ? rec.map(s => `<div class="sx-rec"><span class="when">${sxAgo(s.t)}</span><span class="what">${sxNum(s.sellN)} ${esc(s.sellT.symbol)} → ${sxNum(s.buyN)} ${esc(s.buyT.symbol)}</span><span class="val">${sxUsd(s.usd)}<a href="${NET.explorer}/tx/${s.tx}" target="_blank" rel="noopener" aria-label="View transaction on Blockscout">↗</a></span></div>`).join('')
-    : '<div class="empty-card">No swaps in the last 7 days.</div>';
+    : '<div class="empty-card">No swaps in the last 30 days.</div>';
 }
 
 function sxFrame(el){
   const W = Math.max(260, el.clientWidth || 600), H = W < 480 ? 170 : 200;
   return {W, H, L:48, R:8, T:12, B:24};
 }
-function sxBarChart(el, buckets, week){
+function sxBarChart(el, buckets, week, every_){
   const {W, H, L, R, T, B} = sxFrame(el), iw = W - L - R, ih = H - T - B;
   const max = Math.max(...buckets.map(b => b.v));
   if (!(max > 0)){ el.innerHTML = '<div class="sx-empty">No swaps in this window yet. Make one on the Swap page.</div>'; return; }
-  const {ticks} = niceTicks(0, max, 3), top = ticks[ticks.length - 1] || max;
+  const {ticks, step} = niceTicks(0, max, 3);
+  let top = ticks[ticks.length - 1] || max;
+  if (top < max){ top = +(top + step).toPrecision(12); ticks.push(top); }   // the axis always reaches the tallest bar
   const y = v => T + ih - v / top * ih, slot = iw / buckets.length, bw = Math.max(2, slot - 2);
   let g = ticks.map(v => `<line class="grid" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end">${sxUsd(v)}</text>`).join('');
   g += `<line class="base" x1="${L}" x2="${W-R}" y1="${T+ih}" y2="${T+ih}"/>`;
-  const every = week ? 4 : 6;
+  const every = every_ || (week ? 4 : 6);
   buckets.forEach((b, i) => {
     const x = L + i * slot + 1, h = Math.max(0, T + ih - y(b.v));
     if (h > 0){ const r = Math.min(4, bw/2, h); g += `<path class="bar" data-i="${i}" d="M${x},${T+ih}V${T+ih-h+r}q0,-${r} ${r},-${r}H${x+bw-r}q${r},0 ${r},${r}V${T+ih}Z"/>`; }
     if (i % every === 0) g += `<text x="${x + bw/2}" y="${H-6}" text-anchor="middle">${week ? new Date(b.t0*1000).toLocaleDateString('en-US',{month:'short', day:'numeric'}) : sxTime(b.t0)}</text>`;
   });
   g += `<rect x="${L}" y="${T}" width="${iw}" height="${ih}" fill="transparent" class="hit"/>`;
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Volume per ${week ? '6 hours' : 'hour'}, peak ${sxUsd(max)}">${g}</svg><div class="ctip" hidden></div>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="Volume per ${buckets.length === 30 ? 'day' : week ? '6 hours' : 'hour'}, peak ${sxUsd(max)}">${g}</svg><div class="ctip" hidden></div>`;
   const svg = el.querySelector('svg'), tip = el.querySelector('.ctip'), bars = [...svg.querySelectorAll('.bar')];
   const show = (cx) => {
     const i = Math.min(buckets.length - 1, Math.max(0, Math.floor((cx - L) / slot)));
@@ -5319,7 +5380,7 @@ paintTheme();
   st.tin = TOKENS[0]; st.tout = by('KingS') || TOKENS[1] || TOKENS[0];
   st.la = by('KingS') || TOKENS[0]; st.lb = by('cUSDT') || by('USDT') || TOKENS[0];
   const lxDeep = location.hash.match(LX_HASH);
-  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
+  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#leaderboard' ? 'board' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
   if (lxDeep) openLaunch(E.utils.getAddress(lxDeep[1].toLowerCase()));
   if (location.hash === '#send') setTimeout(() => { if (st.account) sdOpen(); }, 1500);
   renderShell(); renderSwap(); renderLiq(); renderPools();
