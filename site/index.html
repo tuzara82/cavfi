@@ -471,6 +471,7 @@ a.item{color:var(--ink);text-decoration:none}
 .bd-art.dim{filter:grayscale(1);opacity:.45}
 .bd-own{color:var(--ok);font:700 12px var(--body)}
 .bd-how{color:var(--muted);font-size:11.5px;font-style:italic}
+.wc-qr{display:grid;place-items:center;padding:6px 0 10px}.wc-qr img{border-radius:14px;background:#fff;padding:8px;width:240px;height:240px}
 .bd-claim{padding:5px 10px;font-size:12.5px;justify-self:start}
 .bd-dots{display:inline-flex;gap:2px;margin-left:6px;vertical-align:-3px}
 .bd-dot svg{display:block}
@@ -571,6 +572,21 @@ a.item{color:var(--ink);text-decoration:none}
 @media (max-width:420px){.lx-hold{grid-template-columns:20px minmax(0,1fr) 60px 46px}}
 
 /* ---- first steps ---- */
+.gm-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:16px 18px;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:14px 22px}
+.gm-l h2{margin:0;font:400 22px var(--display)}.gm-l small{color:var(--muted);font-size:13px}
+.gm-streak{display:grid;justify-items:center;line-height:1}.gm-streak b{font:500 30px var(--mono);color:var(--chestnut)}.gm-streak span{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.gm-btns{display:flex;gap:8px}.gm-b{padding:11px 16px;font-size:15px;border-radius:14px}.gm-b.done{opacity:.55}
+@media (max-width:640px){.gm-card{grid-template-columns:minmax(0,1fr) auto}.gm-btns{grid-column:1/-1}.gm-b{flex:1}}
+.nm-body{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);width:100%;max-width:760px}
+.nm-input{display:flex;align-items:center;background:var(--well);border:1px solid var(--line);border-radius:14px;padding:4px 14px}
+.nm-input input{flex:1;min-width:0;width:0;border:0;background:none;font:500 24px var(--mono);color:var(--ink);padding:10px 0;outline:none}
+.nm-input span{font:500 24px var(--mono);color:var(--chestnut)}
+.nm-result{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;min-height:44px}
+.nm-hint{color:var(--muted);font-size:12.5px}
+.nm-ok{color:var(--ok);font-weight:700}.nm-no{color:var(--bad);font-weight:700}
+.nm-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font:500 14.5px var(--mono)}
+.nm-row small{font:400 12px var(--body);color:var(--muted)}
+.nm-tag{font:700 10px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--ok);margin-left:8px}
 .ob-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:18px;display:grid;gap:12px}
 .ob-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .ob-head h2{margin:0;font:400 24px var(--display)}
@@ -731,6 +747,7 @@ a.item{color:var(--ink);text-decoration:none}
       <button id="nav-stats" data-view="stats">Stats</button>
       <a id="nav-arena" class="nav-link" href="arena.html">Arena<small>new</small></a>
       <button id="nav-nft" data-view="nft">NFTs</button>
+      <button id="nav-names" data-view="names">Names</button>
       <button id="nav-faucet" data-view="faucet">Faucet</button>
       <button id="nav-pf" data-view="portfolio">Portfolio</button>
     </nav>
@@ -771,6 +788,11 @@ a.item{color:var(--ink);text-decoration:none}
         </svg>
         <span class="hm-pet">tap me</span>
       </button>
+    </section>
+    <section class="gm-card" id="gmCard" hidden aria-labelledby="gmH">
+      <div class="gm-l"><h2 id="gmH">Say it on-chain</h2><small id="gmSub">One gm and one gn a day. Keep a 7-day gm streak for the Early Pup badge.</small></div>
+      <div class="gm-streak" aria-label="gm streak"><b id="gmStreak">0</b><span>day streak</span></div>
+      <div class="gm-btns"><button class="btn gm-b" id="gmBtn" data-gm="gm">☀️ GM</button><button class="btn gm-b" id="gnBtn" data-gm="gn">🌙 GN</button></div>
     </section>
     <section class="ob-card" id="obCard" hidden aria-labelledby="obH">
       <div class="ob-head"><div><h2 id="obH">New to CavFi? Start here</h2><small id="obSub"></small></div><button class="icon-btn" id="obHide" aria-label="Hide the first steps">✕</button></div>
@@ -1035,6 +1057,19 @@ a.item{color:var(--ink);text-decoration:none}
     <div class="fc-grid" id="fcBody"></div>
   </div>
 
+  <!-- ===================== NAMES ===================== -->
+  <div class="view" id="viewNames" hidden>
+    <div class="nm-body">
+      <section class="sx-card nm-search">
+        <div class="sx-head"><h2>Find your .cav name</h2><span id="nmTotal"></span></div>
+        <div class="nm-input"><input id="nmIn" placeholder="yourname" autocomplete="off" spellcheck="false" maxlength="32" aria-label="Name to search"><span>.cav</span></div>
+        <div id="nmResult" class="nm-result" aria-live="polite"><small class="nm-hint">3 to 32 characters: a-z, 0-9 and hyphens. 3 letters 10 DOGE · 4 letters 5 DOGE · 5 or more 1 DOGE. Yours forever, no renewals.</small></div>
+      </section>
+      <section class="sx-card"><div class="sx-head"><h2>Your names</h2><span>your primary name shows instead of your address</span></div><div id="nmMine"></div></section>
+      <section class="sx-card"><div class="sx-head"><h2>Just registered</h2></div><div id="nmRecent"></div></section>
+    </div>
+  </div>
+
   <!-- ===================== NFTs ===================== -->
   <div class="view" id="viewNft" hidden>
     <div class="nf-body" id="nfBody"></div>
@@ -1071,7 +1106,7 @@ a.item{color:var(--ink);text-decoration:none}
     </section>
     <section class="sx-card" aria-labelledby="sxBoardH">
       <div class="sx-head"><h2 id="sxBoardH">Leaderboard</h2><span>last 7 days · points have no value</span></div>
-      <p class="sx-legend">1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 100 per token launched · 500 more when it graduates · +25% of the points of everyone you invited</p>
+      <p class="sx-legend">1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 100 per token launched · 500 more when it graduates · +25% of the points of everyone you invited</p>
       <div class="sx-table sx-board" id="sxBoard"></div>
     </section>
     <section class="sx-card" aria-labelledby="sxRecH">
@@ -1182,11 +1217,11 @@ a.item{color:var(--ink);text-decoration:none}
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 /* WalletConnect (any mobile wallet by QR code). Free project id from https://cloud.reown.com,
    with cavfi.com in its allowed domains. Empty = the option is hidden. */
-const WC_PROJECT_ID = '';
+const WC_PROJECT_ID = 'ad869383e41c6521dec65f38e780d455';
 const NET = {
   name:'DogeOS Testnet', explorer:'https://blockscout.testnet.dogeos.com',
   add:{chainName:'DogeOS Chikyu Testnet', nativeCurrency:{name:'Dogecoin',symbol:'DOGE',decimals:18},
@@ -1195,7 +1230,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -1387,16 +1422,30 @@ function walletGate(){
 let listenersSet = false;
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const wcItem = () => WC_PROJECT_ID ? `<button class="item" id="wWc"><span class="wicon" style="background:#3B99FC">WC</span><span class="nm"><b>WalletConnect</b><small>${isMobile ? 'Pick your wallet app, it opens and asks to connect' : 'Scan a QR code with any mobile wallet'}</small></span></button>` : '';
-/* WalletConnect: the provider bundle (wc.js) is only downloaded when someone picks it. */
+/* WalletConnect: the provider bundle (wc.js) is only downloaded when someone picks it.
+   We draw our own QR code / wallet buttons from the pairing link (no third-party modal). */
+async function wcShowUri(uri){
+  const enc = encodeURIComponent(uri);
+  let img = '';
+  try{ img = await window.CavWC.qr(uri); }catch(e){}
+  $('wText').textContent = isMobile ? 'Pick your wallet app. It opens and asks you to connect to CavFi.' : 'Scan this code with your phone wallet (MetaMask, Trust, Rainbow, OKX…). It asks you to connect to CavFi.';
+  const btn = (href, color, label, name, sub) => `<a class="item" href="${href}"><span class="wicon" style="background:${color}">${label}</span><span class="nm"><b>${name}</b><small>${sub}</small></span></a>`;
+  $('wList').innerHTML = (img ? `<div class="wc-qr"><img src="${img}" alt="WalletConnect QR code" width="240" height="240"></div>` : '') +
+    (isMobile ? btn(`metamask://wc?uri=${enc}`, '#E2761B', 'MM', 'MetaMask', 'Opens the app') + btn(`trust://wc?uri=${enc}`, '#0500FF', 'TW', 'Trust Wallet', 'Opens the app') + btn(uri, '#3B99FC', 'WC', 'Other wallet', 'Any WalletConnect wallet') : '') +
+    `<button class="item" id="wcCopy"><span class="wicon" style="background:var(--chestnut)">⧉</span><span class="nm"><b>Copy link</b><small>Paste it into your wallet's WalletConnect screen</small></span></button>`;
+  $('walletModal').hidden = false;
+  $('wcCopy').onclick = async () => { try{ await navigator.clipboard.writeText(uri); toast('WalletConnect link copied.', 'ok'); }catch(e){ toast(esc(uri)); } };
+}
 let wcProv = null, injected = null;
 async function wcInit(showQr){
-  if (!window.CavWC) await new Promise((ok, bad) => { const sc = document.createElement('script'); sc.src = 'wc.js'; sc.onload = ok; sc.onerror = () => bad(new Error('Could not load WalletConnect.')); document.head.appendChild(sc); });
+  if (!window.CavWC) await new Promise((ok, bad) => { const sc = document.createElement('script'); sc.src = 'wc.js?v=2'; sc.onload = ok; sc.onerror = () => bad(new Error('Could not load WalletConnect.')); document.head.appendChild(sc); });
   if (!wcProv){
     wcProv = await window.CavWC.EthereumProvider.init({
-      projectId: WC_PROJECT_ID, optionalChains: [CHAIN_ID], showQrModal: showQr,
+      projectId: WC_PROJECT_ID, optionalChains: [CHAIN_ID], showQrModal: false,
       rpcMap: {[CHAIN_ID]: NET.add.rpcUrls[0]},
       metadata: {name: 'CavFi', description: 'DeFi hub on DogeOS testnet', url: location.origin, icons: [location.origin + '/icon-192.png']},
     });
+    wcProv.on('display_uri', wcShowUri);
     wcProv.on('disconnect', () => { try{ localStorage.removeItem('cavfi.wc'); }catch(e){} window.ethereum = injected; st.account = null; st.signer = null; st.provider = null; listenersSet = false; renderShell(); refreshAll(); });
   }
   return wcProv;
@@ -1406,6 +1455,7 @@ async function connectWC(){
     $('walletModal').hidden = true;
     const p = await wcInit(true);
     if (!p.session) await p.connect({optionalChains: [CHAIN_ID]});
+    $('walletModal').hidden = true;
     if (injected === null) injected = window.ethereum || undefined;
     window.ethereum = p; listenersSet = false;
     try{ localStorage.setItem('cavfi.wc', '1'); }catch(e){}
@@ -1554,6 +1604,9 @@ async function refreshAll(){
   if (st.view === 'portfolio') loadPortfolio();
   if (st.view === 'faucet') loadFaucet();
   if (st.view === 'nft') loadNft();
+  if (st.view === 'names') loadNames();
+  if (st.view === 'home') loadGm();
+  loadMyName();
   if (st.view === 'home') loadOnboarding();
   await Promise.all([refreshSwap(), refreshLiq(), loadPools().then(loadEarn)]);
 }
@@ -1561,7 +1614,7 @@ function renderShell(){
   $('net').classList.toggle('live', onRightChain());
   $('net').classList.toggle('wrong', !!st.provider && !onRightChain());
   const wb = $('wallet');
-  if (st.account){ wb.textContent = short(st.account); wb.classList.add('on'); }
+  if (st.account){ wb.textContent = myName.name && myName.addr === lk(st.account) ? myName.name + '.cav' : short(st.account); wb.classList.add('on'); }
   else { wb.textContent = 'Connect wallet'; wb.classList.remove('on'); }
   $('fRouter').textContent = A.router ? short(A.router) : 'not deployed';
   $('notDeployed').hidden = ready();
@@ -1571,12 +1624,15 @@ function renderShell(){
 /* ================= views ================= */
 function setView(v){
   st.view = v;
-  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft';
+  $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft'; $('viewNames').hidden = v !== 'names';
   document.querySelector('.lede').hidden = v === 'home';
   document.querySelectorAll('nav button').forEach(b => b.toggleAttribute('aria-current', b.dataset.view === v));
   document.querySelectorAll('nav button[aria-current]').forEach(b => b.setAttribute('aria-current','page'));
   { const nv = document.querySelector('nav'), cur = nv && nv.querySelector('button[aria-current]'); if (nv && cur && nv.scrollWidth > nv.clientWidth) nv.scrollLeft = Math.max(0, cur.offsetLeft - nv.offsetLeft - 24); }
-  if (v === 'faucet'){
+  if (v === 'names'){
+    $('ledeH').innerHTML = 'Claim your <em>.cav</em> name.';
+    $('ledeP').textContent = 'A readable name for your wallet, like borislav.cav. It shows on the leaderboard and in your wallet button instead of 0x… and it is an NFT you own forever.';
+  } else if (v === 'faucet'){
     $('ledeH').innerHTML = 'Fill the royal <em>bowl</em>.';
     $('ledeP').textContent = 'Free test tokens for the DogeOS testnet, all in one place. They have no real value, so try everything.';
   } else if (v === 'nft'){
@@ -1601,14 +1657,15 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'launch' ? '#launch' : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'launch' ? '#launch' : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home') loadStats(sx.loaded);
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
-  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); nfHomeFig(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
+  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); nfHomeFig(); loadGm(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
   if (v === 'portfolio') loadPortfolio();
   if (v === 'faucet') loadFaucet();
   if (v === 'nft') loadNft();
+  if (v === 'names') loadNames();
   if (v === 'launch'){ loadLaunches(); if (!sx.loaded) loadStats(); renderLaunch(); }
 }
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
@@ -2874,6 +2931,7 @@ function niceTicks(lo, hi, n){
 /* ---- leaderboard: points from on-chain activity in the stats window (7 days) ---- */
 const LX_LAUNCHED = E.utils.id('Launched(address,address,string,string,uint256)');
 const AR_STAKED = E.utils.id('Staked(uint256,address,uint256,uint256)'), AR_CLAIMED = E.utils.id('Claimed(uint256,address,uint256)');
+const GM_GM = E.utils.id('GM(address,uint256,uint256)'), GM_GN = E.utils.id('GN(address,uint256)');
 const board = { rows:null, loading:false, err:null, at:0 };
 let txFrom = {}; try{ txFrom = JSON.parse(localStorage.getItem('cavfi.txfrom') || '{}') || {}; }catch(e){ txFrom = {}; }
 async function loadBoard(){
@@ -2897,7 +2955,7 @@ async function loadBoard(){
     }
     try{ localStorage.setItem('cavfi.txfrom', JSON.stringify(txFrom)); }catch(e){}
     const P = {};
-    const row = a => (P[a] ||= {addr:a, swapUsd:0, swaps:0, launchUsd:0, launches:0, grads:0, arenaK:0, arenaWins:0});
+    const row = a => (P[a] ||= {addr:a, swapUsd:0, swaps:0, launchUsd:0, launches:0, grads:0, arenaK:0, arenaWins:0, gms:0});
     for (const t of trades){ const w = t.who || txFrom[t.tx]; if (!w) continue; const r = row(w); r.swapUsd += t.usd; r.swaps++; }
     // 2. launchpad: curve trades, launches and graduations in the window
     if (A.launch){
@@ -2930,13 +2988,24 @@ async function loadBoard(){
         else r.arenaWins++;
       }
     }
+    // 4. gm / gn: 10 points each
+    if (A.gm){
+      const first = Math.max(0, sx.head - Math.ceil(SX_WINDOW / sx.bt));
+      const ranges = []; for (let b = first; b <= sx.head; b += SX_CHUNK) ranges.push([b, Math.min(sx.head, b + SX_CHUNK - 1)]);
+      let i = 0;
+      await Promise.all([0,1,2,3].map(async () => { while (i < ranges.length){ const [a, z] = ranges[i++];
+        const res = await rp.send('eth_getLogs', [{address:A.gm, fromBlock:E.utils.hexValue(a), toBlock:E.utils.hexValue(z), topics:[[GM_GM, GM_GN]]}]);
+        for (const l of res) row(lk('0x' + l.topics[1].slice(26))).gms++; } }));
+    }
     if (A.bot) delete P[lk(A.bot)];   // the CavFi bot's own trades and tips don't count
-    const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.launches * 100 + r.grads * 500;
+    const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.launches * 100 + r.grads * 500;
     let refMap = {}; try{ refMap = await loadRefMap(); }catch(e){}
     for (const r of Object.values(P)){ const by = refMap[r.addr]; if (by){ const x = row(by); x.refPts = (x.refPts || 0) + base(r) * 0.25; x.invites = (x.invites || 0) + 1; } }
     board.rows = Object.values(P).map(r => ({...r, refPts: Math.round(r.refPts || 0), pts: Math.round(base(r) + (r.refPts || 0))}))
       .filter(r => r.pts > 0).sort((a, b) => b.pts - a.pts);
     const me = lk(st.account || '');
+    try{ if (A.names){ const ad = board.rows.slice(0, 20).map(r => r.addr); if (board.rows.some(r => r.addr === me)) ad.push(me);
+      const ns = await nmC().namesOf(ad); board.names = {}; ad.forEach((a, k) => { if (nmValid(ns[k])) board.names[a] = ns[k] + '.cav'; }); } }catch(e){}
     board.badges = await boardBadges([...new Set([...board.rows.slice(0, 20).map(r => r.addr), ...(board.rows.some(r => r.addr === me) ? [me] : [])])]);
     board.err = null; board.at = Date.now();
   }catch(e){ board.err = 'Could not build the leaderboard right now.'; }
@@ -2948,7 +3017,7 @@ function renderBoard(){
   if (!board.rows){ box.innerHTML = `<div class="empty-card">${board.err || 'Counting points…'}</div>`; return; }
   if (!board.rows.length){ box.innerHTML = '<div class="empty-card">No activity in the last 7 days yet.</div>'; return; }
   const me = lk(st.account || ''), top = board.rows.slice(0, 20), myIdx = board.rows.findIndex(r => r.addr === me);
-  const tr = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="${NET.explorer}/address/${r.addr}" target="_blank" rel="noopener">${short(E.utils.getAddress(r.addr))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td>
+  const tr = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="${NET.explorer}/address/${r.addr}" target="_blank" rel="noopener">${(board.names || {})[r.addr] || short(E.utils.getAddress(r.addr))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td>
     <td>${sxUsd(r.swapUsd)}</td><td class="sx-hide-m">${sxUsd(r.launchUsd)}</td><td class="sx-hide-m">${r.arenaK || r.arenaWins ? sxNum(r.arenaK) + ' KingS' + (r.arenaWins ? ` · ${r.arenaWins}🏆` : '') : '–'}</td><td class="sx-hide-m">${r.launches}${r.grads ? ` · ${r.grads}🎓` : ''}</td><td class="sx-hide-m">${r.refPts ? '+' + r.refPts.toLocaleString('en-US') : '–'}</td><td><b>${r.pts.toLocaleString('en-US')}</b></td></tr>`;
   box.innerHTML = `<table><thead><tr><th scope="col">#</th><th scope="col">Trader</th><th scope="col">Swap volume</th><th scope="col" class="sx-hide-m">Launchpad</th><th scope="col" class="sx-hide-m">Arena</th><th scope="col" class="sx-hide-m">Launches</th><th scope="col" class="sx-hide-m">Invites</th><th scope="col">Points</th></tr></thead><tbody>
     ${top.map(tr).join('')}${myIdx >= 20 ? tr(board.rows[myIdx], myIdx) : ''}</tbody></table>`;
@@ -3166,7 +3235,7 @@ function renderPortfolio(){
       <div class="pf-total"><span>Total on CavFi</span><b>${sxUsd(total)}</b><small>testnet tokens, valued at CavFi pool prices</small></div>
       <div class="pf-bar" role="img" aria-label="Where your value is">${seg.map(s => `<span style="width:${pct(s[1]).toFixed(2)}%;background:${s[2]}" title="${s[0]} ${sxUsd(s[1])}"></span>`).join('')}</div>
       <div class="pf-legend">${seg.map(s => `<span><i style="background:${s[2]}"></i>${s[0]} <b>${sxUsd(s[1])}</b></span>`).join('')}</div>
-      <div class="pf-figs"><div><span>Rewards to claim</span><b>${sxNum(d.pending)} KingS</b></div><div><span>Badges</span><b>${bd.mask == null ? '–' : BADGES.filter((b, i) => i && (bd.mask >> (i - 1)) & 1).length + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0)}</b></div><div><span>Open orders</span><b>${d.orders.length}</b></div></div>
+      <div class="pf-figs"><div><span>Rewards to claim</span><b>${sxNum(d.pending)} KingS</b></div><div><span>Badges</span><b>${bd.mask == null ? '–' : BADGES.filter((b, i) => i && (bd.mask >> (i - 1)) & 1).length + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0) + (bd.pup ? 1 : 0)}</b></div><div><span>Open orders</span><b>${d.orders.length}</b></div></div>
       <div class="pf-acts"><button class="btn" data-pf="farm">Harvest on Farms</button><button class="btn" data-pf="badges">Badges & invite link</button><button class="btn" data-pf="refresh">Refresh</button></div>
     </section>
     ${sec('In your wallet', d.wallet.map(r => line(tok(r.t), esc(r.t.symbol), esc(r.t.meme ? (r.t.meme.L.graduated ? 'launchpad token · on CavFi' : 'launchpad token · on the curve') : r.t.name), sxNum(r.n), r.usd)).join(''), 'No tokens yet. Get some from the DogeOS faucet.')}
@@ -3306,6 +3375,7 @@ async function loadBadges(){
     try{ bd.mask = (await bdC().badgesOf(st.account)).toNumber(); bd.err = null; }
     catch(e){ bd.mask = 0; bd.err = 'The badge contract is not reachable at the address in addresses.json.'; }
     if (A.social){ try{ bd.herald = !(await soC().balanceOf(st.account, 1)).isZero(); }catch(e){ bd.herald = false; } }
+    if (A.gm){ try{ bd.pup = !(await gmC().balanceOf(st.account, 1)).isZero(); }catch(e){ bd.pup = false; } }
     if (A.champion){
       try{
         const ch = champC();
@@ -3332,14 +3402,15 @@ function renderBadges(){
   if (bd.mask == null){ box.innerHTML = '<div class="empty-card">Loading badges…</div>'; return; }
   if (bd.err){ box.innerHTML = `<div class="empty-card">${bd.err}</div>`; $('aBadgesN').textContent = ''; return; }
   const have = BADGES.filter((b, i) => i && (bd.mask >> (i - 1)) & 1).length;
-  $('aBadgesN').textContent = `${have + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0)} / ${8 + (A.social ? 1 : 0) + (A.champion ? 1 : 0)}`;
+  $('aBadgesN').textContent = `${have + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0) + (bd.pup ? 1 : 0)} / ${8 + (A.social ? 1 : 0) + (A.champion ? 1 : 0) + (A.gm ? 1 : 0)}`;
   box.innerHTML = BADGES.map((b, id) => {
     if (!id) return '';
     const owned = (bd.mask >> (id - 1)) & 1, claim = !owned && !b.bot ? badgeClaim(id) : null;
     const act = owned ? '<span class="bd-own">✓ yours</span>' : claim ? `<button class="btn primary bd-claim" data-badge="${id}" ${bd.busy ? 'disabled' : ''}>${bd.busy === id ? 'Claiming…' : 'Claim'}</button>` : `<span class="bd-how">${b.bot ? 'from the bot' : 'not yet'}</span>`;
     return `<div class="bd-tile${owned ? ' own' : ''}" title="${esc(b.d)}">${badgeSvg(id, 46, !owned)}<b>${b.t}</b><small>${b.d}</small>${act}</div>`;
   }).join('') + (A.social ? `<div class="bd-tile${bd.herald ? ' own' : ''}"><svg class="bd-art${bd.herald ? '' : ' dim'}" viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#2D6A4F"/><circle cx="32" cy="32" r="25" fill="none" stroke="#FFF8EE" stroke-opacity=".5" stroke-width="1.5"/><path d="M20 28h6l14-8v24l-14-8h-6zM26 36l3 9" fill="none" stroke="#FFF8EE" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 10l2.5-6 3.5 4 2-5 2 5 3.5-4 2.5 6z" fill="#E7B73C"/></svg><b>Royal Herald</b><small>3 people you invited made a swap.</small>${bd.herald ? '<span class="bd-own">✓ yours</span>' : '<span class="bd-how">from the bot</span>'}</div>` : '')
-    + (A.champion ? `<div class="bd-tile${bd.champ ? ' own' : ''}">${CHAMP_SVG(!bd.champ)}<b>Arena Champion</b><small>Back the winning token in an Arena round.</small>${bd.champ ? '<span class="bd-own">✓ yours</span>' : bd.champRound ? `<button class="btn primary bd-claim" data-champ="${bd.champRound}" ${bd.busy ? 'disabled' : ''}>${bd.busy === 'champ' ? 'Claiming…' : 'Claim'}</button>` : '<a class="bd-how" href="arena.html">play the Arena</a>'}</div>` : '');
+    + (A.champion ? `<div class="bd-tile${bd.champ ? ' own' : ''}">${CHAMP_SVG(!bd.champ)}<b>Arena Champion</b><small>Back the winning token in an Arena round.</small>${bd.champ ? '<span class="bd-own">✓ yours</span>' : bd.champRound ? `<button class="btn primary bd-claim" data-champ="${bd.champRound}" ${bd.busy ? 'disabled' : ''}>${bd.busy === 'champ' ? 'Claiming…' : 'Claim'}</button>` : '<a class="bd-how" href="arena.html">play the Arena</a>'}</div>` : '')
+    + (A.gm ? `<div class="bd-tile${bd.pup ? ' own' : ''}"><svg class="bd-art${bd.pup ? '' : ' dim'}" viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#E08A1E"/><circle cx="32" cy="32" r="25" fill="none" stroke="#FFF8EE" stroke-opacity=".5" stroke-width="1.5"/><path d="M18 40h28M22 40a10 10 0 0 1 20 0M32 22v4M21 27l3 3M43 27l-3 3" fill="none" stroke="#FFF8EE" stroke-width="3" stroke-linecap="round"/><path d="M24 10l2.5-6 3.5 4 2-5 2 5 3.5-4 2.5 6z" fill="#E7B73C"/></svg><b>Early Pup</b><small>Say gm 7 days in a row.</small>${bd.pup ? '<span class="bd-own">✓ yours</span>' : '<span class="bd-how">gm on the home page</span>'}</div>` : '');
 }
 $('aBadges').addEventListener('click', async e => {
   const cb = e.target.closest('[data-champ]');
@@ -4556,6 +4627,130 @@ document.addEventListener('click', e => {
 });
 setInterval(() => { if (st.view === 'nft' && !nf.busy && document.visibilityState === 'visible') loadNft(); }, 15000);
 
+/* ================= .cav NAMES =================
+   KingNames: names like borislav.cav are NFTs owned forever. The primary name of a wallet is shown
+   instead of its address in the wallet button and on the leaderboard. Labels are validated on-chain
+   to a-z, 0-9 and '-', so they are safe to put in HTML. */
+const NAMES_ABI = [
+  'function register(string label) payable returns (uint256)', 'function setPrimary(uint256 id)',
+  'function priceOf(string label) view returns (uint256)', 'function available(string label) view returns (bool)', 'function valid(string label) view returns (bool)',
+  'function resolve(string label) view returns (address)', 'function nameOf(address) view returns (string)', 'function namesOf(address[]) view returns (string[])',
+  'function labelsOf(address) view returns (string[] out, uint256[] ids)', 'function recent(uint256 n) view returns (string[] out, address[] owners)',
+  'function totalNames() view returns (uint256)', 'function idOf(string label) pure returns (uint256)',
+];
+const nmC = signer => new E.Contract(A.names, NAMES_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const myName = { addr:null, name:'' };
+const nm = { q:'', check:null, busy:'', mine:null, recent:null, seq:0 };
+const nmClean = v => String(v || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32);
+const nmValid = l => /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(l);
+const nmPrice = l => l.length === 3 ? '10 DOGE' : l.length === 4 ? '5 DOGE' : '1 DOGE';
+async function loadMyName(){
+  if (!A.names || !st.account){ if (myName.name){ myName.name = ''; renderShell(); } return; }
+  try{ const n = await nmC().nameOf(st.account); const changed = n !== myName.name || myName.addr !== lk(st.account); myName.addr = lk(st.account); myName.name = nmValid(n) ? n : ''; if (changed) renderShell(); }catch(e){}
+}
+async function loadNames(){
+  if (!A.names){ $('nmResult').innerHTML = '<small class="nm-hint">.cav names are not deployed on this network yet.</small>'; return; }
+  try{
+    const c = nmC();
+    const [total, rec] = await Promise.all([c.totalNames(), c.recent(12)]);
+    $('nmTotal').textContent = `${total.toString()} names taken`;
+    nm.recent = rec.out.map((l, i) => ({l, o: rec.owners[i]}));
+    if (st.account){ const m = await c.labelsOf(st.account); nm.mine = m.out.map((l, i) => ({l, id: m.ids[i]})); } else nm.mine = null;
+    await loadMyName();
+  }catch(e){}
+  renderNames();
+}
+function renderNames(){
+  const rec = nm.recent || [];
+  $('nmRecent').innerHTML = rec.length ? rec.filter(r => nmValid(r.l)).map(r => `<div class="nm-row"><span>${r.l}.cav</span><small>${st.account && same(r.o, st.account) ? 'yours' : short(r.o)}</small></div>`).join('') : '<div class="empty-card">No names yet. Be the first.</div>';
+  const g = walletGate();
+  if (!st.account){ $('nmMine').innerHTML = '<div class="empty-card">Connect your wallet to see your names.</div>'; }
+  else if (!nm.mine || !nm.mine.length){ $('nmMine').innerHTML = '<div class="empty-card">No names yet. Search above and claim one.</div>'; }
+  else $('nmMine').innerHTML = nm.mine.filter(m => nmValid(m.l)).map(m => `<div class="nm-row"><span>${m.l}.cav${m.l === myName.name ? '<span class="nm-tag">primary</span>' : ''}</span>${m.l === myName.name ? '' : `<button class="btn fc-sm" data-nm="primary" data-id="${m.id.toString()}" ${nm.busy ? 'disabled' : ''}>Make primary</button>`}</div>`).join('');
+  renderNameCheck();
+}
+function renderNameCheck(){
+  const box = $('nmResult'), l = nm.q;
+  if (!l){ box.innerHTML = '<small class="nm-hint">3 to 32 characters: a-z, 0-9 and hyphens. 3 letters 10 DOGE · 4 letters 5 DOGE · 5 or more 1 DOGE. Yours forever, no renewals.</small>'; return; }
+  if (!nmValid(l)){ box.innerHTML = '<small class="nm-hint">3 to 32 characters, a-z, 0-9 and hyphens, not starting or ending with a hyphen.</small>'; return; }
+  const c = nm.check;
+  if (!c || c.l !== l){ box.innerHTML = '<small class="nm-hint">Checking…</small>'; return; }
+  if (!c.free){ box.innerHTML = `<span class="nm-no">${l}.cav is taken</span><small class="nm-hint">${c.owner && st.account && same(c.owner, st.account) ? 'It is yours.' : 'Owner ' + short(c.owner || '')}</small>`; return; }
+  const g = walletGate();
+  box.innerHTML = `<span><span class="nm-ok">${l}.cav is available</span> · <b>${nmPrice(l)}</b></span><button class="btn primary" data-nm="register" ${nm.busy ? 'disabled' : ''}>${nm.busy === 'register' ? 'Registering…' : g ? g.label : 'Register'}</button>`;
+}
+let nmTimer = null;
+$('nmIn').addEventListener('input', e => {
+  const v = nmClean(e.target.value); if (v !== e.target.value) e.target.value = v;
+  nm.q = v; renderNameCheck();
+  clearTimeout(nmTimer);
+  if (!A.names || !nmValid(v)) return;
+  const seq = ++nm.seq;
+  nmTimer = setTimeout(async () => {
+    try{ const c = nmC(); const owner = await c.resolve(v); if (seq !== nm.seq) return; nm.check = {l: v, free: owner === E.constants.AddressZero, owner}; }catch(e){ nm.check = null; }
+    renderNameCheck();
+  }, 350);
+});
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-nm]'); if (!b) return;
+  const g = walletGate(); if (g){ if (g.act) g.act(); return; }
+  const a = b.dataset.nm;
+  try{
+    if (a === 'register'){
+      const l = nm.q; if (!nmValid(l)) return;
+      nm.busy = 'register'; renderNameCheck();
+      const c = nmC(true), price = await c.priceOf(l);
+      const tx = await sendTx(() => c.register(l, {value: price}), 'Registering…', () => {});
+      toast(`${l}.cav is yours! ${txLink(tx.hash)}`, 'ok', 9000);
+      celebrate(b, 30); nm.check = null; nm.q = ''; $('nmIn').value = '';
+    } else if (a === 'primary'){
+      nm.busy = 'primary'; renderNames();
+      const tx = await sendTx(() => nmC(true).setPrimary(b.dataset.id), 'Saving…', () => {});
+      toast(`Primary name updated. ${txLink(tx.hash)}`, 'ok');
+    }
+  }catch(err){ toast(errMsg(err), 'bad'); }
+  nm.busy = ''; myName.name = ''; await loadNames();
+});
+
+/* ================= GM / GN ================= */
+const GM_ABI = ['function gm()', 'function gn()', 'function balanceOf(address, uint256) view returns (uint256)',
+  'function info(address) view returns (bool gmToday, bool gnToday, uint256 streak, uint256 best, uint256 gms, uint256 gns, bool pup, uint256 nextDayAt)'];
+const gmC = signer => new E.Contract(A.gm, GM_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const gmS = { info:null, busy:'' };
+async function loadGm(){
+  const card = $('gmCard'); if (!card) return;
+  card.hidden = !A.gm;
+  if (!A.gm) return;
+  if (st.account){ try{ gmS.info = await gmC().info(st.account); }catch(e){ gmS.info = null; } } else gmS.info = null;
+  renderGm();
+}
+function renderGm(){
+  const i = gmS.info;
+  $('gmStreak').textContent = i ? i.streak.toString() : '0';
+  const left = i ? Math.max(0, i.nextDayAt.toNumber() - Math.floor(Date.now()/1000)) : 0;
+  const hm = `${Math.floor(left/3600)}h ${Math.floor(left%3600/60)}m`;
+  $('gmSub').textContent = !st.account ? 'One gm and one gn a day. Keep a 7-day gm streak for the Early Pup badge.'
+    : i ? `${i.gms.toString()} gm · ${i.gns.toString()} gn so far · best streak ${i.best.toString()}${i.pup ? ' · Early Pup earned 🐶' : ` · ${Math.max(0, 7 - i.streak.toNumber())} more days for Early Pup`}` : '';
+  for (const [id, k, done] of [['gmBtn', 'gm', i && i.gmToday], ['gnBtn', 'gn', i && i.gnToday]]){
+    const b = $(id); b.classList.toggle('done', !!done); b.disabled = !!gmS.busy || !!done;
+    b.textContent = gmS.busy === k ? 'Sending…' : done ? `${k === 'gm' ? '☀️ GM' : '🌙 GN'} ✓ · ${hm}` : (k === 'gm' ? '☀️ GM' : '🌙 GN');
+  }
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-gm]'); if (!b) return;
+  const g = walletGate(); if (g){ if (g.act) g.act(); return; }
+  const k = b.dataset.gm; gmS.busy = k; renderGm();
+  try{
+    const before = gmS.info && gmS.info.pup;
+    const tx = await sendTx(() => k === 'gm' ? gmC(true).gm() : gmC(true).gn(), 'Sending…', () => {});
+    gmS.busy = ''; await loadGm();
+    toast(`${k === 'gm' ? 'gm ☀️' : 'gn 🌙'} said on-chain. ${txLink(tx.hash)}`, 'ok');
+    if (!before && gmS.info && gmS.info.pup){ toast('Badge earned: Early Pup! 7 days of gm in a row.', 'ok', 9000); celebrate(b, 40); }
+  }catch(err){ toast(errMsg(err), 'bad'); }
+  gmS.busy = ''; renderGm();
+});
+setInterval(() => { if (st.view === 'home' && gmS.info) renderGm(); }, 30000);
+
 /* ================= light / dark ================= */
 const THEME_KEY = 'cavfi.theme';
 const MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
@@ -4585,7 +4780,7 @@ paintTheme();
   const by = s => TOKENS.find(t => t.symbol === s);
   st.tin = TOKENS[0]; st.tout = by('KingS') || TOKENS[1] || TOKENS[0];
   st.la = by('KingS') || TOKENS[0]; st.lb = by('cUSDT') || by('USDT') || TOKENS[0];
-  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#swap' ? 'swap' : 'home');
+  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#swap' ? 'swap' : 'home');
   renderShell(); renderSwap(); renderLiq(); renderPools();
   if (!(await wcRestore()) && window.ethereum){
     window.ethereum.request({method:'eth_accounts'}).then(x => { if (x && x[0]) connect(); }).catch(()=>{});
