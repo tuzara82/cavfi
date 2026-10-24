@@ -67,6 +67,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .brand b{font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:.01em}
 .brand b span{color:var(--chestnut)}
 nav{display:flex;gap:4px}
+.bar>nav{min-width:0;overflow-x:auto;scrollbar-width:none}.bar>nav::-webkit-scrollbar{display:none}.bar>nav>*{flex:none}
+@media (max-width:1360px){.bar{gap:14px}nav button,nav a.nav-link{padding:8px 9px}}
 nav button{background:none;border:0;padding:8px 12px;border-radius:10px;color:var(--muted);font-weight:600}
 nav button[aria-current="page"]{color:var(--ink);background:var(--well)}
 nav a.nav-link{padding:8px 12px;border-radius:10px;color:var(--muted);font-weight:600;text-decoration:none;display:inline-flex;align-items:baseline}
@@ -1748,7 +1750,7 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'launch' ? '#launch' : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'help' ? '#faq' : v === 'launch' && lx.open ? '#t/' + lx.open : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'help' ? '#faq'  : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home') loadStats(sx.loaded);
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
@@ -4919,8 +4921,9 @@ paintTheme();
   const by = s => TOKENS.find(t => t.symbol === s);
   st.tin = TOKENS[0]; st.tout = by('KingS') || TOKENS[1] || TOKENS[0];
   st.la = by('KingS') || TOKENS[0]; st.lb = by('cUSDT') || by('USDT') || TOKENS[0];
+  const lxDeep = location.hash.match(LX_HASH);
   setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#faq' ? 'help' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
-  { const m = location.hash.match(LX_HASH); if (m) openLaunch(E.utils.getAddress(m[1].toLowerCase())); }
+  if (lxDeep) openLaunch(E.utils.getAddress(lxDeep[1].toLowerCase()));
   renderShell(); renderSwap(); renderLiq(); renderPools();
   if (!(await wcRestore()) && window.ethereum){
     window.ethereum.request({method:'eth_accounts'}).then(x => { if (x && x[0]) connect(); }).catch(()=>{});
