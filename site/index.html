@@ -183,6 +183,13 @@ main{max-width:1120px;margin:0 auto;padding-block:40px 64px;display:grid;grid-te
 .sf-links{display:flex;flex-wrap:wrap;gap:6px 18px}
 .sf-links a{color:var(--muted);font-size:13px;font-weight:600;text-decoration:none}
 .sf-links a:hover{color:var(--chestnut)}
+.sf-x{display:inline-flex;align-items:center;gap:6px}.sf-x svg{width:13px;height:13px;fill:currentColor}
+.sd-card{display:grid;gap:12px}
+.sd-row{display:grid;gap:6px}.sd-row label{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.sd-row select,.sd-row input{width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:12px;padding:11px 12px;font:500 15px var(--body)}
+.sd-amt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.sd-to{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.sd-to.ok{color:var(--ok)}.sd-to.bad{color:var(--bad)}
+.sd-head{display:flex;justify-content:space-between;align-items:center}
 .sf-note{max-width:1120px;margin:12px auto 0;color:var(--muted);font-size:11.5px}
 
 /* modal */
@@ -602,6 +609,21 @@ a.item{color:var(--ink);text-decoration:none}
 .gm-btns{display:flex;gap:8px}.gm-b{padding:11px 16px;font-size:15px;border-radius:14px}.gm-b.done{opacity:.55}
 @media (max-width:640px){.gm-card{grid-template-columns:minmax(0,1fr) auto}.gm-btns{grid-column:1/-1}.gm-b{flex:1}}
 .nm-body{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);width:100%;max-width:760px}
+.hm-duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.hm-duo{grid-template-columns:minmax(0,1fr)}}
+.qs-card,.rl-card{align-content:start}
+.qs-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.qs-ck{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font:700 13px var(--body);color:#fff}
+.qs-row.done .qs-ck{background:var(--ok);border-color:var(--ok)}
+.qs-row b{display:block;font-size:14.5px}.qs-row small{display:block;color:var(--muted);font-size:12.5px}
+.qs-row.done b{text-decoration:line-through;text-decoration-color:var(--muted)}
+.qs-foot,.rl-foot{font-size:12.5px;color:var(--muted);line-height:1.5}
+.rl-pot{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.rl-pot b{font:500 30px var(--mono);color:var(--chestnut)}
+.rl-win{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:6px 0;border-top:1px solid var(--line)}
+.rl-win span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dca-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.dca-note{font-size:12.5px;color:var(--muted);margin:0;line-height:1.5}
+.nf-life{font-size:12.5px;color:var(--muted);margin:0}
 .nm-input{display:flex;align-items:center;background:var(--well);border:1px solid var(--line);border-radius:14px;padding:4px 14px}
 .nm-input input{flex:1;min-width:0;width:0;border:0;background:none;font:500 24px var(--mono);color:var(--ink);padding:10px 0;outline:none}
 .nm-input span{font:500 24px var(--mono);color:var(--chestnut)}
@@ -823,6 +845,10 @@ a.item{color:var(--ink);text-decoration:none}
       <div class="ob-bar" aria-hidden="true"><span id="obFill"></span></div>
       <ol class="ob-list" id="obList"></ol>
     </section>
+    <div class="hm-duo" id="hmDuo" hidden>
+      <section class="sx-card qs-card" id="qsCard" aria-labelledby="qsH"></section>
+      <section class="sx-card rl-card" id="rlCard" aria-labelledby="rlH"></section>
+    </div>
     <div class="hm-ticker" id="hmTicker" aria-label="Pool prices"><div class="hm-track" id="hmTrack"><span class="hm-tk muted">Reading pool prices…</span></div></div>
     <section class="hm-grid" aria-label="Choose where to go">
       <button class="hm-card" data-go="swap">
@@ -879,7 +905,7 @@ a.item{color:var(--ink);text-decoration:none}
     </section>
     <section class="card" aria-label="Swap">
       <div class="card-head">
-        <div class="mode-tabs" id="modeTabs" role="group" aria-label="Order type"><button data-mode="swap" aria-pressed="true">Swap</button><button data-mode="limit" aria-pressed="false" id="modeLimit" hidden>Limit</button></div>
+        <div class="mode-tabs" id="modeTabs" role="group" aria-label="Order type"><button data-mode="swap" aria-pressed="true">Swap</button><button data-mode="limit" aria-pressed="false" id="modeLimit" hidden>Limit</button><button data-mode="dca" aria-pressed="false" id="modeDca" hidden>Auto-buy</button></div>
         <button class="icon-btn gear" aria-label="Settings" aria-expanded="false">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
         </button>
@@ -924,9 +950,20 @@ a.item{color:var(--ink);text-decoration:none}
         <div class="lim-row"><span>Expires in</span><div class="chips" id="limExp"><button class="chip" data-d="1">1 day</button><button class="chip" data-d="7">7 days</button><button class="chip" data-d="30">30 days</button></div></div>
         <p class="lim-note" id="limNote"></p>
       </div>
+      <div class="limbox" id="dcaBox" hidden>
+        <div class="lim-row"><span>Split into</span><div class="chips" id="dcaN"><button class="chip" data-n="4">4 buys</button><button class="chip" data-n="12">12</button><button class="chip" data-n="24">24</button><button class="chip" data-n="48">48</button></div></div>
+        <div class="lim-row"><span>One buy every</span><div class="chips" id="dcaI"><button class="chip" data-i="900">15 min</button><button class="chip" data-i="3600">1 hour</button><button class="chip" data-i="14400">4 hours</button><button class="chip" data-i="86400">1 day</button></div></div>
+        <div class="lim-row"><span>Skip a buy if the price is worse than now by</span><div class="chips" id="dcaF"><button class="chip" data-f="10">10%</button><button class="chip" data-f="25">25%</button><button class="chip" data-f="0">never skip</button></div></div>
+        <p class="lim-note" id="dcaNote"></p>
+      </div>
       <div class="gwarn" id="sWarn" hidden></div>
       <button class="cta" id="cta">Connect wallet</button>
       <button class="cta" id="limCta" hidden>Place limit order</button>
+      <button class="cta" id="dcaCta" hidden>Start auto-buy</button>
+    </section>
+    <section class="pools" id="dcaPlans" hidden aria-label="Your auto-buys">
+      <div class="pools-head"><h2>Your auto-buys</h2><span id="dcaCount"></span></div>
+      <div id="dcaList" style="display:grid;gap:10px"></div>
     </section>
     <section class="pools" id="limOrders" hidden aria-label="Your limit orders">
       <div class="pools-head"><h2>Your limit orders</h2><span id="limCount"></span></div>
@@ -1074,6 +1111,13 @@ a.item{color:var(--ink);text-decoration:none}
 
   <!-- ===================== PORTFOLIO ===================== -->
   <div class="view" id="viewPortfolio" hidden>
+    <section class="sx-card sd-card" id="pfSend" hidden aria-labelledby="sdH">
+      <div class="sd-head"><h2 id="sdH" style="margin:0">Send</h2><button class="link-btn" data-sd="close">Close</button></div>
+      <div class="sd-row"><label for="sdTok">Token</label><select id="sdTok"></select></div>
+      <div class="sd-row"><label for="sdTo">To</label><input id="sdTo" placeholder="name.cav or 0x…" autocomplete="off" spellcheck="false"><span class="sd-to" id="sdToInfo" aria-live="polite">Type a .cav name like borislav.cav, or a 0x address.</span></div>
+      <div class="sd-row"><label for="sdAmt">Amount</label><div class="sd-amt"><input id="sdAmt" inputmode="decimal" placeholder="0" autocomplete="off"><button class="btn" data-sd="max">MAX</button></div><span class="sd-to" id="sdBal"></span></div>
+      <button class="cta" id="sdGo" data-sd="send" disabled>Send</button>
+    </section>
     <div id="pfBody" class="pf-body"></div>
   </div>
 
@@ -1129,6 +1173,11 @@ a.item{color:var(--ink);text-decoration:none}
       <section class="sx-card hp-sec">
         <h2>Names, NFTs and badges</h2>
         <details><summary>What is a .cav name?</summary><p>A readable name for your wallet, like borislav.cav. It costs 10 DOGE for 3 letters, 5 DOGE for 4 and 1 DOGE for 5 or more, and it is an NFT you own forever with no renewals. Your primary name shows in the wallet button and on the leaderboard.</p></details>
+        <details><summary>Can I send tokens to a .cav name?</summary><p>Yes. On <a href="#portfolio" data-goview="portfolio">Portfolio</a>, press Send and type a name like borislav.cav instead of an address. The site looks the name up in the name contract and shows the address it belongs to before you confirm.</p></details>
+        <details><summary>What are daily quests?</summary><p>Every day (UTC) has 3 small quests, the same for everyone, shown on the home page. They count when your wallet makes the matching CavFi transaction that day. After the day ends the CavFi bot records your result on-chain: 20 leaderboard points per quest, 1 Royal Raffle ticket per quest, and all 3 quests 7 days in a row earns the soulbound Questmaster badge.</p></details>
+        <details><summary>How does the Royal Raffle work?</summary><p>Each week has a KingS pot. Tickets are free and come from daily quests. When the week ends, anyone can close the round and draw it a few blocks later: 3 winners get 50%, 30% and 20% of the pot, with more tickets meaning a better chance. The draw uses the hash of a block fixed when the round closes; on a testnet with one block producer that could in theory be influenced, so treat it as a game.</p></details>
+        <details><summary>What is auto-buy?</summary><p>On the Swap page, Auto-buy splits a purchase into equal buys over time, for example 24 buys, one every hour, so you get an average price. The whole amount waits in the CavFi auto-buy contract, the CavFi bot runs each buy when it is due and keeps 0.1% of it, and you can cancel any time to get the rest back. You can also have a buy skipped while the price is much worse than when you started.</p></details>
+        <details><summary>What are Living Cavaliers?</summary><p>Your Cavalier NFT changes on CavFi with what you do: a halo for a gm streak, golden rays for Early Pup, a trophy for Arena Champion, a star for Questmaster and your .cav name on a ribbon. It is drawn from on-chain data, so it updates by itself; wallets and explorers show the base art.</p></details>
         <details><summary>What do GM and GN do?</summary><p>Say gm and gn on-chain once a day each (days run on UTC). Each one adds 10 leaderboard points. Say gm 7 days in a row for the soulbound Early Pup badge; missing a day restarts your streak.</p></details>
         <details><summary>What are the CavFi Cavaliers?</summary><p>An NFT collection of crowned spaniels whose art and traits live fully on-chain. Stake a Cavalier to earn KingS; rarer crowns and accessories carry more weight, so they earn a bigger share.</p></details>
         <details><summary>How do badges and invites work?</summary><p>Badges are soulbound collectibles for things you have done on CavFi; see them in your account panel. Share your invite link: you get 25% of your invitees' leaderboard points, and 3 invitees who trade earn you the Royal Herald badge.</p></details>
@@ -1137,7 +1186,7 @@ a.item{color:var(--ink);text-decoration:none}
 
       <section class="sx-card hp-sec">
         <h2>Still stuck?</h2>
-        <p style="margin:0">Every contract is on <a href="https://github.com/tuzara82/cavfi" target="_blank" rel="noopener">GitHub</a> and every transaction is on the <a href="https://blockscout.testnet.dogeos.com" target="_blank" rel="noopener">explorer</a>. The <a href="#portfolio" data-goview="portfolio">Portfolio</a> page shows everything your wallet has on CavFi in one place.</p>
+        <p style="margin:0">Every contract is on <a href="https://github.com/tuzara82/cavfi" target="_blank" rel="noopener">GitHub</a> and every transaction is on the <a href="https://blockscout.testnet.dogeos.com" target="_blank" rel="noopener">explorer</a>. The <a href="#portfolio" data-goview="portfolio">Portfolio</a> page shows everything your wallet has on CavFi in one place. News and new features are posted on <a href="https://x.com/cavdefi" target="_blank" rel="noopener">X @cavdefi</a>.</p>
       </section>
     </div>
   </div>
@@ -1228,6 +1277,7 @@ a.item{color:var(--ink);text-decoration:none}
     </div>
     <nav class="sf-links" aria-label="Footer links">
       <a href="#faq" data-goview="help">How it works</a>
+      <a class="sf-x" href="https://x.com/cavdefi" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.8L23 22h-6.3l-4.9-6.4L6.2 22H3l7.3-8.3L1 2h6.4l4.4 5.9L18.9 2zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20z"/></svg>Follow @cavdefi</a>
       <a href="https://github.com/tuzara82/cavfi" target="_blank" rel="noopener">Open source</a>
       <a href="https://github.com/tuzara82/cavfi/blob/main/contracts/SECURITY.md" target="_blank" rel="noopener">Security review</a>
       <a href="https://blockscout.testnet.dogeos.com" target="_blank" rel="noopener">Explorer</a>
@@ -1302,13 +1352,14 @@ a.item{color:var(--ink);text-decoration:none}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<script src="quests-rules.js?v=1"></script>
 <script>
 (() => {
 /* ================= config ================= */
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 /* WalletConnect (any mobile wallet by QR code). Free project id from https://cloud.reown.com,
    with cavfi.com in its allowed domains. Empty = the option is hidden. */
@@ -1321,7 +1372,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -1698,6 +1749,7 @@ async function refreshAll(){
   if (st.view === 'names') loadNames();
   if (st.view === 'home') loadGm();
   loadMyName();
+  if (st.view === 'home'){ loadQuests(); loadRaffle(); }
   if (st.view === 'home') loadOnboarding();
   await Promise.all([refreshSwap(), refreshLiq(), loadPools().then(loadEarn)]);
 }
@@ -1755,7 +1807,7 @@ function setView(v){
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home') loadStats(sx.loaded);
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
-  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); nfHomeFig(); loadGm(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
+  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); nfHomeFig(); loadGm(); loadQuests(); loadRaffle(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
   if (v === 'portfolio') loadPortfolio();
   if (v === 'faucet') loadFaucet();
   if (v === 'nft') loadNft();
@@ -2076,7 +2128,7 @@ function renderSwap(){
   else { label='Swap'; act=doSwap; }
   if (st.busy){ label=st.busy; dis=true; }
   const cta = $('cta'); cta.textContent = label; cta.disabled = dis; cta.onclick = act; cta.classList.toggle('busy', !!st.busy); cta.classList.toggle('danger', danger && !st.busy);
-  $('modeLimit').hidden = !A.limit;
+  $('modeLimit').hidden = !A.limit; $('modeDca').hidden = !A.dca;
   if (typeof renderLimit === 'function') renderLimit();
 }
 function setMax(input, t, bal){
@@ -3028,7 +3080,7 @@ function niceTicks(lo, hi, n){
 /* ---- leaderboard: points from on-chain activity in the stats window (7 days) ---- */
 const LX_LAUNCHED = E.utils.id('Launched(address,address,string,string,uint256)');
 const AR_STAKED = E.utils.id('Staked(uint256,address,uint256,uint256)'), AR_CLAIMED = E.utils.id('Claimed(uint256,address,uint256)');
-const GM_GM = E.utils.id('GM(address,uint256,uint256)'), GM_GN = E.utils.id('GN(address,uint256)');
+const GM_GM = E.utils.id('GM(address,uint256,uint256)'), GM_GN = E.utils.id('GN(address,uint256)'), Q_DAY = E.utils.id('QuestDay(address,uint32,uint8,uint32)');
 const board = { rows:null, loading:false, err:null, at:0 };
 let txFrom = {}; try{ txFrom = JSON.parse(localStorage.getItem('cavfi.txfrom') || '{}') || {}; }catch(e){ txFrom = {}; }
 async function loadBoard(){
@@ -3052,7 +3104,7 @@ async function loadBoard(){
     }
     try{ localStorage.setItem('cavfi.txfrom', JSON.stringify(txFrom)); }catch(e){}
     const P = {};
-    const row = a => (P[a] ||= {addr:a, swapUsd:0, swaps:0, launchUsd:0, launches:0, grads:0, arenaK:0, arenaWins:0, gms:0});
+    const row = a => (P[a] ||= {addr:a, swapUsd:0, swaps:0, launchUsd:0, launches:0, grads:0, arenaK:0, arenaWins:0, gms:0, quests:0});
     for (const t of trades){ const w = t.who || txFrom[t.tx]; if (!w) continue; const r = row(w); r.swapUsd += t.usd; r.swaps++; }
     // 2. launchpad: curve trades, launches and graduations in the window
     if (A.launch){
@@ -3094,8 +3146,17 @@ async function loadBoard(){
         const res = await rp.send('eth_getLogs', [{address:A.gm, fromBlock:E.utils.hexValue(a), toBlock:E.utils.hexValue(z), topics:[[GM_GM, GM_GN]]}]);
         for (const l of res) row(lk('0x' + l.topics[1].slice(26))).gms++; } }));
     }
+    // 5. daily quests recorded by the bot: 20 points per quest
+    if (A.quests){
+      const first = Math.max(0, sx.head - Math.ceil(SX_WINDOW / sx.bt));
+      const ranges = []; for (let b = first; b <= sx.head; b += SX_CHUNK) ranges.push([b, Math.min(sx.head, b + SX_CHUNK - 1)]);
+      let i = 0;
+      await Promise.all([0,1,2,3].map(async () => { while (i < ranges.length){ const [a, z] = ranges[i++];
+        const res = await rp.send('eth_getLogs', [{address:A.quests, fromBlock:E.utils.hexValue(a), toBlock:E.utils.hexValue(z), topics:[Q_DAY]}]);
+        for (const l of res) row(lk('0x' + l.topics[1].slice(26))).quests += Number(BigInt('0x' + l.data.slice(2, 66))); } }));
+    }
     if (A.bot) delete P[lk(A.bot)];   // the CavFi bot's own trades and tips don't count
-    const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.launches * 100 + r.grads * 500;
+    const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.quests * 20 + r.launches * 100 + r.grads * 500;
     let refMap = {}; try{ refMap = await loadRefMap(); }catch(e){}
     for (const r of Object.values(P)){ const by = refMap[r.addr]; if (by){ const x = row(by); x.refPts = (x.refPts || 0) + base(r) * 0.25; x.invites = (x.invites || 0) + 1; } }
     board.rows = Object.values(P).map(r => ({...r, refPts: Math.round(r.refPts || 0), pts: Math.round(base(r) + (r.refPts || 0))}))
@@ -3308,6 +3369,7 @@ async function loadPortfolio(){
     if (A.nft) jobs.push(loadNft(true));
     if (A.names) jobs.push(nmC().labelsOf(st.account).then(m => { pfNames = m.out.filter(nmValid); }).catch(() => {}));
     if (A.arena) jobs.push(pfLoadBets().then(b => { pfBets = b; }).catch(() => {}));
+    if (A.dca) jobs.push(loadDcaPlans());
     await Promise.all(jobs.map(j => Promise.resolve(j).catch(() => {})));
     // wallet tokens: listed tokens, imported ones, and every launchpad token
     const toks = [...allTokens().filter(t => !t.wrapped || true)];
@@ -3360,8 +3422,8 @@ function renderPortfolio(){
       <div class="pf-total"><span>Total on CavFi</span><b>${sxUsd(total)}</b><small>testnet tokens, valued at CavFi pool prices</small></div>
       <div class="pf-bar" role="img" aria-label="Where your value is">${seg.map(s => `<span style="width:${pct(s[1]).toFixed(2)}%;background:${s[2]}" title="${s[0]} ${sxUsd(s[1])}"></span>`).join('')}</div>
       <div class="pf-legend">${seg.map(s => `<span><i style="background:${s[2]}"></i>${s[0]} <b>${sxUsd(s[1])}</b></span>`).join('')}</div>
-      <div class="pf-figs"><div><span>Rewards to claim</span><b>${sxNum(d.pending)} KingS</b></div><div><span>Badges</span><b>${bd.mask == null ? '–' : BADGES.filter((b, i) => i && (bd.mask >> (i - 1)) & 1).length + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0) + (bd.pup ? 1 : 0)}</b></div><div><span>Open orders</span><b>${d.orders.length}</b></div><div><span>Collectibles</span><b>${d.nfts.length + d.names.length}</b></div></div>
-      <div class="pf-acts"><button class="btn" data-pf="farm">Harvest on Farms</button><button class="btn" data-pf="badges">Badges & invite link</button><button class="btn" data-pf="refresh">Refresh</button></div>
+      <div class="pf-figs"><div><span>Rewards to claim</span><b>${sxNum(d.pending)} KingS</b></div><div><span>Badges</span><b>${bd.mask == null ? '–' : BADGES.filter((b, i) => i && (bd.mask >> (i - 1)) & 1).length + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0) + (bd.pup ? 1 : 0) + (bd.quest ? 1 : 0)}</b></div><div><span>Open orders</span><b>${d.orders.length}</b></div><div><span>Collectibles</span><b>${d.nfts.length + d.names.length}</b></div></div>
+      <div class="pf-acts"><button class="btn primary" data-pf="send">Send</button><button class="btn" data-pf="farm">Harvest on Farms</button><button class="btn" data-pf="badges">Badges & invite link</button><button class="btn" data-pf="refresh">Refresh</button></div>
     </section>
     ${sec('In your wallet', d.wallet.map(r => line(tok(r.t), esc(r.t.symbol), esc(r.t.meme ? (r.t.meme.L.graduated ? 'launchpad token · on CavFi' : 'launchpad token · on the curve') : r.t.name), sxNum(r.n), r.usd)).join(''), 'No tokens yet. Get some from the DogeOS faucet.')}
     ${sec('Liquidity', d.lps.map(({p, share, usd}) => line(`<span class="pair-coins">${coin(tokenByAddr(p.a0, true) || p.t0)}${coin(tokenByAddr(p.a1, true) || p.t1)}</span>`, `${esc((tokenByAddr(p.a0, true) || p.t0).symbol)} / ${esc((tokenByAddr(p.a1, true) || p.t1).symbol)}`,
@@ -3370,13 +3432,14 @@ function renderPortfolio(){
       ...d.stakes.map(({s, usd}) => line(coin(s.t), esc(s.t.symbol), `staking · ${sxNum(fl(s.pending, 18))} KingS to harvest`, fmt(s.userAmt, s.t.decimals, 4), usd))].join(''), 'Nothing staked. Stake tokens or LP on Farms to earn KingS.')}
     ${sec('Votes & orders', [d.voteLocked ? line('<span class="coin king"><svg aria-hidden="true"><use href="#king"/></svg></span>', 'Voting lock', 'KingS locked in KingVote', sxNum(d.voteLocked) + ' KingS', d.voteUsd) : '',
       ...d.orders.map(({x, usd}) => line(`<span class="pair-coins">${coin(x.ti)}${coin(x.to)}</span>`, `Limit #${x.id}`, `${fmt(x.o.amountIn, x.ti.decimals)} ${esc(x.ti.symbol)} → ≥ ${fmt(x.o.minOut, x.to.decimals)} ${esc(x.to.symbol)}`, 'open', usd))].join(''), 'No locked votes or open limit orders.')}
+    ${A.dca && dca.plans.some(x => x.p.active) ? sec('Auto-buys', dca.plans.filter(x => x.p.active).map(({id, p, ti, to}) => line(`<span class="pair-coins">${coin(ti)}${coin(to)}</span>`, `Auto-buy #${id}`, `${fmt(p.perBuy, ti.decimals)} ${esc(ti.symbol)} → ${esc(to.symbol)} every ${dcaEvery(p.interval)} · ${p.buysTotal - p.buysLeft} of ${p.buysTotal} done`, `${fmt(p.perBuy.mul(p.buysLeft), ti.decimals)} ${esc(ti.symbol)}`, pfUsd(addrOf(ti), fl(p.perBuy.mul(p.buysLeft), ti.decimals)))).join(''), '') : ''}
     ${A.arena ? sec('Arena bets', d.bets.length ? d.bets.map(b => {
       const on = b.stakes.map((x, i) => x.isZero() ? '' : `${sxNum(fl(x, 18))} on ${esc(pfSym(b.tokens[i]))}`).filter(Boolean).join(', ');
       return line('<span class="coin king"><svg aria-hidden="true"><use href="#king"/></svg></span>', `Round #${b.id}<span class="pf-tag t-${b.s[0]}">${b.s[1]}</span>`, `${on} · ${b.s[2]}`,
         b.c ? `+${sxNum(b.c)} KingS` : `${sxNum(b.k)} KingS`, b.s[0] === 'live' || b.c ? (guard.ref[lk(A.kings)] ? (b.c || b.k) * guard.ref[lk(A.kings)] : null) : null);
     }).join('') + `<a class="pf-more" href="arena.html">${d.bets.some(b => b.c) ? 'Claim your winnings in the Arena →' : 'Open the Arena →'}</a>` : '', 'No Arena bets yet. <a href="arena.html">Back a token in the Arena</a> to win the pot.') : ''}
     ${A.nft || A.names ? sec('Collectibles', [
-      ...d.nfts.slice(0, 8).map(x => line(`<span class="coin pf-nfa">${nfSvg(x.dna)}</span>`, `Cavalier #${x.id}`, `${NF_COAT[x.t.coat]} · ${x.t.crown ? NF_CROWN[x.t.crown] + ' crown' : 'no crown'} · ${x.staked ? 'staked, earning KingS' : 'in wallet, not staked'}`, `×${x.t.weight}`, null)),
+      ...d.nfts.slice(0, 8).map(x => line(`<span class="coin pf-nfa">${nfSvg(x.dna, (nf.life || {})[lk(x.owner)])}</span>`, `Cavalier #${x.id}`, `${NF_COAT[x.t.coat]} · ${x.t.crown ? NF_CROWN[x.t.crown] + ' crown' : 'no crown'} · ${x.staked ? 'staked, earning KingS' : 'in wallet, not staked'}`, `×${x.t.weight}`, null)),
       d.nfts.length > 8 ? `<a class="pf-more" href="#nft" data-goview="nft">and ${d.nfts.length - 8} more Cavaliers →</a>` : '',
       d.nfEarned > 0 ? line('<span class="coin king"><svg aria-hidden="true"><use href="#king"/></svg></span>', 'Cavalier staking', 'KingS earned, claim on the NFTs page', sxNum(d.nfEarned) + ' KingS', null) : '',
       ...d.names.map(l => line('<span class="coin pf-cav">.cav</span>', `${l}.cav`, l === myName.name ? 'your primary name' : 'name · yours forever', 'NFT', null))].join(''),
@@ -3387,8 +3450,95 @@ document.addEventListener('click', e => {
   const a = b.dataset.pf;
   if (a === 'gate'){ const g = walletGate(); if (g && g.act) g.act(); }
   else if (a === 'farm') setView('farm');
+  else if (a === 'send') sdOpen();
   else if (a === 'badges') openAccount();
   else if (a === 'refresh'){ pf.data = null; loadPortfolio(); }
+});
+
+/* ================= SEND (to a .cav name or an address) =================
+   The name is resolved by KingNames.resolve() at the moment you press Send, and the resolved
+   address is shown first, so a name that changed owner can't surprise you. */
+const sd = { to:null, toFor:'', busy:false, seq:0 };
+const TRANSFER_ABI = ['function transfer(address,uint256) returns (bool)'];
+function sdTokens(){
+  const list = [TOKENS[0]];
+  const d = pf.data && pf.data.wallet ? pf.data.wallet.map(r => r.t) : [];
+  for (const t of d) if (!list.some(x => x.address === t.address)) list.push(t);
+  for (const t of allTokens()) if (!list.some(x => x.address === t.address) && !t.wrapped) list.push(t);
+  return list;
+}
+function sdTok(){ const v = $('sdTok').value; return sdTokens().find(t => t.address === v) || TOKENS[0]; }
+function sdOpen(){
+  const g = walletGate(); if (g){ if (g.act) g.act(); return; }
+  const sel = $('sdTok'), cur = sel.value;
+  sel.innerHTML = sdTokens().map(t => `<option value="${t.address}">${esc(t.symbol)}${t.name && t.name !== t.symbol ? ' · ' + esc(t.name) : ''}</option>`).join('');
+  if (cur) sel.value = cur;
+  $('pfSend').hidden = false; $('pfSend').scrollIntoView({behavior:'smooth', block:'start'});
+  sdBal(); $('sdTo').focus();
+}
+let sdBalSeq = 0;
+async function sdBal(){
+  const seq = ++sdBalSeq, t = sdTok(), b = await balanceOf(t);
+  if (seq !== sdBalSeq) return;
+  sd.bal = b; $('sdBal').textContent = b ? `Balance ${fmt(b, t.decimals)} ${t.symbol}` : '';
+  sdRender();
+}
+async function sdResolve(){
+  const raw = $('sdTo').value.trim(), seq = ++sd.seq, info = $('sdToInfo');
+  sd.to = null; sd.toFor = raw;
+  if (!raw){ info.className = 'sd-to'; info.textContent = 'Type a .cav name like borislav.cav, or a 0x address.'; return sdRender(); }
+  if (/^0x[0-9a-fA-F]{40}$/.test(raw)){
+    try{ sd.to = E.utils.getAddress(raw); info.className = 'sd-to ok'; info.textContent = `Sending to ${sd.to}`; }
+    catch(e){ info.className = 'sd-to bad'; info.textContent = 'That address has a typo (checksum does not match).'; }
+    return sdRender();
+  }
+  const label = raw.toLowerCase().replace(/\.cav$/, '');
+  if (!nmValid(label)){ info.className = 'sd-to bad'; info.textContent = 'Not a valid .cav name or 0x address.'; return sdRender(); }
+  if (!A.names){ info.className = 'sd-to bad'; info.textContent = '.cav names are not deployed on this network.'; return sdRender(); }
+  info.className = 'sd-to'; info.textContent = `Looking up ${label}.cav…`;
+  try{
+    const who = await nmC().resolve(label);
+    if (seq !== sd.seq) return;
+    if (who === E.constants.AddressZero){ info.className = 'sd-to bad'; info.textContent = `${label}.cav is not registered.`; }
+    else { sd.to = who; info.className = 'sd-to ok'; info.textContent = `${label}.cav → ${who}${same(who, st.account) ? ' (that is you)' : ''}`; }
+  }catch(e){ if (seq === sd.seq){ info.className = 'sd-to bad'; info.textContent = 'Could not look the name up. Try again.'; } }
+  sdRender();
+}
+function sdRender(){
+  const t = sdTok(), amt = parseAmt($('sdAmt').value, t.decimals), btn = $('sdGo');
+  let label = 'Send', dis = false;
+  if (sd.busy){ label = sd.busy; dis = true; }
+  else if (!sd.to){ label = 'Enter a recipient'; dis = true; }
+  else if (!amt){ label = 'Enter an amount'; dis = true; }
+  else if (sd.bal && amt.gt(sd.bal)){ label = `Not enough ${t.symbol}`; dis = true; }
+  else label = `Send ${$('sdAmt').value} ${t.symbol}`;
+  btn.textContent = label; btn.disabled = dis;
+}
+let sdTimer = null;
+$('sdTo').addEventListener('input', () => { clearTimeout(sdTimer); sd.to = null; sdRender(); sdTimer = setTimeout(sdResolve, 350); });
+$('sdAmt').addEventListener('input', e => { cleanNum(e.target); sdRender(); });
+$('sdTok').addEventListener('change', () => { $('sdAmt').value = ''; sdBal(); });
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-sd]'); if (!b) return;
+  const a = b.dataset.sd;
+  if (a === 'close'){ $('pfSend').hidden = true; return; }
+  if (a === 'max'){
+    const t = sdTok(); let v = sd.bal || ZERO;
+    if (t.address === N) v = v.sub(E.utils.parseEther('0.1'));
+    if (v.lt(0)) v = ZERO;
+    $('sdAmt').value = toInput(v, t.decimals); return sdRender();
+  }
+  if (a !== 'send' || sd.busy) return;
+  const g = walletGate(); if (g){ if (g.act) g.act(); return; }
+  await sdResolve(); // look the name up again right before sending
+  const t = sdTok(), amt = parseAmt($('sdAmt').value, t.decimals), to = sd.to;
+  if (!to || !amt) return;
+  const busy = l => { sd.busy = l; sdRender(); };
+  try{
+    await sendTx(() => t.address === N ? st.signer.sendTransaction({to, value: amt}) : new E.Contract(t.address, TRANSFER_ABI, st.signer).transfer(to, amt), 'Sending…', busy);
+    toast(`Sent ${esc($('sdAmt').value)} ${esc(t.symbol)} to ${esc(sd.toFor.includes('.') || !sd.toFor.startsWith('0x') ? sd.toFor.toLowerCase().replace(/(\.cav)?$/, '.cav') : short(to))}.`, 'ok');
+    $('sdAmt').value = ''; sd.busy = false; sdBal(); pf.data = null; loadPortfolio();
+  }catch(err){ toast(errMsg(err), 'bad'); sd.busy = false; sdRender(); }
 });
 
 /* ================= REFERRALS (KingSocial) =================
@@ -3512,6 +3662,7 @@ async function loadBadges(){
     catch(e){ bd.mask = 0; bd.err = 'The badge contract is not reachable at the address in addresses.json.'; }
     if (A.social){ try{ bd.herald = !(await soC().balanceOf(st.account, 1)).isZero(); }catch(e){ bd.herald = false; } }
     if (A.gm){ try{ bd.pup = !(await gmC().balanceOf(st.account, 1)).isZero(); }catch(e){ bd.pup = false; } }
+    if (A.quests){ try{ bd.quest = !(await questsC().balanceOf(st.account, 1)).isZero(); }catch(e){ bd.quest = false; } }
     if (A.champion){
       try{
         const ch = champC();
@@ -3538,7 +3689,7 @@ function renderBadges(){
   if (bd.mask == null){ box.innerHTML = '<div class="empty-card">Loading badges…</div>'; return; }
   if (bd.err){ box.innerHTML = `<div class="empty-card">${bd.err}</div>`; $('aBadgesN').textContent = ''; return; }
   const have = BADGES.filter((b, i) => i && (bd.mask >> (i - 1)) & 1).length;
-  $('aBadgesN').textContent = `${have + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0) + (bd.pup ? 1 : 0)} / ${8 + (A.social ? 1 : 0) + (A.champion ? 1 : 0) + (A.gm ? 1 : 0)}`;
+  $('aBadgesN').textContent = `${have + (bd.herald ? 1 : 0) + (bd.champ ? 1 : 0) + (bd.pup ? 1 : 0) + (bd.quest ? 1 : 0)} / ${8 + (A.social ? 1 : 0) + (A.champion ? 1 : 0) + (A.gm ? 1 : 0) + (A.quests ? 1 : 0)}`;
   box.innerHTML = BADGES.map((b, id) => {
     if (!id) return '';
     const owned = (bd.mask >> (id - 1)) & 1, claim = !owned && !b.bot ? badgeClaim(id) : null;
@@ -3546,7 +3697,8 @@ function renderBadges(){
     return `<div class="bd-tile${owned ? ' own' : ''}" title="${esc(b.d)}">${badgeSvg(id, 46, !owned)}<b>${b.t}</b><small>${b.d}</small>${act}</div>`;
   }).join('') + (A.social ? `<div class="bd-tile${bd.herald ? ' own' : ''}"><svg class="bd-art${bd.herald ? '' : ' dim'}" viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#2D6A4F"/><circle cx="32" cy="32" r="25" fill="none" stroke="#FFF8EE" stroke-opacity=".5" stroke-width="1.5"/><path d="M20 28h6l14-8v24l-14-8h-6zM26 36l3 9" fill="none" stroke="#FFF8EE" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 10l2.5-6 3.5 4 2-5 2 5 3.5-4 2.5 6z" fill="#E7B73C"/></svg><b>Royal Herald</b><small>3 people you invited made a swap.</small>${bd.herald ? '<span class="bd-own">✓ yours</span>' : '<span class="bd-how">from the bot</span>'}</div>` : '')
     + (A.champion ? `<div class="bd-tile${bd.champ ? ' own' : ''}">${CHAMP_SVG(!bd.champ)}<b>Arena Champion</b><small>Back the winning token in an Arena round.</small>${bd.champ ? '<span class="bd-own">✓ yours</span>' : bd.champRound ? `<button class="btn primary bd-claim" data-champ="${bd.champRound}" ${bd.busy ? 'disabled' : ''}>${bd.busy === 'champ' ? 'Claiming…' : 'Claim'}</button>` : '<a class="bd-how" href="arena.html">play the Arena</a>'}</div>` : '')
-    + (A.gm ? `<div class="bd-tile${bd.pup ? ' own' : ''}"><svg class="bd-art${bd.pup ? '' : ' dim'}" viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#E08A1E"/><circle cx="32" cy="32" r="25" fill="none" stroke="#FFF8EE" stroke-opacity=".5" stroke-width="1.5"/><path d="M18 40h28M22 40a10 10 0 0 1 20 0M32 22v4M21 27l3 3M43 27l-3 3" fill="none" stroke="#FFF8EE" stroke-width="3" stroke-linecap="round"/><path d="M24 10l2.5-6 3.5 4 2-5 2 5 3.5-4 2.5 6z" fill="#E7B73C"/></svg><b>Early Pup</b><small>Say gm 7 days in a row.</small>${bd.pup ? '<span class="bd-own">✓ yours</span>' : '<span class="bd-how">gm on the home page</span>'}</div>` : '');
+    + (A.gm ? `<div class="bd-tile${bd.pup ? ' own' : ''}"><svg class="bd-art${bd.pup ? '' : ' dim'}" viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#E08A1E"/><circle cx="32" cy="32" r="25" fill="none" stroke="#FFF8EE" stroke-opacity=".5" stroke-width="1.5"/><path d="M18 40h28M22 40a10 10 0 0 1 20 0M32 22v4M21 27l3 3M43 27l-3 3" fill="none" stroke="#FFF8EE" stroke-width="3" stroke-linecap="round"/><path d="M24 10l2.5-6 3.5 4 2-5 2 5 3.5-4 2.5 6z" fill="#E7B73C"/></svg><b>Early Pup</b><small>Say gm 7 days in a row.</small>${bd.pup ? '<span class="bd-own">✓ yours</span>' : '<span class="bd-how">gm on the home page</span>'}</div>` : '')
+    + (A.quests ? `<div class="bd-tile${bd.quest ? ' own' : ''}"><svg class="bd-art${bd.quest ? '' : ' dim'}" viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#1E5FA8"/><circle cx="32" cy="32" r="25" fill="none" stroke="#FFF8EE" stroke-opacity=".5" stroke-width="1.5"/><path d="M22 22h20v24H22z M26 29l3 3 5-6 M26 38h12" fill="none" stroke="#FFF8EE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 10l2.5-6 3.5 4 2-5 2 5 3.5-4 2.5 6z" fill="#E7B73C"/></svg><b>Questmaster</b><small>Finish all 3 daily quests 7 days in a row.</small>${bd.quest ? '<span class="bd-own">✓ yours</span>' : '<span class="bd-how">daily quests on the home page</span>'}</div>` : '');
 }
 $('aBadges').addEventListener('click', async e => {
   const cb = e.target.closest('[data-champ]');
@@ -3826,11 +3978,13 @@ function setMode(m){
   document.querySelectorAll('#modeTabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
   if (m === 'limit' && !lim.price){ const r = limMarketRate(); if (r) lim.price = limPriceStr(r * LIM_FILL_NOW); }
   renderSwap(); if (m === 'limit'){ limCheckAllowance(); loadLimitOrders(); limFetchMarket(); }
+  if (m === 'dca'){ dcaCheckAllowance(); loadDcaPlans(); }
 }
 function renderLimit(){
   const on = st.mode === 'limit' && !!A.limit;
-  $('limBox').hidden = !on; $('limCta').hidden = !on; $('cta').hidden = on;
-  $('recvLabel').textContent = on ? 'You receive at least' : 'You receive (estimated)';
+  $('limBox').hidden = !on; $('limCta').hidden = !on; $('cta').hidden = on || st.mode === 'dca';
+  $('recvLabel').textContent = on ? 'You receive at least' : st.mode === 'dca' ? 'You receive in total (estimated, at today\'s price)' : 'You receive (estimated)';
+  renderDca();
   if (!on) return;
   $('details').hidden = true; $('sWarn').hidden = true;
   const tin = st.tin, tout = st.tout, mr = limMarketRate();
@@ -3969,12 +4123,132 @@ async function limAct(kind, id){
   refreshSwap(); loadLimitOrders();
 }
 $('modeTabs').addEventListener('click', e => { const b = e.target.closest('button[data-mode]'); if (b) setMode(b.dataset.mode); });
-$('amtIn').addEventListener('input', () => { if (st.mode === 'limit'){ clearTimeout(lim.t); lim.t = setTimeout(() => { limCheckAllowance(); limFetchMarket(); }, 300); } });
+$('amtIn').addEventListener('input', () => { if (st.mode === 'dca'){ clearTimeout(dca.t); dca.t = setTimeout(dcaCheckAllowance, 300); } if (st.mode === 'limit'){ clearTimeout(lim.t); lim.t = setTimeout(() => { limCheckAllowance(); limFetchMarket(); }, 300); } });
 $('limPrice').addEventListener('input', e => { cleanNum(e.target); lim.price = e.target.value; renderLimit(); });
 $('limPct').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const r = limMarketRate(); if (!r){ toast(lim.mkt && lim.mkt.key === limKey() && !lim.mkt.rate ? 'No pool route for this pair yet.' : 'Getting the market price… try again in a second.'); limFetchMarket(); return; } const pct = Number(b.dataset.p); lim.price = limPriceStr(pct === 0 ? r * LIM_FILL_NOW : r * (1 + pct/100)); $('limPrice').value = lim.price; renderLimit(); });
 $('limExp').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; lim.days = +b.dataset.d; renderLimit(); });
 $('limList').addEventListener('click', e => { const b = e.target.closest('[data-lim]'); if (b) limAct(b.dataset.lim, +b.dataset.id); });
 setInterval(() => { if (st.view === 'swap' && !document.hidden && lim.orders.some(x => x.o.status === 1)) loadLimitOrders(); }, 30000);
+
+/* ================= AUTO-BUY (KingDCA) =================
+   The whole amount goes into the DCA contract up front and is split into equal buys; the CavFi bot
+   runs each buy when it is due (and keeps 0.1% of that buy). Cancel any time to get the rest back. */
+const DCA_TUPLE = 'tuple(address owner, bool active, bool nativeIn, bool nativeOut, uint32 buysTotal, uint32 buysLeft, uint32 interval, uint64 nextAt, address tokenIn, address tokenOut, uint256 perBuy, uint256 minOutPerBuy, uint256 spent, uint256 received)';
+const DCA_ABI = [
+  'function create(address tokenIn, address tokenOut, uint256 perBuy, uint32 buys, uint32 interval, uint256 minOutPerBuy, bool nativeOut) returns (uint256)',
+  'function createNative(address tokenOut, uint256 perBuy, uint32 buys, uint32 interval, uint256 minOutPerBuy) payable returns (uint256)',
+  'function cancel(uint256 id)', `function plansOf(address) view returns (uint256[] ids, ${DCA_TUPLE}[] items)`,
+];
+const dca = { n:24, i:3600, f:25, allow:true, busy:false, plans:[] };
+const dcaC = signer => new E.Contract(A.dca, DCA_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const dcaEvery = s => s >= 86400 ? `${s/86400} day${s > 86400 ? 's' : ''}` : s >= 3600 ? `${s/3600} hour${s > 3600 ? 's' : ''}` : `${s/60} min`;
+function dcaParts(){
+  const amt = parseAmt($('amtIn').value, st.tin.decimals); if (!amt) return null;
+  const per = amt.div(dca.n); if (per.isZero()) return null;
+  return {per, total: per.mul(dca.n)};
+}
+function dcaFloor(){
+  // minimum per buy = today's quote for one part, minus the chosen margin (0 = never skip)
+  const parts = dcaParts(), q = st.quote, amt = parseAmt($('amtIn').value, st.tin.decimals);
+  if (!dca.f || !parts || !q || !q.out || !amt) return ZERO;
+  return q.out.mul(parts.per).div(amt).mul(100 - dca.f).div(100);
+}
+function renderDca(){
+  const on = st.mode === 'dca' && !!A.dca;
+  $('dcaBox').hidden = !on; $('dcaCta').hidden = !on;
+  if (!on) return;
+  $('details').hidden = true; $('sWarn').hidden = true;
+  document.querySelectorAll('#dcaN .chip').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.n === dca.n)));
+  document.querySelectorAll('#dcaI .chip').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === dca.i)));
+  document.querySelectorAll('#dcaF .chip').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.f === dca.f)));
+  const parts = dcaParts(), tin = st.tin, tout = st.tout, hrs = dca.n * dca.i / 3600;
+  $('dcaNote').textContent = parts
+    ? `${fmt(parts.per, tin.decimals)} ${tin.symbol} every ${dcaEvery(dca.i)}, ${dca.n} times (about ${hrs >= 48 ? Math.round(hrs/24) + ' days' : Math.round(hrs) + ' hours'}). The first buy runs within a minute. The CavFi bot runs each buy and keeps 0.1% of it; cancel any time to get the rest back.${dca.f ? ` A buy is skipped (and retried later) while the price is more than ${dca.f}% worse than now.` : ''}`
+    : 'Enter the total you want to spend. It is split into equal buys over time, so you get an average price instead of one moment\'s price.';
+  const g = walletGate(), amt = parseAmt($('amtIn').value, tin.decimals);
+  let label = `Start auto-buy: ${dca.n} buys`, dis = false, act = doCreateDca;
+  if (dca.busy){ label = dca.busy; dis = true; act = null; }
+  else if (g){ label = g.label; dis = !!g.dis; act = g.act || null; }
+  else if (same(addrOf(tin), addrOf(tout))){ label = 'Select different tokens'; dis = true; act = null; }
+  else if (!amt || !parts){ label = 'Enter an amount'; dis = true; act = null; }
+  else if (st.balIn && amt.gt(st.balIn)){ label = 'Insufficient ' + tin.symbol; dis = true; act = null; }
+  else if (!dca.allow){ label = 'Approve ' + tin.symbol; act = dcaApprove; }
+  const c = $('dcaCta'); c.textContent = label; c.disabled = dis; c.onclick = act; c.classList.toggle('busy', !!dca.busy);
+}
+let dcaASeq = 0;
+async function dcaCheckAllowance(){
+  const seq = ++dcaASeq;
+  if (!A.dca || st.tin.address === N){ dca.allow = true; return renderDca(); }
+  const p = dcaParts(); const ok = await allowanceOk(st.tin, p ? p.total : BN.from(1), A.dca);
+  if (seq === dcaASeq){ dca.allow = ok; renderDca(); }
+}
+async function dcaApprove(){
+  const setB = b => { dca.busy = b; renderDca(); };
+  try{
+    await sendTx(() => new E.Contract(st.tin.address, ERC20_ABI, st.signer).approve(A.dca, E.constants.MaxUint256), 'Approving…', setB);
+    toast(`${st.tin.symbol} approved for auto-buy.`, 'ok');
+  }catch(e){ toast(errMsg(e), 'bad'); }
+  dca.busy = false; await dcaCheckAllowance();
+}
+async function doCreateDca(){
+  const parts = dcaParts(); if (!parts) return;
+  const floor = dcaFloor(), c = dcaC(true), outAddr = addrOf(st.tout), nativeOut = st.tout.address === N;
+  const setB = b => { dca.busy = b; renderDca(); };
+  try{
+    const tx = await sendTx(() => st.tin.address === N ? c.createNative(outAddr, parts.per, dca.n, dca.i, floor, {value: parts.total})
+      : c.create(st.tin.address, outAddr, parts.per, dca.n, dca.i, floor, nativeOut), 'Starting…', setB);
+    toast(`Auto-buy started: ${fmt(parts.per, st.tin.decimals)} ${st.tin.symbol} → ${st.tout.symbol} every ${dcaEvery(dca.i)}, ${dca.n} times. ${txLink(tx.hash)}`, 'ok', 9000);
+    celebrate($('dcaCta'), 14);
+  }catch(e){ toast(errMsg(e), 'bad', 8000); }
+  dca.busy = false; refreshSwap(); loadDcaPlans();
+}
+let dcaPSeq = 0;
+async function loadDcaPlans(){
+  const seq = ++dcaPSeq;
+  if (!A.dca || !st.account || !onRightChain()){ dca.plans = []; return renderDcaPlans(); }
+  try{
+    const r = await dcaC().plansOf(st.account);
+    const items = await Promise.all(r.ids.map(async (id, k) => {
+      const p = r.items[k];
+      const [ti, to] = await Promise.all([resolveToken(p.tokenIn), resolveToken(p.tokenOut)]);
+      return {id: id.toNumber(), p, ti: p.nativeIn ? TOKENS[0] : ti, to: p.nativeOut ? TOKENS[0] : to};
+    }));
+    if (seq === dcaPSeq) dca.plans = items.reverse().slice(0, 25);
+  }catch(e){ if (seq === dcaPSeq) dca.plans = []; }
+  if (seq === dcaPSeq) renderDcaPlans();
+}
+function renderDcaPlans(){
+  const box = $('dcaPlans');
+  box.hidden = !A.dca || !dca.plans.length || st.view !== 'swap';
+  if (box.hidden) return;
+  const now = Math.floor(Date.now()/1000);
+  $('dcaCount').textContent = `${dca.plans.filter(x => x.p.active).length} running`;
+  $('dcaList').innerHTML = dca.plans.map(({id, p, ti, to}) => {
+    const done = p.buysTotal - p.buysLeft, next = Number(p.nextAt.toString()) - now;
+    const st_ = p.active ? 'open' : p.buysLeft === 0 && done === p.buysTotal ? 'filled' : 'cancelled';
+    const tag = {open:'Running', filled:'Done', cancelled:'Cancelled'}[st_];
+    const avg = done && !p.received.isZero() ? fl(p.received, to.decimals) / fl(p.spent, ti.decimals) : 0;
+    const line = (p.active ? (next > 0 ? `Next buy in ${next > 3600 ? Math.round(next/3600) + 'h' : Math.max(1, Math.round(next/60)) + 'm'}. ` : 'Next buy is due now. ') : '')
+      + (done ? `Got ${fmt(p.received, to.decimals)} ${to.symbol} so far, average 1 ${ti.symbol} = ${limPriceStr(avg)} ${to.symbol}.` : 'No buy yet.');
+    return `<div class="pool lim-ord ${st_}"><div class="pool-top"><span class="pair-coins">${coin(ti)}${coin(to)}</span>
+      <span class="pool-name"><b>${fmt(p.perBuy, ti.decimals)} ${ti.symbol} → ${to.symbol} every ${dcaEvery(p.interval)}</b><small>${done} of ${p.buysTotal} buys · #${id}</small></span>
+      <span class="lim-tag ${st_}">${tag}</span></div>
+      <div class="lim-line">${line}</div>${p.active ? `<div class="lim-btns"><button class="btn" data-dca="cancel" data-id="${id}">Cancel, return ${fmt(p.perBuy.mul(p.buysLeft), ti.decimals)} ${ti.symbol}</button></div>` : ''}</div>`;
+  }).join('');
+}
+$('dcaN').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; dca.n = +b.dataset.n; renderDca(); dcaCheckAllowance(); });
+$('dcaI').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; dca.i = +b.dataset.i; renderDca(); });
+$('dcaF').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; dca.f = +b.dataset.f; renderDca(); });
+$('dcaList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-dca]'); if (!b) return;
+  const id = +b.dataset.id, x = dca.plans.find(q => q.id === id); if (!x) return;
+  try{
+    const tx = await sendTx(() => dcaC(true).cancel(id), 'Cancelling…', t => { b.disabled = !!t; if (t) b.textContent = t; });
+    toast(`Auto-buy #${id} cancelled, the rest of your ${x.ti.symbol} is back. ${txLink(tx.hash)}`, 'ok');
+  }catch(err){ toast(errMsg(err), 'bad'); }
+  refreshSwap(); loadDcaPlans();
+});
+setInterval(() => { if (st.view === 'swap' && !document.hidden && dca.plans.some(x => x.p.active)) loadDcaPlans(); }, 30000);
 
 /* ================= LAUNCHPAD =================
    Meme tokens on a bonding curve (KingLaunch). Reads go through the read-only RPC,
@@ -4611,7 +4885,7 @@ function nfTraits(dna){
   t.weight = [1, 2, 3, 5, 10][t.crown] + (t.acc ? 1 : 0) + (t.coat === 3 ? 1 : 0);
   return t;
 }
-function nfSvg(dna){
+function nfSvg(dna, life){
   const t = nfTraits(dna);
   const head = ['#A84A1E', '#2A2530', '#2A2530', '#9C3B1A'][t.coat], blaze = ['#FFF4E6', '#FFF4E6', '#C9773A', '#B8552C'][t.coat];
   const bg = ['#F6E7D8', '#DCEBF5', '#E3F0DC', '#F7DDE2', '#E6E0F5', '#F5E6C8'][t.bg];
@@ -4638,7 +4912,32 @@ function nfSvg(dna){
     + (t.coat === 1 ? '<circle cx="24.5" cy="36" r="2.2" fill="#C9773A"/><circle cx="39.5" cy="36" r="2.2" fill="#C9773A"/>' : '')
     + eyes
     + '<ellipse cx="32" cy="39.6" rx="3.3" ry="2.4" fill="#1B1A2E"/><path d="M32 42 v2.6 M28.6 45.6 q3.4 2.4 6.8 0" stroke="#1B1A2E" stroke-width="1.3" fill="none" stroke-linecap="round"/>'
-    + acc + crown + '</svg>';
+    + acc + crown + nfLifeSvg(life) + '</svg>';
+}
+/* Living Cavaliers: each Cavalier also shows what its owner does on CavFi, read from the chain:
+   a sun halo for a gm streak of 3+ days (golden rays with the Early Pup badge), a trophy for the Arena
+   Champion badge, a blue star for Questmaster, and the owner's .cav name on a ribbon. */
+function nfLifeSvg(l){
+  if (!l) return '';
+  let o = '';
+  if (l.pup) o += '<g stroke="#E7B73C" stroke-width="1.6" stroke-linecap="round" opacity=".9"><path d="M5 22l-4-1M6 30H1M5 38l-4 1M59 22l4-1M58 30h5M59 38l4 1"/></g>';
+  if (l.streak >= 3) o += '<circle cx="32" cy="34" r="29" fill="none" stroke="#F2C14E" stroke-width="2.2" stroke-dasharray="3 3" opacity=".75"/>';
+  if (l.champ) o += '<g transform="translate(50 3)"><path d="M1 1h10v3a5 5 0 0 1-10 0z" fill="#E7B73C"/><path d="M6 9v3M3 13h6" stroke="#B8860B" stroke-width="1.6" stroke-linecap="round"/><path d="M1 2H-1a2 2 0 0 0 2 3M11 2h2a2 2 0 0 1-2 3" fill="none" stroke="#E7B73C" stroke-width="1.1"/></g>';
+  if (l.quest) o += '<g transform="translate(3 3)"><circle cx="6" cy="6" r="6" fill="#1E5FA8"/><path d="M6 2.2l1.1 2.4 2.6.3-1.9 1.8.5 2.6L6 8l-2.3 1.3.5-2.6L2.3 4.9l2.6-.3z" fill="#FFF8EE"/></g>';
+  if (l.name){ const n = l.name.length > 15 ? l.name.slice(0, 14) + '…' : l.name; o += `<rect x="9" y="56.5" width="46" height="6.5" rx="2" fill="#1B1A2E" opacity=".78"/><text x="32" y="61.3" font-size="4.4" text-anchor="middle" fill="#FFF8EE" font-family="ui-monospace,monospace">${esc(n)}</text>`; }
+  return o;
+}
+async function nfLoadLife(owners){
+  const list = [...new Set(owners.map(lk))].slice(0, 80); if (!list.length) return;
+  const life = {};
+  list.forEach(a => life[a] = {});
+  const jobs = [];
+  if (A.names) jobs.push(nmC().namesOf(list).then(ns => ns.forEach((n, k) => { if (nmValid(n)) life[list[k]].name = n + '.cav'; })).catch(() => {}));
+  if (A.gm) jobs.push(...list.map(a => gmC().info(a).then(i => { life[a].streak = i.streak.toNumber(); life[a].pup = i.pup; }).catch(() => {})));
+  if (A.champion) jobs.push(...list.map(a => champC().balanceOf(a, 1).then(b => { life[a].champ = !b.isZero(); }).catch(() => {})));
+  if (A.quests) jobs.push(...list.map(a => questsC().balanceOf(a, 1).then(b => { life[a].quest = !b.isZero(); }).catch(() => {})));
+  await Promise.all(jobs);
+  nf.life = life;
 }
 let nfSeq = 0;
 async function nfHomeFig(){ const f = $('hmFigNft'); if (!f) return; if (!A.nft){ f.textContent = 'soon'; return; } try{ const c = nfC(); const [n, m] = await Promise.all([c.totalMinted(), c.maxSupply()]); f.textContent = `${n} / ${m}`; }catch(e){} }
@@ -4662,6 +4961,7 @@ async function loadNft(force){
     }
     if (seq !== nfSeq) return;
     nf.all = all; nf.at = Date.now();
+    await nfLoadLife(all.map(x => x.owner)).catch(() => {});
     nf.info = {price, minted: n, max: max.toNumber(), totalWeight: tw.toNumber(), rate, finish: fin.toNumber(), mine, skew: blk ? blk.timestamp - Math.floor(Date.now()/1000) : 0};
     const f = $('hmFigNft'); if (f) f.textContent = `${n} / ${max.toNumber()}`;
   }catch(e){ if (seq === nfSeq) nf.info = {error: true}; }
@@ -4674,7 +4974,7 @@ function nfCard(x, mineView){
       : `<button class="btn primary fc-sm" data-nf="stake" data-id="${x.id}" ${nf.busy ? 'disabled' : ''}>Stake</button>`)
     : `<small class="nf-own">${st.account && same(x.owner, st.account) ? 'yours' : short(x.owner)}</small>`;
   return `<div class="nf-card${rare}">
-    <div class="nf-art">${nfSvg(x.dna)}${x.staked ? '<span class="nf-tag">staked</span>' : ''}</div>
+    <div class="nf-art">${nfSvg(x.dna, (nf.life || {})[lk(x.owner)])}${x.staked ? '<span class="nf-tag">staked</span>' : ''}</div>
     <div class="nf-meta"><b>Cavalier #${x.id}</b><span class="nf-w" title="Staking weight">×${t.weight}</span></div>
     <small class="nf-tr">${NF_COAT[t.coat]} · ${t.crown ? NF_CROWN[t.crown] + ' crown' : 'no crown'}${t.acc ? ' · ' + NF_ACC[t.acc] : ''}</small>
     ${act}
@@ -4703,7 +5003,7 @@ function renderNft(){
   box.innerHTML = `
     <div class="nf-top">
       <section class="sx-card nf-mint">
-        <div class="nf-hero">${nf.all.length ? nfSvg(nf.all[nf.all.length - 1].dna) : nfSvg('123456789012345678901234567890')}</div>
+        <div class="nf-hero">${nf.all.length ? nfSvg(nf.all[nf.all.length - 1].dna, (nf.life || {})[lk(nf.all[nf.all.length - 1].owner)]) : nfSvg('123456789012345678901234567890')}</div>
         <div class="nf-mbody">
           <div class="sx-head"><h2>Mint a Cavalier</h2><span>${i.minted} / ${i.max} minted</span></div>
           <div class="nf-prog" aria-hidden="true"><span style="width:${(i.minted / i.max * 100).toFixed(2)}%"></span></div>
@@ -4738,6 +5038,7 @@ function renderNft(){
         </div>
         <span>${NF_CROWN.map((n, k) => k ? `${n} ${cr[k] || 0}` : '').filter(Boolean).join(' · ')}</span>
       </div>
+      <p class="nf-life">Living Cavaliers: each one shows what its owner does on CavFi. A halo for a gm streak of 3+ days (golden rays with Early Pup), a trophy for Arena Champion, a blue star for Questmaster and the owner's .cav name. Read from the chain on CavFi; wallets and explorers show the base art.</p>
       ${list.length ? `<div class="nf-grid">${list.map(x => nfCard(x, nf.tab === 'mine')).join('')}</div>`
         : `<div class="empty-card">${nf.tab === 'mine' ? (st.account ? 'No Cavaliers yet. Mint your first one above.' : 'Connect your wallet to see your Cavaliers.') : 'Nobody has minted yet. Be the first.'}</div>`}
     </section>`;
@@ -4893,6 +5194,101 @@ document.addEventListener('click', async e => {
 });
 setInterval(() => { if (st.view === 'home' && gmS.info) renderGm(); }, 30000);
 
+/* ================= DAILY QUESTS =================
+   The 3 quests of the day come from quests-rules.js (shared with the bot). Progress is read from your
+   own transactions of today on the DogeOS explorer; the bot records each finished day on-chain. */
+const QUESTS_ABI = ['function info(address) view returns (uint256 streak, uint256 best, uint256 fullDays, uint256 quests, bool badge, uint8 yesterday)',
+  'function balanceOf(address, uint256) view returns (uint256)'];
+const questsC = () => new E.Contract(A.quests, QUESTS_ABI, onRightChain() ? st.provider : RP());
+const qs = { day:0, list:[], ev:null, info:null, loading:false, at:0 };
+async function myTxsToday(addr, dayStart){
+  const out = [];
+  if (A.rpc){ // local test chain: read the blocks directly
+    const p = RP(), head = await p.getBlockNumber();
+    for (let b = head; b >= Math.max(0, head - 3000); b--){
+      const blk = await p.getBlockWithTransactions(b); if (blk.timestamp < dayStart) break;
+      for (const t of blk.transactions) if (same(t.from, addr)){ const rc = await p.getTransactionReceipt(t.hash); out.push({to: t.to, input: t.data, ok: rc.status === 1, ts: blk.timestamp}); }
+    }
+    return out;
+  }
+  let url = `${NET.explorer}/api/v2/addresses/${addr}/transactions?filter=from`;
+  for (let page = 0; page < 6; page++){
+    const r = await fetch(url).then(x => x.json());
+    for (const t of r.items || []){
+      const ts = Math.floor(Date.parse(t.timestamp) / 1000);
+      if (ts < dayStart) return out;
+      out.push({to: t.to && t.to.hash, input: t.raw_input || '', ok: t.status === 'ok' || t.result === 'success', ts});
+    }
+    if (!r.next_page_params) break;
+    url = `${NET.explorer}/api/v2/addresses/${addr}/transactions?filter=from&` + new URLSearchParams(r.next_page_params);
+  }
+  return out;
+}
+async function loadQuests(){
+  if (!A.quests || !window.CavQuests){ $('hmDuo').hidden = !(A.quests || A.raffle); return; }
+  $('hmDuo').hidden = false;
+  const now = Math.floor(Date.now()/1000), day = Math.floor(now / 86400);
+  qs.day = day; qs.list = CavQuests.questsFor(day, A);
+  if (st.account){
+    try{
+      const [txs, info] = await Promise.all([myTxsToday(st.account, day * 86400), questsC().info(st.account).catch(() => null)]);
+      qs.ev = CavQuests.evaluate(txs, A, day); qs.info = info;
+    }catch(e){ qs.ev = null; }
+  } else { qs.ev = null; qs.info = null; }
+  qs.at = Date.now(); renderQuests();
+}
+function renderQuests(){
+  const box = $('qsCard'); if (!box || !A.quests || !window.CavQuests) { if (box) box.hidden = true; return; }
+  box.hidden = false;
+  const now = Math.floor(Date.now()/1000), left = (qs.day + 1) * 86400 - now;
+  const ev = qs.ev, i = qs.info;
+  const rows = (qs.list || []).map((q, k) => {
+    const done = ev && ev.done[k];
+    const go = q.href ? `<a class="btn fc-sm" href="${q.href}">Go</a>` : `<button class="btn fc-sm" data-goview="${q.view}">Go</button>`;
+    return `<div class="qs-row${done ? ' done' : ''}"><span class="qs-ck" aria-hidden="true">${done ? '✓' : ''}</span><span><b>${esc(q.title)}</b><small>${esc(q.hint)}</small></span>${done ? '<span class="bd-own">done</span>' : go}</div>`;
+  }).join('');
+  const n = ev ? ev.count : 0;
+  box.innerHTML = `<div class="sx-head"><h2 id="qsH">Daily quests</h2><span>new quests in ${Math.floor(left/3600)}h ${Math.floor(left%3600/60)}m</span></div>
+    ${rows}
+    <div class="qs-foot">${!st.account ? 'Connect your wallet to track your quests.' : `${n} of 3 done today${n === 3 ? ' 🎉' : ''}.`}
+    ${i ? ` Streak <b>${i.streak.toString()}</b> day${i.streak.eq(1) ? '' : 's'} (best ${i.best.toString()})${i.badge ? ' · Questmaster earned 🏅' : ` · all 3 quests for 7 days in a row earns the Questmaster badge`}.` : ''}
+    Each quest is also 1 ticket for the Royal Raffle. The CavFi bot checks and records each day after it ends (midnight UTC); progress here can lag a minute behind the explorer.</div>`;
+}
+
+/* ================= ROYAL RAFFLE ================= */
+const RAFFLE_ABI = ['function current() view returns (uint256 id, uint64 start, uint64 end, uint256 totalTickets, uint256 playerCount, uint256 pot, uint64 drawBlock)',
+  'function ticketsOf(uint256, address) view returns (uint256)',
+  'function getRound(uint256) view returns (tuple(uint64 start, uint64 end, uint64 drawBlock, bool drawn, uint256 totalTickets, uint256 pot, address[3] winners, uint256[3] prizes))'];
+const raffleC = () => new E.Contract(A.raffle, RAFFLE_ABI, onRightChain() ? st.provider : RP());
+const rl = { cur:null, mine:0, last:null, names:{} };
+async function loadRaffle(){
+  if (!A.raffle){ $('rlCard').hidden = true; return; }
+  try{
+    const c = raffleC(), cur = await c.current();
+    const [mine, last] = await Promise.all([st.account ? c.ticketsOf(cur.id, st.account) : Promise.resolve(ZERO), cur.id.gt(1) ? c.getRound(cur.id.sub(1)) : Promise.resolve(null)]);
+    rl.cur = cur; rl.mine = mine.toNumber(); rl.last = last;
+    if (last && A.names){ const ws = last.winners.filter(w => w !== E.constants.AddressZero); if (ws.length){ try{ const ns = await nmC().namesOf(ws); ws.forEach((w, k) => { if (nmValid(ns[k])) rl.names[lk(w)] = ns[k] + '.cav'; }); }catch(e){} } }
+  }catch(e){ rl.cur = null; }
+  renderRaffle();
+}
+function renderRaffle(){
+  const box = $('rlCard'); if (!box) return;
+  box.hidden = !A.raffle; if (!A.raffle) return;
+  const c = rl.cur;
+  if (!c){ box.innerHTML = '<div class="sx-head"><h2 id="rlH">Royal Raffle</h2></div><div class="empty-card">Reading the raffle…</div>'; return; }
+  const now = Math.floor(Date.now()/1000), left = Number(c.end.toString()) - now;
+  const when = left > 86400 ? `${Math.floor(left/86400)}d ${Math.floor(left%86400/3600)}h` : left > 0 ? `${Math.floor(left/3600)}h ${Math.floor(left%3600/60)}m` : 'drawing soon';
+  const total = c.totalTickets.toNumber(), chance = total && rl.mine ? Math.min(100, rl.mine / total * 100 * 3) : 0;
+  const last = rl.last && rl.last.drawn ? rl.last : null;
+  const wins = last ? last.winners.map((w, k) => w === E.constants.AddressZero ? '' : `<div class="rl-win"><span>${['🥇','🥈','🥉'][k]} ${esc(rl.names[lk(w)] || short(w))}${same(w, st.account || '') ? ' <b class="you">you</b>' : ''}</span><b>${sxNum(fl(last.prizes[k], 18))} KingS</b></div>`).join('') : '';
+  box.innerHTML = `<div class="sx-head"><h2 id="rlH">Royal Raffle</h2><span>week #${c.id.toString()} · ${left > 0 ? 'draw in ' + when : when}</span></div>
+    <div class="rl-pot"><b>${sxNum(fl(c.pot, 18))}</b><span>KingS in the pot</span></div>
+    <div class="pf-figs"><div><span>Your tickets</span><b>${st.account ? rl.mine : '–'}</b></div><div><span>All tickets</span><b>${total}</b></div><div><span>Players</span><b>${c.playerCount.toString()}</b></div></div>
+    ${wins ? `<div class="rl-foot"><b>Last week's winners</b></div>${wins}` : ''}
+    <div class="rl-foot">Tickets are free: 1 for every daily quest you finish, added by the bot after each day. At the end of the week 3 winners get 50%, 30% and 20% of the pot, drawn on-chain with more tickets meaning a bigger chance.${chance ? ` Your chance to win something right now: about ${chance.toFixed(chance < 10 ? 1 : 0)}%.` : ''} Testnet KingS, no real value.</div>`;
+}
+setInterval(() => { if (st.view === 'home' && !document.hidden){ loadQuests(); loadRaffle(); } }, 60000);
+
 /* ================= light / dark ================= */
 const THEME_KEY = 'cavfi.theme';
 const MOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
@@ -4923,8 +5319,9 @@ paintTheme();
   st.tin = TOKENS[0]; st.tout = by('KingS') || TOKENS[1] || TOKENS[0];
   st.la = by('KingS') || TOKENS[0]; st.lb = by('cUSDT') || by('USDT') || TOKENS[0];
   const lxDeep = location.hash.match(LX_HASH);
-  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#faq' ? 'help' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
+  setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
   if (lxDeep) openLaunch(E.utils.getAddress(lxDeep[1].toLowerCase()));
+  if (location.hash === '#send') setTimeout(() => { if (st.account) sdOpen(); }, 1500);
   renderShell(); renderSwap(); renderLiq(); renderPools();
   if (!(await wcRestore()) && window.ethereum){
     window.ethereum.request({method:'eth_accounts'}).then(x => { if (x && x[0]) connect(); }).catch(()=>{});

@@ -11,6 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 loadDotEnv(path.join(HERE, '.env'));
@@ -40,6 +41,12 @@ const CFG = {
   arenaNoiseMaxPct: Number(env('ARENA_NOISE_MAX_PCT', '0.6')) / 100,
   arenaNoiseLowDoge: Number(env('ARENA_NOISE_LOW_DOGE', '60')),
   arenaRemindHours: env('ARENA_REMIND_HOURS', '2,24').split(',').map(Number).filter(x => x > 0),
+  dca: env('DCA', '1') === '1',
+  quests: env('QUESTS', '1') === '1',
+  questsSource: env('QUESTS_SOURCE', 'explorer'), // 'explorer' (Blockscout API) or 'rpc' (scan blocks; local tests)
+  questsDelaySec: Number(env('QUESTS_DELAY_SEC', '300')),
+  raffle: env('RAFFLE', '1') === '1',
+  alerts: env('ALERTS', '1') === '1',
   dryRun: env('DRY_RUN', '0') === '1',
   once: process.argv.includes('--once'),
 };
@@ -73,6 +80,14 @@ const ABI = {
           'function lastSettled() view returns (uint256)', 'function claimable(uint256 id, address user) view returns (uint256)',
           'function getRound(uint256 id) view returns (tuple(uint64 start, uint64 end, uint16 feeBps, uint8 winnerMask, bool settled, uint256 staked, uint256 rollover, uint256 winnerStake, uint256 payout))'],
   names: ['function namesOf(address[]) view returns (string[])'],
+  dca: ['function count() view returns (uint256)', 'function due(uint256 start, uint256 n) view returns (uint256[])', 'function execute(uint256 id, address[] path) returns (uint256)',
+        'function get(uint256 id) view returns (tuple(address owner, bool active, bool nativeIn, bool nativeOut, uint32 buysTotal, uint32 buysLeft, uint32 interval, uint64 nextAt, address tokenIn, address tokenOut, uint256 perBuy, uint256 minOutPerBuy, uint256 spent, uint256 received))',
+        'function keeper(address) view returns (bool)'],
+  quests: ['function record(uint32 day, address[] users, uint8[] done)', 'function attester(address) view returns (bool)', 'function doneOf(address, uint32) view returns (uint8)',
+           'event Questmaster(address indexed who)'],
+  raffle: ['function current() view returns (uint256 id, uint64 start, uint64 end, uint256 totalTickets, uint256 playerCount, uint256 pot, uint64 drawBlock)',
+           'function addTickets(address[] users, uint256[] counts)', 'function close()', 'function draw()', 'function attester(address) view returns (bool)',
+           'event Drawn(uint256 indexed id, address[3] winners, uint256[3] prizes, uint256 pot)'],
   launch: ['event Launched(address indexed token, address indexed creator, string name, string symbol, uint256 target)',
            'event Graduated(address indexed token, address indexed pair, uint256 doge, uint256 amount, uint256 liquidity)'],
 };
@@ -568,6 +583,205 @@ async function arenaReminders(){
   state.arenaWins = keep; saveState();
 }
 
+// ------------------------------------------------------------------ 6. auto-buy (DCA) keeper
+// Runs every due part of every auto-buy plan through the best CavFi route (earns 0.1% of the part).
+// A part whose best route pays less than the plan's floor is skipped and retried 10 minutes later.
+const dcaSkip = {};
+async function dcaKeeper(){
+  if (!CFG.dca || !A.dca || !wallet || me === ethers.constants.AddressZero) return;
+  const c = new ethers.Contract(A.dca, ABI.dca, wallet);
+  if (!state.dcaKeeperOk){ if (!(await c.keeper(me))){ log('dca: this wallet is not a keeper of the auto-buy contract, skipping'); CFG.dca = false; return; } state.dcaKeeperOk = true; }
+  const n = (await c.count()).toNumber(); if (!n) return;
+  for (let s = 0; s < n; s += 200){
+    const ids = await c.due(s, 200);
+    for (const idB of ids){
+      const id = idB.toNumber();
+      if (dcaSkip[id] && now() < dcaSkip[id]) continue;
+      try{
+        const p = await c.get(id);
+        const swapIn = p.perBuy.sub(p.perBuy.mul(10).div(10000));
+        const best = await bestRoute(p.tokenIn, p.tokenOut, swapIn);
+        if (!best || best.out.lt(p.minOutPerBuy)){ dcaSkip[id] = now() + 600; log(`dca #${id}: price below the plan's floor, retry in 10 min`); continue; }
+        await send(`dca #${id}: buy ${p.buysTotal - p.buysLeft + 1}/${p.buysTotal}`, () => c.execute(id, best.path));
+        if (p.buysLeft === 1){
+          const ti = await token(p.tokenIn), to = await token(p.tokenOut);
+          await tg(`🔁 <b>Auto-buy #${id} finished</b>\n${p.buysTotal} buys of ${fmtN(fl(p.perBuy, ti.decimals))} ${esc(ti.symbol)} → ${esc(to.symbol)} for ${short(p.owner)}.`);
+        }
+      }catch(e){ dcaSkip[id] = now() + 600; log(`dca #${id} failed:`, (e.reason || e.message || '').slice(0, 100)); }
+    }
+  }
+}
+
+// ------------------------------------------------------------------ 7. daily quests + Royal Raffle tickets
+// After a UTC day ends (+ QUESTS_DELAY_SEC), read that day's transactions to every quest contract,
+// check each wallet against the day's 3 quests (rules shared with the site in site/quests-rules.js),
+// record the result on-chain and give one raffle ticket per quest done.
+const requireLocal = createRequire(import.meta.url);
+let QR = null;
+function questRules(){
+  if (QR) return QR;
+  const f = path.join(path.dirname(CFG.addresses), 'quests-rules.js');
+  QR = requireLocal(f);
+  return QR;
+}
+async function dayTxsExplorer(contract, from, to){
+  const out = [];
+  let url = `${CFG.explorer}/api/v2/addresses/${contract}/transactions?filter=to`;
+  for (let page = 0; page < 60; page++){
+    const r = await fetch(url).then(x => x.json());
+    let older = false;
+    for (const t of r.items || []){
+      const ts = Math.floor(Date.parse(t.timestamp) / 1000);
+      if (ts >= to) continue;
+      if (ts < from){ older = true; break; }
+      out.push({from: t.from && t.from.hash, to: t.to && t.to.hash, input: t.raw_input || '', ok: t.status === 'ok' || t.result === 'success', ts});
+    }
+    if (older || !r.next_page_params) break;
+    url = `${CFG.explorer}/api/v2/addresses/${contract}/transactions?filter=to&` + new URLSearchParams(r.next_page_params);
+  }
+  return out;
+}
+async function dayTxsRpc(contracts, from, to){
+  const set = new Set(contracts), out = [];
+  const head = await provider.getBlockNumber();
+  for (let b = head; b >= 0; b--){
+    const blk = await provider.getBlockWithTransactions(b);
+    if (blk.timestamp < from) break;
+    if (blk.timestamp >= to) continue;
+    for (const t of blk.transactions){
+      if (!t.to || !set.has(lk(t.to))) continue;
+      const rc = await provider.getTransactionReceipt(t.hash);
+      out.push({from: t.from, to: t.to, input: t.data, ok: rc.status === 1, ts: blk.timestamp});
+    }
+  }
+  return out;
+}
+let questsAt = 0;
+async function questsDaily(){
+  if (!CFG.quests || !A.quests || !wallet || me === ethers.constants.AddressZero || now() - questsAt < 120) return;
+  questsAt = now();
+  const chainNow = (await provider.getBlock('latest')).timestamp;   // same clock as the contract's today()
+  const last = Math.floor((chainNow - CFG.questsDelaySec) / 86400) - 1; // the last day that has fully ended
+  if (state.questsDay != null && state.questsDay >= last) return;
+  // catch up on days missed while the bot was off (at most 7; the contract accepts 30 days back)
+  const day = state.questsDay == null ? last : Math.max(state.questsDay + 1, last - 6);
+  const q = new ethers.Contract(A.quests, ABI.quests, wallet);
+  if (!(await q.attester(me))){ log('quests: this wallet is not an attester of the quests contract, skipping'); CFG.quests = false; return; }
+  const R = questRules(), from = day * 86400, to = from + 86400;
+  const contracts = R.contracts(A);
+  const txs = CFG.questsSource === 'rpc' ? await dayTxsRpc(contracts, from, to)
+    : (await Promise.all(contracts.map(c => dayTxsExplorer(c, from, to)))).flat();
+  const by = {};
+  for (const t of txs) if (t.from) (by[ethers.utils.getAddress(t.from)] ||= []).push(t);
+  delete by[ethers.utils.getAddress(me)]; // the bot itself doesn't play
+  const users = [], done = [];
+  for (const [u, list] of Object.entries(by)){ const ev = R.evaluate(list, A, day); if (ev.count > 0){ users.push(u); done.push(ev.count); } }
+  log(`quests: day ${day} (${new Date(from * 1000).toISOString().slice(0, 10)}): ${users.length} wallets did quests, ${done.filter(d => d === 3).length} finished all 3`);
+  const masters = [];
+  for (let i = 0; i < users.length; i += 40){
+    const u = users.slice(i, i + 40), d = done.slice(i, i + 40);
+    const tx = await send(`quests: record day ${day} (${u.length} wallets)`, () => q.record(day, u, d));
+    if (tx){ const rc = await provider.getTransactionReceipt(tx.hash); for (const l of rc.logs){ try{ const e = q.interface.parseLog(l); if (e.name === 'Questmaster') masters.push(e.args.who); }catch(_){} } }
+  }
+  // raffle tickets: one per quest
+  if (CFG.raffle && A.raffle && users.length){
+    try{
+      await raffleKeeper(); // close/draw an ended round first, so tickets land in an open one
+      const r = new ethers.Contract(A.raffle, ABI.raffle, wallet), cur = await r.current();
+      const t = (await provider.getBlock('latest')).timestamp;
+      if (await r.attester(me) && t < Number(cur.end.toString()) && cur.drawBlock.isZero()){
+        for (let i = 0; i < users.length; i += 40) await send(`raffle: ${users.slice(i, i + 40).length} wallets get tickets`, () => r.addTickets(users.slice(i, i + 40), done.slice(i, i + 40)));
+      } else log('raffle: round not open for tickets right now');
+    }catch(e){ log('raffle tickets failed:', (e.reason || e.message || '').slice(0, 100)); }
+  }
+  state.questsDay = day; saveState();
+  if (day < last) questsAt = 0; // more days to catch up: next loop continues right away
+  if (users.length){
+    await tg(`📜 <b>Daily quests, ${new Date(from * 1000).toISOString().slice(0, 10)}</b>\n${users.length} wallet${users.length === 1 ? '' : 's'} did quests, ${done.filter(d => d === 3).length} finished all 3.` +
+      (CFG.raffle && A.raffle ? `\n🎟️ ${done.reduce((a, b) => a + b, 0)} Royal Raffle tickets given out.` : '') +
+      (masters.length ? `\n🏅 New Questmaster: ${masters.map(short).join(', ')}` : '') + `\nToday's quests: <a href="https://cavfi.com">cavfi.com</a>`);
+  }
+}
+let raffleAt = 0;
+async function raffleKeeper(){
+  if (!CFG.raffle || !A.raffle || !wallet || me === ethers.constants.AddressZero) return;
+  const r = new ethers.Contract(A.raffle, ABI.raffle, wallet), cur = await r.current();
+  const blk = await provider.getBlock('latest');
+  if (blk.timestamp < Number(cur.end.toString())) return;
+  if (cur.drawBlock.isZero()){ await send(`raffle: close week #${cur.id}`, () => r.close()); return; }
+  if (blk.number <= cur.drawBlock.toNumber()) return;
+  const tx = await send(`raffle: draw week #${cur.id}`, () => r.draw());
+  if (!tx) return;
+  const rc = await provider.getTransactionReceipt(tx.hash);
+  const ev = rc.logs.map(l => { try{ return r.interface.parseLog(l); }catch(e){ return null; } }).find(x => x && x.name === 'Drawn');
+  if (!ev) return; // the chosen block was too old; a new one was picked
+  const ws = ev.args.winners.map((w, i) => ({w, p: fl(ev.args.prizes[i], 18)})).filter(x => x.w !== ethers.constants.AddressZero && x.p > 0);
+  let names = ws.map(() => '');
+  if (A.names && ws.length){ try{ names = await new ethers.Contract(A.names, ABI.names, provider).namesOf(ws.map(x => x.w)); }catch(e){} }
+  await tg(ws.length
+    ? `🎟️ <b>Royal Raffle week #${ev.args.id} drawn!</b>\n${ws.map((x, i) => `${['🥇', '🥈', '🥉'][i]} ${/^[a-z0-9-]{3,32}$/.test(names[i] || '') ? names[i] + '.cav' : short(x.w)}: ${fmtN(x.p)} KingS`).join('\n')}\nPrizes are already in their wallets. New week, new tickets: do your daily quests on <a href="https://cavfi.com">cavfi.com</a>`
+    : `🎟️ <b>Royal Raffle week #${ev.args.id}</b>: no tickets this week, the pot of ${fmtN(fl(ev.args.pot, 18))} KingS rolls into next week.`);
+}
+
+// ------------------------------------------------------------------ 8. Telegram price alerts
+// Anyone can message the bot: /price KingS · /alert KingS above 0.00003 · /alerts · /cancel 2 · /help
+// Prices are the same market prices the bot uses for pool fixes (USD, from the CavFi pools).
+const ALERT_MAX = 10;
+async function tgReply(chat, html){
+  if (!CFG.tgToken) return;
+  try{ await fetch(`${CFG.tgApi}/bot${CFG.tgToken}/sendMessage`, {method:'POST', headers:{'content-type':'application/json'},
+    body: JSON.stringify({chat_id: chat, text: html, parse_mode: 'HTML', disable_web_page_preview: true})}); }catch(e){}
+}
+function findToken(sym){
+  const s = String(sym || '').toLowerCase().replace(/^\$/, '');
+  if (s === 'doge' || s === 'wdoge') return tokens[lk(A.wdoge)];
+  const all = Object.values(tokens).filter(t => t.symbol.toLowerCase() === s || (s === 'usdt' && t.symbol === 'cUSDT') || (s === 'usdc' && t.symbol === 'cUSDC'));
+  return all.sort((a, b) => (ref[lk(b.address)] ? 1 : 0) - (ref[lk(a.address)] ? 1 : 0))[0] || null;
+}
+const usdStr = v => v == null ? '?' : '$' + (v >= 1 ? v.toLocaleString('en-US', {maximumFractionDigits: 4}) : v.toLocaleString('en-US', {maximumSignificantDigits: 4, maximumFractionDigits: 20}));
+async function alertsPoll(){
+  if (!CFG.alerts || !CFG.tgToken) return;
+  let r;
+  try{ r = await fetch(`${CFG.tgApi}/bot${CFG.tgToken}/getUpdates?timeout=0&offset=${(state.tgOffset || 0) + 1}&allowed_updates=["message"]`).then(x => x.json()); }catch(e){ return; }
+  if (!r || !r.ok) return;
+  for (const u of r.result || []){
+    state.tgOffset = Math.max(state.tgOffset || 0, u.update_id);
+    const m = u.message; if (!m || !m.text || !m.chat) continue;
+    const chat = m.chat.id, parts = m.text.trim().split(/\s+/), cmd = parts[0].toLowerCase().replace(/@.*$/, '');
+    const mine = (state.alerts ||= []).filter(a => a.chat === chat);
+    if (cmd === '/start' || cmd === '/help'){
+      await tgReply(chat, `🐶 <b>CavFi price alerts</b>\n/price KingS: current price\n/alert KingS above 0.00003: tell me when KingS goes above $0.00003\n/alert DOGE below 0.05\n/alerts: your alerts\n/cancel 2: remove alert 2\nPrices come from the CavFi pools on the DogeOS testnet (testnet tokens, no real value).`);
+    } else if (cmd === '/price'){
+      const t = findToken(parts[1]);
+      await tgReply(chat, t ? `${esc(t.symbol)}: <b>${usdStr(ref[lk(t.address)])}</b>${ref[lk(A.wdoge)] && lk(t.address) !== lk(A.wdoge) && ref[lk(t.address)] ? ` (${(ref[lk(t.address)] / ref[lk(A.wdoge)]).toPrecision(4)} DOGE)` : ''}` : 'Unknown token. Try /price KingS, /price DOGE or /price RPUP.');
+    } else if (cmd === '/alert'){
+      const t = findToken(parts[1]), dir = (parts[2] || '').toLowerCase(), price = Number(String(parts[3] || '').replace(',', '.').replace(/^\$/, ''));
+      if (!t || !['above', 'below'].includes(dir) || !(price > 0)) await tgReply(chat, 'Usage: /alert KingS above 0.00003  (or below)');
+      else if (mine.length >= ALERT_MAX) await tgReply(chat, `You already have ${ALERT_MAX} alerts. Remove one with /cancel.`);
+      else {
+        const id = (state.alertSeq = (state.alertSeq || 0) + 1);
+        state.alerts.push({id, chat, addr: t.address, sym: t.symbol, dir, price});
+        await tgReply(chat, `✅ Alert ${id}: I'll tell you when ${esc(t.symbol)} goes ${dir} ${usdStr(price)}. Now: ${usdStr(ref[lk(t.address)])}.`);
+      }
+    } else if (cmd === '/alerts'){
+      await tgReply(chat, mine.length ? mine.map(a => `${a.id}. ${esc(a.sym)} ${a.dir} ${usdStr(a.price)}`).join('\n') : 'No alerts yet. Example: /alert KingS above 0.00003');
+    } else if (cmd === '/cancel'){
+      const id = Number(parts[1]), before = state.alerts.length;
+      state.alerts = state.alerts.filter(a => !(a.chat === chat && a.id === id));
+      await tgReply(chat, state.alerts.length < before ? `Alert ${id} removed.` : 'No such alert. See /alerts.');
+    }
+  }
+  // fire alerts
+  const keep = [];
+  for (const a of state.alerts || []){
+    const v = ref[lk(a.addr)];
+    if (v != null && ((a.dir === 'above' && v >= a.price) || (a.dir === 'below' && v <= a.price))){
+      await tgReply(a.chat, `🔔 <b>${esc(a.sym)} is ${a.dir} ${usdStr(a.price)}</b>\nNow ${usdStr(v)}. Trade on <a href="https://cavfi.com">cavfi.com</a>`);
+    } else keep.push(a);
+  }
+  state.alerts = keep; saveState();
+}
+
 // Market noise: on a quiet testnet nobody trades, every Arena token ends a round at +0.00% and the
 // round is a tie. In the middle of each round (never inside the start or end price windows) the bot
 // makes ARENA_NOISE_TRADES small random swaps (0.5-2% of a pool, at most ARENA_NOISE_MAX_DOGE),
@@ -703,6 +917,10 @@ async function main(){
       await arena();
       await arenaNoise();
       await arenaReminders();
+      await dcaKeeper();
+      await questsDaily();
+      await raffleKeeper();
+      await alertsPoll();
       await weeklyTopTen();
       await heralds();
       await notify();
