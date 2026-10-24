@@ -18,3 +18,7 @@ site/addresses.backup.json
 *.log
 contracts/verify-json/
 contracts/verify-json/
+publish/
+demo/
+noah-upload/
+KingGM.json
