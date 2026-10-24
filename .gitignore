@@ -16,3 +16,5 @@ site/_body.html
 site/_extra.css
 site/addresses.backup.json
 *.log
+contracts/verify-json/
+contracts/verify-json/
