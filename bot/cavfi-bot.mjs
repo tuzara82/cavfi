@@ -153,8 +153,23 @@ const tokens = {};   // lk(address) -> {address, symbol, decimals}
 let pools = [];      // {address, a0, a1, t0, t1, r0, r1}
 let ref = {};        // lk(address) -> USD
 const cooldown = {}; // pool -> timestamp
-const state = fs.existsSync(STATE_FILE) ? JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) : {};
-const saveState = () => fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 1));
+// bot-state.json is written to a temp file and renamed, so a crash or power cut never leaves it half-written.
+// If it is unreadable anyway, the last good copy (bot-state.json.bak) is used, else the bot starts fresh.
+function loadState(){
+  for (const f of [STATE_FILE, STATE_FILE + '.bak']){
+    try{ if (fs.existsSync(f)){ const t = fs.readFileSync(f, 'utf8').replace(/\0/g, '').trim(); if (t){ const j = JSON.parse(t); if (f !== STATE_FILE) console.log('bot-state.json was damaged, using bot-state.json.bak'); return j; } } }
+    catch(e){ console.log(`${path.basename(f)} is damaged (${e.message.slice(0, 60)}), ignoring it`); try{ fs.copyFileSync(f, f + '.broken'); }catch(_){} }
+  }
+  return {};
+}
+const state = loadState();
+let stateBakAt = 0;
+const saveState = () => {
+  const tmp = STATE_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(state, null, 1));
+  fs.renameSync(tmp, STATE_FILE);
+  if (Date.now() - stateBakAt > 600000){ stateBakAt = Date.now(); try{ fs.copyFileSync(STATE_FILE, STATE_FILE + '.bak'); }catch(e){} }
+};
 
 async function token(addr){
   const k = lk(addr); if (tokens[k]) return tokens[k];

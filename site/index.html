@@ -1659,7 +1659,7 @@ async function wcShowUri(uri){
   const enc = encodeURIComponent(uri);
   let img = '';
   try{ img = await window.CavWC.qr(uri); }catch(e){}
-  $('wText').textContent = isMobile ? 'Pick your wallet app. It opens and asks you to connect to CavFi.' : 'Scan this code with your phone wallet (MetaMask, Trust, Rainbow, OKX…). It asks you to connect to CavFi.';
+  $('wText').textContent = isMobile ? 'Pick your wallet app. It opens and asks you to connect to CavFi. After you approve, come back to this tab: the wallet button shows your address.' : 'Scan this code with your phone wallet (MetaMask, Trust, Rainbow, OKX…). It asks you to connect to CavFi.';
   const btn = (href, color, label, name, sub) => `<a class="item" href="${href}"><span class="wicon" style="background:${color}">${label}</span><span class="nm"><b>${name}</b><small>${sub}</small></span></a>`;
   $('wList').innerHTML = (img ? `<div class="wc-qr"><img src="${img}" alt="WalletConnect QR code" width="240" height="240"></div>` : '') +
     (isMobile ? btn(`metamask://wc?uri=${enc}`, '#E2761B', 'MM', 'MetaMask', 'Opens the app') + btn(`trust://wc?uri=${enc}`, '#0500FF', 'TW', 'Trust Wallet', 'Opens the app') + btn(uri, '#3B99FC', 'WC', 'Other wallet', 'Any WalletConnect wallet') : '') +
@@ -1668,6 +1668,15 @@ async function wcShowUri(uri){
   $('wcCopy').onclick = async () => { try{ await navigator.clipboard.writeText(uri); toast('WalletConnect link copied.', 'ok'); }catch(e){ toast(esc(uri)); } };
 }
 let wcProv = null, injected = null;
+const WC_SIGN = /^(eth_sendTransaction|personal_sign|eth_sign|eth_signTypedData(_v3|_v4)?|wallet_switchEthereumChain|wallet_addEthereumChain|wallet_watchAsset)$/;
+function wcWallet(){
+  const md = (wcProv && wcProv.session && wcProv.session.peer && wcProv.session.peer.metadata) || {}, nm = md.name || 'your wallet';
+  const r = md.redirect || {};
+  let link = r.native || r.universal || '';
+  if (!link) link = /metamask/i.test(nm) ? 'metamask://' : /trust/i.test(nm) ? 'trust://' : /rainbow/i.test(nm) ? 'rainbow://' : /okx/i.test(nm) ? 'okx://' : '';
+  if (link && !/[:/]$/.test(link) && !/^https?:/.test(link)) link += '//';
+  return {name: nm.replace(/ Wallet$/i, '') || 'your wallet', link};
+}
 async function wcInit(showQr){
   if (!window.CavWC) await new Promise((ok, bad) => { const sc = document.createElement('script'); sc.src = 'wc.js?v=2'; sc.onload = ok; sc.onerror = () => bad(new Error('Could not load WalletConnect.')); document.head.appendChild(sc); });
   if (!wcProv){
@@ -1677,6 +1686,13 @@ async function wcInit(showQr){
       metadata: {name: 'CavFi', description: 'DeFi hub on DogeOS testnet', url: location.origin, icons: [location.origin + '/icon-192.png']},
     });
     wcProv.on('display_uri', wcShowUri);
+    // On a phone, a WalletConnect request only reaches the wallet app in the background. Bring the app to the
+    // front for every signature, and leave a button in case the browser blocks the automatic switch.
+    const orig = wcProv.request.bind(wcProv);
+    wcProv.request = async args => {
+      if (isMobile && WC_SIGN.test(args && args.method)){ const w = wcWallet(); if (w.link){ toast(`Confirm in ${esc(w.name)}. <a href="${w.link}">Open ${esc(w.name)}</a>`, '', 15000); setTimeout(() => { try{ window.location.href = w.link; }catch(e){} }, 250); } }
+      return orig(args);
+    };
     wcProv.on('disconnect', () => { try{ localStorage.removeItem('cavfi.wc'); }catch(e){} window.ethereum = injected; st.account = null; st.signer = null; st.provider = null; listenersSet = false; renderShell(); refreshAll(); });
   }
   return wcProv;
@@ -1691,6 +1707,7 @@ async function connectWC(){
     window.ethereum = p; listenersSet = false;
     try{ localStorage.setItem('cavfi.wc', '1'); }catch(e){}
     await connect();
+    if (st.account) toast(`Connected with ${esc(wcWallet().name)}: ${short(st.account)} ✓`, 'ok', 8000);
   }catch(e){ if (!/closed|reject|User/i.test(e.message || '')) toast(errMsg(e), 'bad'); }
 }
 async function wcRestore(){
