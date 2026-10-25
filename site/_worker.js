@@ -22,6 +22,8 @@ const TX_TASKS = {
   limit:  {keys: ['limit'], sel: ['0x391560b2', '0xb0987adb'], need: 'Place a limit order on cavfi.com (Swap page, Limit tab).'},
   dca:    {keys: ['dca'], sel: ['0x7b070932', '0xd5c55b52'], need: 'Start an auto-buy on cavfi.com (Swap page, Auto-buy tab).'},
   farm:   {keys: ['farm', 'stake'], sel: ['0xe2bbb158', '0x608fc37a', '0xddc63262'], need: 'Stake or harvest on cavfi.com Farms.'},
+  predict:{keys: ['predict'], sel: ['0x8decaec0'], need: 'Back YES or NO on a DOGE price market: cavfi.com/#predict'},
+  duel:   {keys: ['duel'], sel: ['0xc139da6f', '0x19b05f49'], need: 'Start or accept an Arena duel: cavfi.com/#duels'},
 };
 // tasks checked from contract state
 const STATE_TASKS = {
@@ -107,22 +109,70 @@ async function quest(request, env, url){
   }
 }
 
-// Profile pages: cavfi.com/u/borislav.cav serves the site with its own link-preview title, so a shared
-// profile shows the name on X and Telegram. The page itself then opens the profile at /#u/borislav.cav.
-async function profilePage(env, url, id){
+// Share pages: cavfi.com/u/borislav.cav, cavfi.com/duel/5 and cavfi.com/p/3 serve the site with their own
+// link-preview title and text, so a shared link shows what it is on X and Telegram. The page itself then
+// opens the right view (/#u/…, /#duel/5, /#p/3).
+async function sharePage(env, url, title, desc, path){
   const r = await env.ASSETS.fetch(new Request(new URL('/', url)));
   if (!r.ok) return r;
-  const clean = id.toLowerCase().replace(/[^a-z0-9.-]/g, '').slice(0, 64);
-  const who = /^0x[0-9a-f]{40}$/.test(clean) ? clean.slice(0, 6) + '…' + clean.slice(-4) : clean;
-  const title = `${who} on CavFi`, desc = `Living Cavaliers, badges, leaderboard rank, gm and quest streaks and Arena wins of ${who} on CavFi, the DeFi hub on the DogeOS testnet.`;
-  const page = `https://cavfi.com/u/${clean}`;
+  const e = v => String(v).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
   let html = await r.text();
-  const set = (re, val) => { html = html.replace(re, m => m.replace(/content="[^"]*"/, `content="${val}"`)); };
+  const set = (re, val) => { html = html.replace(re, m => m.replace(/content="[^"]*"/, `content="${e(val)}"`)); };
   set(/<meta property="og:title"[^>]*>/, title); set(/<meta name="twitter:title"[^>]*>/, title);
   set(/<meta property="og:description"[^>]*>/, desc); set(/<meta name="twitter:description"[^>]*>/, desc);
-  set(/<meta property="og:url"[^>]*>/, page);
-  html = html.replace('<title>CavFi</title>', `<title>${title}</title>`);
-  return new Response(html, {headers: {'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300'}});
+  set(/<meta property="og:url"[^>]*>/, 'https://cavfi.com' + path);
+  html = html.replace('<title>CavFi</title>', `<title>${e(title)}</title>`);
+  return new Response(html, {headers: {'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=120'}});
+}
+async function profilePage(env, url, id){
+  const clean = id.toLowerCase().replace(/[^a-z0-9.-]/g, '').slice(0, 64);
+  const who = /^0x[0-9a-f]{40}$/.test(clean) ? clean.slice(0, 6) + '…' + clean.slice(-4) : clean;
+  return sharePage(env, url, `${who} on CavFi`, `Living Cavaliers, badges, leaderboard rank, gm and quest streaks and Arena wins of ${who} on CavFi, the DeFi hub on the DogeOS testnet.`, `/u/${clean}`);
+}
+const strAt = (hex, off) => { const n = Number(word('0x' + hex.slice(2 + off * 2), 0)); const b = hex.slice(2 + off * 2 + 64, 2 + off * 2 + 64 + n * 2); return decodeURIComponent(b.replace(/../g, '%$&')); };
+const fmtK = wei => { const v = Number(wei / 10n ** 14n) / 1e4; return v >= 1000 ? Math.round(v).toLocaleString('en-US') : v.toLocaleString('en-US', {maximumFractionDigits: 2}); };
+async function nameOrShort(A, a){
+  try{ if (A.names){ const r = await call(A.names, '0xf5c57382' + pad(a)); const n = strAt(r, Number(word(r, 0))); if (/^[a-z0-9-]{3,32}$/.test(n)) return n + '.cav'; } }catch(e){}
+  return a.slice(0, 6) + '…' + a.slice(-4);
+}
+async function duelPage(env, url, id){
+  const path = `/duel/${id}`, fallback = () => sharePage(env, url, `Arena duel #${id} on CavFi`, 'A one-on-one bet on the CavFi Arena: whose token rises more against DOGE this round? Winner takes both stakes. DogeOS testnet.', path);
+  try{
+    rpcUrl = env.RPC || RPC;
+    const A = await addresses(env, url); if (!A.duel || !A.arena) return fallback();
+    const d = await call(A.duel, '0x9507d39a' + pad(BigInt(id).toString(16)));
+    const maker = '0x' + d.slice(26, 66), roundId = word(d, 4), mi = Number(word(d, 5)), ti = Number(word(d, 6)), state = Number(word(d, 7)), stake = word(d, 8);
+    const winner = '0x' + d.slice(2 + 64 * 3 + 24, 2 + 64 * 4);
+    if (maker === '0x' + '0'.repeat(40)) return fallback();
+    const rt = await call(A.arena, '0xfa827e2e' + pad(roundId.toString(16)));
+    const off = Number(word(rt, 0)) / 32, tok = i => '0x' + rt.slice(2 + 64 * (off + 1 + i) + 24, 2 + 64 * (off + 2 + i));
+    const sym = async a => { try{ const r = await call(a, '0x95d89b41'); return strAt(r, Number(word(r, 0))); }catch(e){ return '?'; } };
+    const [a, b, mk] = await Promise.all([sym(tok(mi)), sym(tok(ti)), nameOrShort(A, maker)]);
+    const st = Number(stake / 10n ** 18n) ? fmtK(stake) : '0';
+    let title = `Duel #${id}: ${a} vs ${b} · ${st} KingS`, desc;
+    if (state === 1) desc = `${mk} says ${a} beats ${b} in Arena round #${roundId}. Accept with ${st} KingS and back ${b}: whichever rises more against DOGE wins both stakes. DogeOS testnet.`;
+    else if (state === 2) desc = `${a} vs ${b} in Arena round #${roundId}, ${st} KingS each. Decided when the round settles.`;
+    else if (state === 3) desc = winner === '0x' + '0'.repeat(40) ? `${a} vs ${b} ended level: both stakes returned.` : `${await nameOrShort(A, winner)} won ${fmtK(stake * 2n)} KingS.`;
+    else desc = `This duel was cancelled. Start your own on CavFi.`;
+    return sharePage(env, url, title, desc, path);
+  }catch(e){ return fallback(); }
+}
+async function marketPage(env, url, id){
+  const path = `/p/${id}`, fallback = () => sharePage(env, url, `DOGE price market #${id} on CavFi`, 'Back YES or NO on the real DOGE price with testnet KingS on CavFi.', path);
+  try{
+    rpcUrl = env.RPC || RPC;
+    const A = await addresses(env, url); if (!A.predict) return fallback();
+    const r = await call(A.predict, '0x9507d39a' + pad(BigInt(id).toString(16)));
+    const t = Number(word(r, 0)), w = i => word('0x' + r.slice(2 + t * 2), i);
+    const q = strAt(r, t + Number(w(0))).replace(/^Weekly: w/, 'W');
+    const state = Number(w(3)), yesWon = w(4) === 1n, price = Number(w(6)) / 1e8, yes = w(7), no = w(8), tot = yes + no;
+    const pY = tot ? Number(yes * 100n / tot) : 0;
+    let desc;
+    if (state === 2) desc = `${yesWon ? 'YES' : 'NO'} won: DOGE was $${price.toPrecision(3)}. ${fmtK(tot)} KingS pot.`;
+    else if (state === 3) desc = 'Refunded: everyone got their KingS back.';
+    else desc = tot ? `YES ${pY}% · NO ${100 - pY}% · ${fmtK(tot)} KingS pot. Back YES or NO with testnet KingS.` : 'Nobody has picked a side yet. Back YES or NO with testnet KingS.';
+    return sharePage(env, url, q || `DOGE market #${id}`, desc + ' The CavFi bot reports the price from Binance.', path);
+  }catch(e){ return fallback(); }
 }
 
 export default {
@@ -130,6 +180,10 @@ export default {
     const url = new URL(request.url);
     const um = url.pathname.match(/^\/u\/([^/]{3,80})\/?$/);
     if (um && request.method === 'GET'){ let id = um[1]; try{ id = decodeURIComponent(id); }catch(e){} return profilePage(env, url, id); }
+    const dm = url.pathname.match(/^\/duel\/(\d{1,9})\/?$/);
+    if (dm && request.method === 'GET') return duelPage(env, url, dm[1]);
+    const pm = url.pathname.match(/^\/p\/(\d{1,9})\/?$/);
+    if (pm && request.method === 'GET') return marketPage(env, url, pm[1]);
     if (url.pathname === '/api/quest'){
       if (request.method === 'OPTIONS') return new Response(null, {headers: {'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST', 'access-control-allow-headers': 'content-type, x-api-key'}});
       return quest(request, env, url);

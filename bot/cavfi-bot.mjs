@@ -54,6 +54,8 @@ const CFG = {
   duels: env('DUELS', '1') === '1',
   watchMax: Number(env('WATCH_MAX', '3')),
   gmRemindHour: Number(env('GM_REMIND_HOUR_UTC', '18')),
+  digest: env('DIGEST', '1') === '1',
+  digestHour: Number(env('DIGEST_HOUR_UTC', '6')),
   dryRun: env('DRY_RUN', '0') === '1',
   once: process.argv.includes('--once'),
 };
@@ -799,8 +801,12 @@ async function alertsPoll(){
       else { state.watch = (state.watch || []).filter(w => !(w.chat === chat && lk(w.addr) === lk(addr))); await tgReply(chat, 'Stopped following that wallet.'); }
     } else if (cmd === '/me'){
       await watchSummary(chat);
+    } else if (['/arena', '/markets', '/duels', '/quests', '/raffle', '/today'].includes(cmd)){
+      const f = {'/arena': arenaText, '/markets': marketsText, '/duels': duelsText, '/quests': questsText, '/raffle': raffleText}[cmd];
+      const txt = f ? await f() : (await Promise.all([questsText(), marketsText(), arenaText(), duelsText(), raffleText()])).filter(Boolean).join('\n\n');
+      await tgReply(chat, txt || 'Nothing to show right now.');
     } else if (cmd === '/start' || cmd === '/help'){
-      await tgReply(chat, `🐶 <b>CavFi bot</b>\n<b>Your wallet</b>\n/watch kingdoge.cav (or 0x...): private messages for Arena wins, unclaimed winnings, auto-buys, quests, raffle prizes, predictions, duels and gm streak reminders\n/me: your followed wallets\n/unwatch: stop\n\n<b>Prices</b>\n/price KingS: current price\n/alert KingS above 0.00003: tell me when KingS goes above $0.00003\n/alert DOGE below 0.05\n/alerts: your alerts\n/cancel 2: remove alert 2\n\nEverything runs on the DogeOS testnet (testnet tokens, no real value). Token prices come from the CavFi pools; prediction markets use the DOGE price from Binance.`);
+      await tgReply(chat, `🐶 <b>CavFi bot</b>\n<b>Your wallet</b>\n/watch kingdoge.cav (or 0x...): private messages for Arena wins, unclaimed winnings, auto-buys, quests, raffle prizes, predictions, duels and gm streak reminders\n/me: your followed wallets\n/unwatch: stop\n\n<b>CavFi today</b>\n/today: everything below in one message\n/markets: open DOGE price markets\n/arena: the current Arena round\n/duels: open duels\n/quests: today's quests\n/raffle: this week's raffle\n\n<b>Prices</b>\n/price KingS: current price\n/alert KingS above 0.00003: tell me when KingS goes above $0.00003\n/alert DOGE below 0.05\n/alerts: your alerts\n/cancel 2: remove alert 2\n\nEverything runs on the DogeOS testnet (testnet tokens, no real value). Token prices come from the CavFi pools; prediction markets use the DOGE price from Binance.`);
     } else if (cmd === '/price'){
       const t = findToken(parts[1]);
       await tgReply(chat, t ? `${esc(t.symbol)}: <b>${usdStr(ref[lk(t.address)])}</b>${ref[lk(A.wdoge)] && lk(t.address) !== lk(A.wdoge) && ref[lk(t.address)] ? ` (${(ref[lk(t.address)] / ref[lk(A.wdoge)]).toPrecision(4)} DOGE)` : ''}` : 'Unknown token. Try /price KingS, /price DOGE or /price RPUP.');
@@ -1035,6 +1041,62 @@ async function writeTgJson(){
   }catch(e){ log('telegram getMe failed:', e.message); }
 }
 
+// ------------------------------------------------------------------ 13. Telegram group: morning digest + commands
+// Every morning (DIGEST_HOUR_UTC) the bot posts the day on CavFi to the group: today's quests, open DOGE
+// markets with their odds, the Arena round, open duels and the raffle pot. Anyone can ask for each part:
+// /quests /markets /arena /duels.
+async function questsText(){
+  if (!A.quests) return '';
+  try{ const R = questRules(), day = Math.floor(now() / 86400), qs = R.questsFor(day, A);
+    return `📜 <b>Today's quests</b> (1 raffle ticket each)\n${qs.map(q => `• ${esc(q.title)}`).join('\n')}`; }catch(e){ return ''; }
+}
+async function marketsText(){
+  if (!A.predict) return '';
+  try{
+    const c = new ethers.Contract(A.predict, ABI.predict, provider), [ids, items] = await c.page(0, 20), t = now();
+    const open = items.map((m, i) => ({m, id: ids[i].toNumber()})).filter(x => x.m.state === 1 && t < Number(x.m.closeAt.toString()));
+    if (!open.length) return '🔮 <b>DOGE price markets</b>\nNo open market right now.';
+    return `🔮 <b>DOGE price markets</b>\n` + open.map(({m, id}) => { const y = fl(m.yesPool, 18), n = fl(m.noPool, 18), tot = y + n;
+      return `• ${esc(m.question.replace(/^Weekly: w/, 'W'))}\n   ${tot ? `YES ${Math.round(y / tot * 100)}% · NO ${Math.round(n / tot * 100)}% · ${fmtN(tot)} KingS` : 'nobody yet'} · <a href="https://cavfi.com/p/${id}">bet</a>`; }).join('\n');
+  }catch(e){ return ''; }
+}
+async function arenaText(){
+  if (!A.arena) return '';
+  try{
+    const c = new ethers.Contract(A.arena, ABI.arena, provider), r = await c.currentRound();
+    if (!r.live) return '🏟️ <b>Arena</b>: the next round opens soon.';
+    const [toks] = await c.roundTokens(r.id), syms = []; for (const a of toks) syms.push((await token(a)).symbol);
+    const t = (await provider.getBlock('latest')).timestamp, left = Number(r.stakingEndsAt.toString()) - t;
+    return `🏟️ <b>Arena round #${r.id}</b>: ${esc(syms.join(' · '))}\nPot ${r.pot.isZero() ? '0' : fmtN(fl(r.pot, 18))} KingS · ${left > 0 ? `staking open for ${Math.floor(left / 60)} min` : 'staking closed, result soon'} · <a href="https://cavfi.com/arena.html">play</a>`;
+  }catch(e){ return ''; }
+}
+async function duelsText(){
+  if (!A.duel || !A.arena) return '';
+  try{
+    const d = new ethers.Contract(A.duel, ABI.duel, provider), ar = new ethers.Contract(A.arena, ABI.arena, provider);
+    const [ids, items] = await d.page(0, 30), r = await ar.currentRound();
+    const open = items.map((x, i) => ({x, id: ids[i].toNumber()})).filter(o => o.x.state === 1 && o.x.roundId.eq(r.id) && o.x.invited === ethers.constants.AddressZero);
+    if (!open.length) return '⚔️ <b>Duels</b>: none open. Start one: <a href="https://cavfi.com/#duels">cavfi.com/#duels</a>';
+    const [toks] = await ar.roundTokens(r.id), sym = async i => (await token(toks[i])).symbol;
+    const lines = [];
+    for (const {x, id} of open.slice(0, 5)) lines.push(`• ${esc(await labelOf(x.maker))}: ${esc(await sym(x.makerIdx))} beats ${esc(await sym(x.takerIdx))} · ${fmtN(fl(x.stake, 18))} KingS · <a href="https://cavfi.com/duel/${id}">accept</a>`);
+    return `⚔️ <b>Open duels</b>\n${lines.join('\n')}`;
+  }catch(e){ return ''; }
+}
+async function raffleText(){
+  if (!A.raffle) return '';
+  try{ const r = await new ethers.Contract(A.raffle, ABI.raffle, provider).current();
+    return `🎟️ <b>Royal Raffle</b> week #${r.id}: ${fmtN(fl(r.pot, 18))} KingS pot, ${r.totalTickets} tickets, draw ${new Date(Number(r.end.toString()) * 1000).toISOString().slice(0, 10)}`; }catch(e){ return ''; }
+}
+async function morningDigest(){
+  if (!CFG.digest || !CFG.tgToken || !CFG.tgChat) return;
+  const t = now(), day = Math.floor(t / 86400);
+  if ((t % 86400) / 3600 < CFG.digestHour || state.digestDay === day) return;
+  state.digestDay = day; saveState();
+  const parts = (await Promise.all([questsText(), marketsText(), arenaText(), duelsText(), raffleText()])).filter(Boolean);
+  await tg(`☀️ <b>gm CavFi!</b> Today on <a href="https://cavfi.com">cavfi.com</a>:\n\n${parts.join('\n\n')}\n\n<i>DogeOS testnet, tokens have no value.</i>`);
+}
+
 // Market noise: on a quiet testnet nobody trades, every Arena token ends a round at +0.00% and the
 // round is a tie. In the middle of each round (never inside the start or end price windows) the bot
 // makes ARENA_NOISE_TRADES small random swaps (0.5-2% of a pool, at most ARENA_NOISE_MAX_DOGE),
@@ -1137,7 +1199,9 @@ const LOCK = path.join(HERE, 'bot.lock');
 function takeLock(){
   try{
     const pid = Number(fs.readFileSync(LOCK, 'utf8'));
-    if (pid && pid !== process.pid){ try{ process.kill(pid, 0); console.error(`Another CavFi bot is already running (pid ${pid}). Stop it first (stop-bot.ps1) or close its window.`); process.exit(3); }catch(e){ /* stale lock */ } }
+    // a lock not refreshed for 5 minutes is stale (after a crash or power cut Windows may give that pid to another program)
+    const fresh = Date.now() - fs.statSync(LOCK).mtimeMs < 5 * 60000;
+    if (pid && pid !== process.pid && fresh){ try{ process.kill(pid, 0); console.error(`Another CavFi bot is already running (pid ${pid}). Stop it first (stop-bot.ps1) or close its window.`); process.exit(3); }catch(e){ /* stale lock */ } }
   }catch(e){}
   fs.writeFileSync(LOCK, String(process.pid));
   const drop = () => { try{ if (Number(fs.readFileSync(LOCK, 'utf8')) === process.pid) fs.unlinkSync(LOCK); }catch(e){} };
@@ -1179,6 +1243,7 @@ async function main(){
       await duelKeeper();
       await alertsPoll();
       await gmReminders();
+      await morningDigest();
       await weeklyTopTen();
       await heralds();
       await notify();
@@ -1188,6 +1253,7 @@ async function main(){
       if (errors === 5) await tg('⚠️ CavFi bot: 5 failed rounds in a row. Check the RPC or the bot wallet.');
     }
     if (CFG.once) break;
+    try{ const t = new Date(); fs.utimesSync(LOCK, t, t); }catch(e){}   // keep the lock fresh
     await sleep(CFG.interval);
   }
 }

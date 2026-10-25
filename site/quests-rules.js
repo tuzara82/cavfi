@@ -17,7 +17,10 @@
     {id: 'nft',    key: ['nft'],            sel: ['0xa0712d68', '0x0fbf0a93', '0x4e71d92d'], title: 'Mint, stake or claim a Cavalier', hint: 'On the NFTs page', view: 'nft'},
     {id: 'limit',  key: ['limit'],          sel: ['0x391560b2', '0xb0987adb'],               title: 'Place a limit order',      hint: 'On the Swap page, Limit tab', view: 'swap'},
     {id: 'dca',    key: ['dca'],            sel: ['0x7b070932', '0xd5c55b52'],               title: 'Start an auto-buy',        hint: 'Swap page, Auto-buy', view: 'swap'},
-    {id: 'name',   key: ['names'],          sel: ['0xf2c298be', '0x38e74feb'],               title: 'Claim or set a .cav name', hint: 'On the Names page', view: 'names'}
+    {id: 'name',   key: ['names'],          sel: ['0xf2c298be', '0x38e74feb'],               title: 'Claim or set a .cav name', hint: 'On the Names page', view: 'names'},
+    // added later: "from" is the first UTC day they can be picked, so earlier days keep exactly the same quests
+    {id: 'predict', key: ['predict'],       sel: ['0x8decaec0'],                             title: 'Call the DOGE price',      hint: 'Back YES or NO on any open market', view: 'predict', from: 20752},
+    {id: 'duel',   key: ['duel'],           sel: ['0xc139da6f', '0x19b05f49'],               title: 'Start or accept a duel',   hint: 'Predict page, Arena duels tab', href: '#duels', from: 20752}
   ];
   var GM = {id: 'gm', key: ['gm'], sel: ['0xc0129d43'], title: 'Say gm', hint: 'GM card on the home page', view: 'home'};
   var GN = {id: 'gn', key: ['gm'], sel: ['0x3118f543'], title: 'Say gn', hint: 'GM card on the home page', view: 'home'};
@@ -30,7 +33,7 @@
     var first = day % 2 === 0 ? GM : GN;
     var list = [];
     if (has(A, first)) list.push(first);
-    var pool = POOL.filter(function(q){ return has(A, q); });
+    var pool = POOL.filter(function(q){ return has(A, q) && (!q.from || day >= q.from); });
     var seed = Math.imul(day, 0x9E3779B1) >>> 0;
     while (list.length < 3 && pool.length){
       seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
