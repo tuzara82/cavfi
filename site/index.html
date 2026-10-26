@@ -6,6 +6,7 @@
 <style>[hidden]{display:none!important} body{margin:0} :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 <script>try{var t=localStorage.getItem('cavfi.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <script>(function(p){var m=p.match(/^\/(u|duel|p)\/([^/]+)\/?$/);if(m)location.replace('/#'+m[1]+'/'+m[2])})(location.pathname)</script>
+<script>(function(){try{var q=location.search+location.hash;if(/[?&]tg=1\b|tgWebApp/.test(q)||sessionStorage.getItem('cavfi.tg')){sessionStorage.setItem('cavfi.tg','1');document.documentElement.classList.add('tg');document.write('<script src="https://telegram.org/js/telegram-web-app.js"><\/script>')}}catch(e){}})()</script>
 <title>CavFi</title>
 <meta name="description" content="CavFi: swap, add liquidity, farm and stake on the DogeOS testnet with DOGE, KingS, LBTC, WETH and stablecoins.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -666,6 +667,15 @@ a.item{color:var(--ink);text-decoration:none}
 .lx-team{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:var(--well);color:var(--muted);font:700 10.5px var(--body);letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
 .lx-kmain b .lx-team{font:700 10.5px var(--body);color:var(--muted)}
 @media (max-width:560px){.lx-king{grid-template-columns:auto minmax(0,1fr)}.lx-king .lx-crown{display:none}.lx-kgo{grid-column:1/-1}}
+/* activity calendar */
+.hm-grid{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;max-width:640px}
+.hm-grid i,.hm-key i{display:block;aspect-ratio:1;border-radius:4px;background:var(--well)}
+.hm-grid .hm-x{background:none}
+.hm-1{background:color-mix(in srgb,var(--chestnut) 30%,var(--well))!important}.hm-2{background:color-mix(in srgb,var(--chestnut) 55%,var(--well))!important}
+.hm-3{background:color-mix(in srgb,var(--chestnut) 80%,var(--well))!important}.hm-4{background:var(--chestnut)!important}
+.hm-key{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}.hm-key i{width:12px}
+/* inside Telegram */
+html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 /* live feed */
 .fd-card{gap:0}
 .fd-row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
@@ -673,6 +683,8 @@ a.item{color:var(--ink);text-decoration:none}
 .fd-row .fd-go{color:var(--chestnut);font-weight:700}
 .fd-row small,.fd-row small a{color:var(--muted);font:500 12px var(--mono);font-weight:500;white-space:nowrap}
 .fd-ic{font-size:16px;text-align:center}
+.fd-note{color:var(--muted);font-size:12px;padding-top:8px}
+.fd-card .sx-head .chips .chip{padding:5px 10px;font-size:12px}
 /* profile */
 .up-body{display:grid;gap:14px}
 .up-hero{display:grid;grid-template-columns:160px minmax(0,1fr);gap:18px;align-items:center}
@@ -1258,6 +1270,7 @@ a.item{color:var(--ink);text-decoration:none}
       <section class="sx-card hp-sec">
         <h2>Predict, duels, profiles and alerts</h2>
         <details><summary>How do DOGE price predictions work?</summary><p>On <a href="#predict" data-goview="predict">Predict</a>, each market asks a yes/no question about the real DOGE/USD price, like "Will DOGE be above $0.20 on Sunday, 20:00 UTC?". Back YES or NO with KingS until the market closes. Everyone on the right side shares the whole pot in proportion to their stake, minus a 2% fee, so the pool sizes show the crowd's odds. If only one side was backed, everyone gets their KingS back. Testnet KingS, no real value.</p></details>
+        <details><summary>What are the hourly markets?</summary><p>Every hour the CavFi bot opens a quick "up or down" market: will DOGE be higher at the end of the hour than at its start? The line is DOGE's price at the start of the hour, bets close 10 minutes before the end, and if the price is exactly the same, NO wins. Only bets of 100 KingS or more earn leaderboard points.</p></details>
         <details><summary>Who decides the price?</summary><p>The CavFi bot. It opens a daily and a weekly market and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase DOGE-USD if Binance is unavailable). That is a <b>trusted role</b>: the price comes from the bot, not from a decentralized oracle, and you can check it against the exchange yourself. If the bot doesn't report within 7 days, anyone can turn the market into a full refund.</p></details>
         <details><summary>What is an Arena duel?</summary><p>A one-on-one bet on the current Arena round: pick two of the round's tokens and a KingS stake, for example "RPUP beats KingS, 1,000 KingS". Whoever accepts takes the other token with the same stake. When the Arena round is settled, the token that rose more against DOGE (using the Arena's own start and end prices) wins, and its backer gets both stakes, with no fee. Duels can be accepted only while Arena staking is open. A tie, or too few price samples, refunds both. You can invite one person with a .cav name or address, or share the duel link with anyone.</p></details>
         <details><summary>What is a profile?</summary><p>Every wallet has a public page at cavfi.com/u/name.cav (or the 0x address): its Living Cavaliers, badges, leaderboard rank, gm and quest streaks, Arena wins, duels, names and raffle tickets, all read from the chain. Share it on X or download it as an image card.</p></details>
@@ -1461,7 +1474,7 @@ a.item{color:var(--ink);text-decoration:none}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-<script src="quests-rules.js?v=1"></script>
+<script src="quests-rules.js?v=2"></script>
 <script>
 (() => {
 /* ================= config ================= */
@@ -1672,6 +1685,18 @@ function walletGate(){
 /* ================= wallet ================= */
 let listenersSet = false;
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+/* Telegram Mini App: when CavFi is opened from the CavFi bot inside Telegram, links to wallets and other sites
+   must leave Telegram through Telegram.WebApp.openLink, and wallet apps are opened by their https links. */
+const TG = document.documentElement.classList.contains('tg') && window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+if (TG){ try{ TG.ready(); TG.expand(); TG.setHeaderColor && TG.setHeaderColor('#11101A'); TG.setBackgroundColor && TG.setBackgroundColor('#11101A'); }catch(e){} }
+const tgOpen = url => { try{ TG.openLink(url); }catch(e){ window.open(url, '_blank'); } };
+const WALLET_HTTPS = {'metamask://': 'https://metamask.app.link/', 'trust://': 'https://link.trustwallet.com/', 'rainbow://': 'https://rnbwapp.com/', 'okx://': 'https://www.okx.com/download'};
+if (TG) document.addEventListener('click', e => {
+  const a = e.target.closest('a[href]'); if (!a) return;
+  const href = a.getAttribute('href');
+  if (/^https?:/i.test(href) && !href.startsWith(location.origin)){ e.preventDefault(); tgOpen(href); }
+  else if (/^(metamask|trust|rainbow|okx):/i.test(href)){ e.preventDefault(); const k = href.match(/^[a-z]+:\/\//i); tgOpen((k && WALLET_HTTPS[k[0].toLowerCase()]) || href); }
+}, true);
 const wcItem = () => WC_PROJECT_ID ? `<button class="item" id="wWc"><span class="wicon" style="background:#3B99FC">WC</span><span class="nm"><b>WalletConnect</b><small>${isMobile ? 'Pick your wallet app, it opens and asks to connect' : 'Scan a QR code with any mobile wallet'}</small></span></button>` : '';
 /* WalletConnect: the provider bundle (wc.js) is only downloaded when someone picks it.
    We draw our own QR code / wallet buttons from the pairing link (no third-party modal). */
@@ -1682,7 +1707,8 @@ async function wcShowUri(uri){
   $('wText').textContent = isMobile ? 'Pick your wallet app. It opens and asks you to connect to CavFi. After you approve, come back to this tab: the wallet button shows your address.' : 'Scan this code with your phone wallet (MetaMask, Trust, Rainbow, OKX…). It asks you to connect to CavFi.';
   const btn = (href, color, label, name, sub) => `<a class="item" href="${href}"><span class="wicon" style="background:${color}">${label}</span><span class="nm"><b>${name}</b><small>${sub}</small></span></a>`;
   $('wList').innerHTML = (img ? `<div class="wc-qr"><img src="${img}" alt="WalletConnect QR code" width="240" height="240"></div>` : '') +
-    (isMobile ? btn(`metamask://wc?uri=${enc}`, '#E2761B', 'MM', 'MetaMask', 'Opens the app') + btn(`trust://wc?uri=${enc}`, '#0500FF', 'TW', 'Trust Wallet', 'Opens the app') + btn(uri, '#3B99FC', 'WC', 'Other wallet', 'Any WalletConnect wallet') : '') +
+    (isMobile && TG ? btn(`https://metamask.app.link/wc?uri=${enc}`, '#E2761B', 'MM', 'MetaMask', 'Opens the app') + btn(`https://link.trustwallet.com/wc?uri=${enc}`, '#0500FF', 'TW', 'Trust Wallet', 'Opens the app')
+      : isMobile ? btn(`metamask://wc?uri=${enc}`, '#E2761B', 'MM', 'MetaMask', 'Opens the app') + btn(`trust://wc?uri=${enc}`, '#0500FF', 'TW', 'Trust Wallet', 'Opens the app') + btn(uri, '#3B99FC', 'WC', 'Other wallet', 'Any WalletConnect wallet') : '') +
     `<button class="item" id="wcCopy"><span class="wicon" style="background:var(--chestnut)">⧉</span><span class="nm"><b>Copy link</b><small>Paste it into your wallet's WalletConnect screen</small></span></button>`;
   $('walletModal').hidden = false;
   $('wcCopy').onclick = async () => { try{ await navigator.clipboard.writeText(uri); toast('WalletConnect link copied.', 'ok'); }catch(e){ toast(esc(uri)); } };
@@ -1710,7 +1736,10 @@ async function wcInit(showQr){
     // front for every signature, and leave a button in case the browser blocks the automatic switch.
     const orig = wcProv.request.bind(wcProv);
     wcProv.request = async args => {
-      if (isMobile && WC_SIGN.test(args && args.method)){ const w = wcWallet(); if (w.link){ toast(`Confirm in ${esc(w.name)}. <a href="${w.link}">Open ${esc(w.name)}</a>`, '', 15000); setTimeout(() => { try{ window.location.href = w.link; }catch(e){} }, 250); } }
+      if (isMobile && WC_SIGN.test(args && args.method)){ const w = wcWallet(); if (w.link){
+        const link = TG ? (WALLET_HTTPS[w.link] || w.link) : w.link;
+        toast(`Confirm in ${esc(w.name)}. <a href="${link}">Open ${esc(w.name)}</a>`, '', 15000);
+        setTimeout(() => { try{ if (TG) tgOpen(link); else window.location.href = link; }catch(e){} }, 250); } }
       return orig(args);
     };
     wcProv.on('disconnect', () => { try{ localStorage.removeItem('cavfi.wc'); }catch(e){} window.ethereum = injected; st.account = null; st.signer = null; st.provider = null; listenersSet = false; renderShell(); refreshAll(); });
@@ -1741,7 +1770,7 @@ function walletModal(){
   const enc = encodeURIComponent(here);
   const item = (href, color, label, name, sub) => `<a class="item" href="${href}" target="_blank" rel="noopener"><span class="wicon" style="background:${color}">${label}</span><span class="nm"><b>${name}</b><small>${sub}</small></span></a>`;
   if (isMobile){
-    $('wText').textContent = 'Your phone browser has no crypto wallet. Open CavFi inside your wallet app, where Connect wallet works.';
+    $('wText').textContent = TG ? 'Inside Telegram, connect with WalletConnect: it opens your wallet app to approve, then come back to Telegram.' : 'Your phone browser has no crypto wallet. Open CavFi inside your wallet app, where Connect wallet works.';
     $('wList').innerHTML =
       wcItem() +
       item(`https://metamask.app.link/dapp/${bare}`, '#E2761B', 'MM', 'Open in MetaMask', 'Recommended') +
@@ -3326,6 +3355,7 @@ async function loadBoard(){
       const res = {}; ids.forEach((id, k) => { if (items[k].state === 2) res[id.toNumber()] = items[k].yesWon; });
       const seen = new Set(), right = new Set();
       for (const l of logs){ const id = Number(BigInt(l.topics[1])), who = lk('0x' + l.topics[2].slice(26)), r = row(who), yes = BigInt('0x' + l.data.slice(2, 66)) !== 0n;
+        if (BigInt('0x' + l.data.slice(66, 130)) < 100n * 10n ** 18n) continue;   // bets under 100 KingS don't earn points
         if (!seen.has(who + id)){ seen.add(who + id); r.preds = (r.preds || 0) + 1; }
         if (res[id] !== undefined && res[id] === yes && !right.has(who + id)){ right.add(who + id); r.predWins = (r.predWins || 0) + 1; } }
     }catch(e){} }
@@ -3357,7 +3387,7 @@ async function loadBoard(){
   if (st.view === 'profile') renderProfile();
 }
 const LB_TABS = {
-  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed, 50 more per right call · 50 per duel played, 50 more per duel won · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
+  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
   swap:  {key: r => r.swapUsd, legend: 'Ranked by swap volume, valued at today\'s CavFi pool prices.', val: r => sxUsd(r.swapUsd)},
   arena: {key: r => r.arenaWins * 1e12 + r.arenaK, legend: 'Ranked by Arena rounds won, then by KingS staked.', val: r => r.arenaWins ? `${r.arenaWins} 🏆` : sxNum(r.arenaK) + ' KingS'},
   quest: {key: r => r.quests * 2 + r.gms, legend: 'Ranked by daily quests done (recorded by the bot after each day), then by gm and gn.', val: r => `${r.quests} quests`},
@@ -5567,6 +5597,20 @@ async function loadProfile(){
       for (const x of ds) if (x.state === 3){ d.duels.played++; if (same(x.winner, addr)) d.duels.won++; } })().catch(() => {}));
     if (A.predict) jobs.push((async () => { const c = prC(), ids = await c.idsOf(addr);
       d.preds.ids = await Promise.all(ids.slice(-50).map(async i => ({i: i.toNumber(), y: await c.yesOf(i, addr), n: await c.noOf(i, addr)}))); })().catch(() => {}));
+    jobs.push((async () => {   // activity calendar: CavFi transactions per UTC day, last 16 weeks
+      const set = new Set(Object.values(A).filter(v => typeof v === 'string' && /^0x[0-9a-fA-F]{40}$/.test(v)).map(lk));
+      const since = Math.floor(Date.now() / 1000) - 112 * 86400, days = {};
+      let url = `${NET.explorer}/api/v2/addresses/${addr}/transactions?filter=from`;
+      for (let pg = 0; pg < 6; pg++){
+        const r = await fetch(url).then(x => x.json());
+        let old = false;
+        for (const t of r.items || []){ const ts = Math.floor(Date.parse(t.timestamp) / 1000); if (ts < since){ old = true; break; }
+          if ((t.status === 'ok' || t.result === 'success') && t.to && set.has(lk(t.to.hash))){ const k = Math.floor(ts / 86400); days[k] = (days[k] || 0) + 1; } }
+        if (old || !r.next_page_params) break;
+        url = `${NET.explorer}/api/v2/addresses/${addr}/transactions?filter=from&` + new URLSearchParams(r.next_page_params);
+      }
+      d.days = days;
+    })().catch(() => {}));
     if (A.nft) jobs.push((async () => {
       if (!nf.all.length){ const c = nfC(), n = (await c.totalMinted()).toNumber(), all = [];
         for (let s = 1; s <= n; s += 50){ const [o, dn, k] = await c.page(s, 50); o.forEach((own, i) => all.push({id: s + i, owner: own, dna: dn[i], staked: k[i], t: nfTraits(dn[i])})); }
@@ -5591,6 +5635,23 @@ function profileRank(addr){
   if (!board.rows) return null;
   const i = board.rows.findIndex(r => r.addr === lk(addr));
   return i < 0 ? {rank: null, pts: 0, arenaWins: 0} : {rank: i + 1, pts: board.rows[i].pts, arenaWins: board.rows[i].arenaWins};
+}
+/* follows live in this browser only */
+const follows = () => { try{ return new Set(JSON.parse(localStorage.getItem('cavfi.follow') || '[]')); }catch(e){ return new Set(); } };
+const saveFollows = f => { try{ localStorage.setItem('cavfi.follow', JSON.stringify([...f])); }catch(e){} };
+function profileHeat(d){
+  if (!d.days) return '';
+  const today = Math.floor(Date.now() / 86400000), dow = (today + 3) % 7;   // day 0 (1970-01-01) was a Thursday; 0 = Monday
+  const start = today - dow - 15 * 7, cells = [];
+  let active = 0, best = 0, run = 0;
+  for (let k = start; k <= today; k++){ const n = d.days[k] || 0; if (n){ active++; run++; best = Math.max(best, run); } else run = 0; }
+  let cur = 0; for (let k = today; d.days[k] || (k === today && d.days[k - 1]); k--) if (d.days[k]) cur++; else if (k !== today) break;
+  for (let w = 0; w < 16; w++) for (let r = 0; r < 7; r++){ const k = start + w * 7 + r; if (k > today){ cells.push('<i class="hm-x"></i>'); continue; }
+    const n = d.days[k] || 0, lv = n === 0 ? 0 : n === 1 ? 1 : n <= 3 ? 2 : n <= 6 ? 3 : 4;
+    cells.push(`<i class="hm-${lv}" title="${new Date(k * 86400000).toISOString().slice(0, 10)}: ${n} CavFi transaction${n === 1 ? '' : 's'}"></i>`); }
+  return `<section class="sx-card"><div class="sx-head"><h2>Activity</h2><span>last 16 weeks · ${active} active day${active === 1 ? '' : 's'} · longest streak ${best} · current ${cur}</span></div>
+    <div class="hm-grid" role="img" aria-label="CavFi activity: ${active} active days in the last 16 weeks">${cells.join('')}</div>
+    <div class="hm-key"><span>less</span><i class="hm-0"></i><i class="hm-1"></i><i class="hm-2"></i><i class="hm-3"></i><i class="hm-4"></i><span>more</span></div></section>`;
 }
 function profileCount(d){ return (d.badges ? [...Array(8)].reduce((n, _, k) => n + ((d.badges >> k) & 1), 0) : 0) + (d.champ ? 1 : 0) + (d.gm && d.gm.pup ? 1 : 0) + (d.q && d.q.badge ? 1 : 0); }
 function renderProfile(){
@@ -5625,6 +5686,7 @@ function renderProfile(){
         <div><span>Badges</span><b>${profileCount(d)}</b><small>soulbound</small></div>
       </div>
       <div class="up-share">
+        ${mine ? '' : `<button class="btn${follows().has(lk(d.addr)) ? ' primary' : ''}" data-up="follow">${follows().has(lk(d.addr)) ? '✓ Following' : '+ Follow'}</button>`}
         <button class="btn" data-up="copy">Copy link</button>
         <a class="btn" href="https://x.com/intent/post?text=${encodeURIComponent(`${mine ? 'My' : (d.primary || short(d.addr)) + "'s"} CavFi profile on DogeOS 👑 ${rk && rk.rank ? `#${rk.rank} on the leaderboard, ` : ''}${d.gm ? d.gm.streak.toString() : 0}-day gm streak`)}&url=${encodeURIComponent(url)}" target="_blank" rel="noopener">Post on X</a>
         <button class="btn" data-up="png">Download card</button>
@@ -5632,6 +5694,7 @@ function renderProfile(){
         <a class="btn" href="${NET.explorer}/address/${d.addr}" target="_blank" rel="noopener">Explorer</a>
       </div>
     </section>
+    ${profileHeat(d)}
     ${d.cavs.length > 1 ? `<section class="sx-card"><div class="sx-head"><h2>Cavaliers</h2><span>${d.cavs.length}</span></div><div class="up-cavs">${d.cavs.slice(0, 24).map(x => `<span title="Cavalier #${x.id}">${nfSvg(x.dna, d.life)}</span>`).join('')}</div></section>` : ''}
     ${d.names.length ? `<section class="sx-card"><div class="sx-head"><h2>Names</h2></div><div class="up-tags">${d.names.map(n => `<span>${esc(n)}${n === d.primary ? ' · primary' : ''}</span>`).join('')}</div></section>` : ''}
     ${!top && mine ? `<div class="empty-card">Mint a <a href="#nft" data-goview="nft">Cavalier</a> and it shows here, living: halo for your gm streak, trophy, star and your name.</div>` : ''}
@@ -5645,6 +5708,9 @@ document.addEventListener('submit', async e => {
 document.addEventListener('click', async e => {
   const b = e.target.closest('[data-up]'); if (!b || !up.data) return;
   const d = up.data, id = profileId(d.addr, d.primary), url = `https://cavfi.com/u/${encodeURIComponent(id)}`;
+  if (b.dataset.up === 'follow'){ const f = follows(), a = lk(d.addr);
+    if (f.has(a)) f.delete(a); else { if (f.size >= 50) return toast('You can follow up to 50 wallets.', 'bad'); f.add(a); }
+    saveFollows(f); renderProfile(); toast(f.has(a) ? `Following ${esc(d.primary || short(d.addr))}: their moves show under Following on the home page.` : 'Unfollowed.', 'ok'); return; }
   if (b.dataset.up === 'copy'){ try{ await navigator.clipboard.writeText(url); toast('Profile link copied.', 'ok'); }catch(_){ toast(esc(url)); } }
   if (b.dataset.up === 'png'){ try{ await profilePng(d); }catch(err){ toast('Could not draw the card in this browser.', 'bad'); } }
 });
@@ -5702,10 +5768,11 @@ async function loadPredict(){
   }
   if (A.predict) jobs.push((async () => {
     const c = prC(), n = (await c.count()).toNumber();
-    const [ids, items] = await c.page(0, Math.min(n, 30));
+    const [ids, items] = await c.page(0, Math.min(n, 80));
     pr.markets = ids.map((id, k) => ({id: id.toNumber(), m: items[k]}));
     pr.mine = {};
-    if (me) await Promise.all(pr.markets.map(async x => { const [y, no, cl] = await Promise.all([c.yesOf(x.id, me), c.noOf(x.id, me), c.claimable(x.id, me)]); pr.mine[x.id] = {y, n: no, cl}; }));
+    // hourly markets add up fast: look up your stake only in open ones, the 30 newest, and every daily/weekly one
+    if (me) await Promise.all(pr.markets.filter((x, k) => k < 30 || x.m.state === 1 || !x.m.question.startsWith('Hourly')).map(async x => { const [y, no, cl] = await Promise.all([c.yesOf(x.id, me), c.noOf(x.id, me), c.claimable(x.id, me)]); pr.mine[x.id] = {y, n: no, cl}; }));
   })().catch(() => { pr.err = 'Could not read the markets right now.'; }));
   if (A.duel && A.arena) jobs.push((async () => {
     const ar = arRdC(), r = await ar.currentRound();
@@ -5730,6 +5797,7 @@ async function loadPredict(){
   await Promise.all(jobs);
   pr.at = Date.now(); renderPredict();
 }
+const prKind = m => m.question.startsWith('Weekly') ? 'weekly' : m.question.startsWith('Hourly') ? '⏱ hourly · up or down' : 'daily';
 const prWho = a => pr.names[lk(a)] || short(a);
 function renderPredict(){
   document.querySelectorAll('#prTabs .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === pr.tab)));
@@ -5738,7 +5806,7 @@ function renderPredict(){
   const gate = walletGate();
   // ---- markets
   const now = Math.floor(Date.now()/1000) + (pr.skew || 0);   // chain time
-  const disclosure = `<p class="pr-note"><b>How prices are decided:</b> the CavFi bot opens these markets and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase if Binance is down). It is a trusted oracle, not a decentralized one, so you can check every result against the exchange. If it doesn't report within 7 days, anyone can refund the market. Winners share the pot minus a 2% fee. Testnet KingS, no real value.</p>`;
+  const disclosure = `<p class="pr-note"><b>How prices are decided:</b> the CavFi bot opens these markets and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase if Binance is down). It is a trusted oracle, not a decentralized one, so you can check every result against the exchange. If it doesn't report within 7 days, anyone can refund the market. Winners share the pot minus a 2% fee. <b>Hourly</b> markets open every hour: the line is DOGE's price at the start of the hour (the same Binance candle), bets close 10 minutes before the end, and the same price counts as NO. Testnet KingS, no real value.</p>`;
   if (!A.predict) $('prMarkets').innerHTML = `<div class="empty-card">DOGE price markets are not deployed on this network yet.</div>`;
   else if (!pr.markets) $('prMarkets').innerHTML = `<div class="empty-card">${pr.err ? esc(pr.err) : 'Reading the markets…'}</div>`;
   else {
@@ -5759,14 +5827,16 @@ function renderPredict(){
         : `<div class="pr-bet"><input inputmode="decimal" placeholder="KingS amount" id="prAmt${x.id}" aria-label="KingS to stake" autocomplete="off"><button class="btn yes" data-pr="bet" data-id="${x.id}" data-side="1" ${pr.busy ? 'disabled' : ''}>YES</button><button class="btn no" data-pr="bet" data-id="${x.id}" data-side="0" ${pr.busy ? 'disabled' : ''}>NO</button></div>`;
       if (my && my.cl.gt(0)) act += `<button class="btn primary" data-pr="claim" data-id="${x.id}" ${pr.busy ? 'disabled' : ''}>${pr.busy === 'claim' + x.id ? 'Claiming…' : `Claim ${sxNum(fl(my.cl, 18))} KingS`}</button>`;
       if (m.state === 1 && now > res + 7 * 86400 && !gate) act += `<button class="btn" data-pr="expire" data-id="${x.id}">Refund this market</button>`;
-      act += `<div class="up-share"><button class="btn fc-sm" data-pr="mshare" data-id="${x.id}">Copy link</button><a class="btn fc-sm" href="https://x.com/intent/post?text=${encodeURIComponent(`${m.question.replace(/^Weekly: w/, 'W')} YES or NO? 🔮`)}&url=${encodeURIComponent(`https://cavfi.com/p/${x.id}`)}" target="_blank" rel="noopener">Post on X</a></div>`;
-      return `<section class="sx-card${pr.hlm === x.id ? ' pr-hl' : ''}" id="mkt-${x.id}"><div class="sx-head"><span class="pr-meta">#${x.id}${m.question.startsWith('Weekly') ? ' · weekly' : ' · daily'}</span><span class="pr-meta">${sxNum(tot)} KingS pot</span></div>
-        <h3 class="pr-q">${esc(m.question.replace(/^Weekly: w/, 'W'))}</h3>
+      act += `<div class="up-share"><button class="btn fc-sm" data-pr="mshare" data-id="${x.id}">Copy link</button><a class="btn fc-sm" href="https://x.com/intent/post?text=${encodeURIComponent(`${m.question.replace(/^(Weekly|Hourly): w/, 'W')} YES or NO? 🔮`)}&url=${encodeURIComponent(`https://cavfi.com/p/${x.id}`)}" target="_blank" rel="noopener">Post on X</a></div>`;
+      return `<section class="sx-card${pr.hlm === x.id ? ' pr-hl' : ''}" id="mkt-${x.id}"><div class="sx-head"><span class="pr-meta">#${x.id} · ${prKind(m)}</span><span class="pr-meta">${sxNum(tot)} KingS pot</span></div>
+        <h3 class="pr-q">${esc(m.question.replace(/^(Weekly|Hourly): w/, 'W'))}</h3>
         <div class="pr-bar" role="img" aria-label="YES ${pY.toFixed(0)}%, NO ${(100 - pY).toFixed(0)}%"><i style="width:${pY}%"></i><i style="width:${100 - pY}%"></i></div>
         <div class="pr-sides"><div><span>YES · ${tot ? pY.toFixed(0) + '%' : '–'}</span><b>${sxNum(yes)}</b><small>${yes ? 'pays ×' + mult(yes).toFixed(2) : 'nobody yet'}</small></div><div><span>NO · ${tot ? (100 - pY).toFixed(0) + '%' : '–'}</span><b>${sxNum(no)}</b><small>${no ? 'pays ×' + mult(no).toFixed(2) : 'nobody yet'}</small></div></div>
         <p class="pr-note">${status}</p>${mineTxt}${act}</section>`;
     };
-    const live = pr.markets.filter(x => x.m.state === 1), done = pr.markets.filter(x => x.m.state !== 1);
+    const live = pr.markets.filter(x => x.m.state === 1).sort((a, b) => Number(a.m.closeAt.toString()) - Number(b.m.closeAt.toString()) || a.id - b.id);
+    const hourlyOld = new Set(pr.markets.filter(x => x.m.state !== 1 && x.m.question.startsWith('Hourly')).slice(3).map(x => x.id));
+    const done = pr.markets.filter(x => x.m.state !== 1 && !hourlyOld.has(x.id));
     const claimables = pr.markets.filter(x => pr.mine[x.id] && pr.mine[x.id].cl.gt(0) && x.m.state !== 1);
     $('prMarkets').innerHTML = (live.length ? `<div class="pr-grid">${live.map(card).join('')}</div>` : `<div class="empty-card">No open markets right now. The CavFi bot opens a daily and a weekly DOGE market.</div>`)
       + (claimables.length ? `<div class="sx-head"><h2>To claim</h2></div><div class="pr-grid">${claimables.map(card).join('')}</div>` : '')
@@ -5915,7 +5985,7 @@ async function loadFeed(){
         else if (A0 === lk(A.arena) && t0 === FD_T.arClaimed){ const who = topic2(l); if (who === bot) continue;
           items.push({...base, who, ic: '🏆', txt: `won ${K(n(l, 0))} KingS in Arena round #${Number(BigInt(l.topics[1]))}`, href: 'arena.html'}); }
         else if (A0 === lk(A.predict) && t0 === PR_BET){ const who = topic2(l), id = Number(BigInt(l.topics[1])), m = await mOf(id);
-          items.push({...base, who, ic: '🔮', txt: `bet ${K(n(l, 1))} KingS on <b>${n(l, 0) ? 'YES' : 'NO'}</b>${m ? ': ' + esc(m.question.replace(/^Weekly: w/, 'W').replace(/^Will /, 'will ')) : ''}`, href: '#predict'}); }
+          items.push({...base, who, ic: '🔮', txt: `bet ${K(n(l, 1))} KingS on <b>${n(l, 0) ? 'YES' : 'NO'}</b>${m ? ': ' + esc(m.question.replace(/^(Weekly|Hourly): w/, 'W').replace(/^Will /, 'will ')) : ''}`, href: '#predict'}); }
         else if (A0 === lk(A.predict) && t0 === PR_CLAIMED){ const id = Number(BigInt(l.topics[1])), m = await mOf(id); if (!m || m.state !== 2) continue;
           items.push({...base, who: topic2(l), ic: '🎯', txt: `called DOGE right and won ${K(n(l, 0))} KingS (market #${id})`, href: '#predict'}); }
         else if (A0 === lk(A.duel) && t0 === DU_CREATED){ const id = Number(BigInt(l.topics[1])), rid = Number(BigInt(l.topics[3]));
@@ -5940,8 +6010,10 @@ async function loadFeed(){
       if (sx.pools.some(p => same(p.address, s.to)) || [A.router, A.limit, A.dca, A.launch].some(a => same(a, s.to))) continue;
       items.push({at: s.t, tx: s.tx, who: lk(s.to), ic: '🔁', txt: `bought ${sxNum(s.buyN)} ${esc(s.buyT.symbol)} for ${sxUsd(s.usd)}`, href: '#swap'}); } }
     items.sort((a, b) => b.at - a.at);
-    FD.items = items.filter(x => x.who !== bot).slice(0, 12);
-    const who = [...new Set(FD.items.map(x => x.who).filter(Boolean))].filter(a => FD.names[a] == null);
+    FD.all = items.filter(x => x.who !== bot);
+    FD.items = FD.all.slice(0, 12);
+    const fl_ = follows(), mineF = FD.all.filter(x => fl_.has(x.who)).slice(0, 12);
+    const who = [...new Set([...FD.items, ...mineF].map(x => x.who).filter(Boolean))].filter(a => FD.names[a] == null);
     if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); who.forEach((a, k) => FD.names[a] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
     FD.at = Date.now();
   }catch(e){ if (!FD.items) FD.items = []; }
@@ -5953,11 +6025,16 @@ function renderFeed(){
   const now = Math.floor(Date.now()/1000);
   const ago = t => { const s = Math.max(0, now - t); return s < 60 ? 'just now' : s < 3600 ? Math.floor(s/60) + 'm ago' : Math.floor(s/3600) + 'h ago'; };
   const nameOf = a => FD.names[a] || short(E.utils.getAddress(a));
-  box.innerHTML = `<div class="sx-head"><h2 id="fdH">Live on CavFi</h2><span>from the chain · last 16 hours</span></div>`
-    + (FD.items.length ? FD.items.map(x => `<div class="fd-row"><span class="fd-ic" aria-hidden="true">${x.ic}</span><span>${x.who && !x.noName ? `<a href="#u/${esc(FD.names[x.who] || x.who)}">${esc(nameOf(x.who))}</a> ` : x.who ? `<a href="#u/${esc(x.who)}">${esc(short(E.utils.getAddress(x.who)))}</a> ` : ''}${x.txt} <a class="fd-go" href="${x.href}" aria-label="Open">→</a></span><small><a href="${NET.explorer}/tx/${x.tx}" target="_blank" rel="noopener">${ago(x.at)}</a></small></div>`).join('')
-      : '<div class="empty-card">Quiet right now. Be the first: back a token in the Arena or call the DOGE price.</div>');
+  const f = follows(), list = FD.tab === 'following' ? (FD.all || []).filter(x => f.has(x.who)).slice(0, 12) : FD.items;
+  box.innerHTML = `<div class="sx-head"><h2 id="fdH">Live on CavFi</h2><span class="chips" role="group" aria-label="Whose activity"><button class="chip" data-fd="all" aria-pressed="${FD.tab !== 'following'}">Everyone</button><button class="chip" data-fd="following" aria-pressed="${FD.tab === 'following'}">Following${f.size ? ' · ' + f.size : ''}</button></span></div>`
+    + (FD.tab === 'following' && !f.size ? '<div class="empty-card">Follow wallets from their profile (open any name on the leaderboard) and their moves show up here.</div>'
+    : list.length ? list.map(x => `<div class="fd-row"><span class="fd-ic" aria-hidden="true">${x.ic}</span><span>${x.who && !x.noName ? `<a href="#u/${esc(FD.names[x.who] || x.who)}">${esc(nameOf(x.who))}</a> ` : x.who ? `<a href="#u/${esc(x.who)}">${esc(short(E.utils.getAddress(x.who)))}</a> ` : ''}${x.txt} <a class="fd-go" href="${x.href}" aria-label="Open">→</a></span><small><a href="${NET.explorer}/tx/${x.tx}" target="_blank" rel="noopener">${ago(x.at)}</a></small></div>`).join('')
+      : FD.tab === 'following' ? '<div class="empty-card">The wallets you follow did nothing on CavFi in the last 16 hours.</div>' : '<div class="empty-card">Quiet right now. Be the first: back a token in the Arena or call the DOGE price.</div>')
+    + '<small class="fd-note">from the chain · last 16 hours</small>';
 }
 setInterval(() => { if (st.view === 'home' && !document.hidden) loadFeed(); }, 60000);
+document.addEventListener('click', e => { const b = e.target.closest('[data-fd]'); if (!b) return; FD.tab = b.dataset.fd; try{ localStorage.setItem('cavfi.fdtab', FD.tab); }catch(_){} renderFeed(); });
+try{ FD.tab = localStorage.getItem('cavfi.fdtab') || 'all'; }catch(e){}
 
 $('aProfile').addEventListener('click', () => { $('acctModal').hidden = true; });
 /* ================= light / dark ================= */

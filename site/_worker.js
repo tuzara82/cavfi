@@ -164,7 +164,7 @@ async function marketPage(env, url, id){
     const A = await addresses(env, url); if (!A.predict) return fallback();
     const r = await call(A.predict, '0x9507d39a' + pad(BigInt(id).toString(16)));
     const t = Number(word(r, 0)), w = i => word('0x' + r.slice(2 + t * 2), i);
-    const q = strAt(r, t + Number(w(0))).replace(/^Weekly: w/, 'W');
+    const q = strAt(r, t + Number(w(0))).replace(/^(Weekly|Hourly): w/, 'W');
     const state = Number(w(3)), yesWon = w(4) === 1n, price = Number(w(6)) / 1e8, yes = w(7), no = w(8), tot = yes + no;
     const pY = tot ? Number(yes * 100n / tot) : 0;
     let desc;

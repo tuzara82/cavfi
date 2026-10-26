@@ -50,6 +50,8 @@ const CFG = {
   predict: env('PREDICT', '1') === '1',
   predictDaily: env('PREDICT_DAILY', '1') === '1',
   predictWeekly: env('PREDICT_WEEKLY', '1') === '1',
+  predictHourly: env('PREDICT_HOURLY', '1') === '1',
+  predictHourlyPostMin: Number(env('PREDICT_HOURLY_POST_MIN', '1000')),
   predictPrice: Number(env('PREDICT_PRICE', '0')), // tests only: use this DOGE/USD price instead of the exchanges
   duels: env('DUELS', '1') === '1',
   watchMax: Number(env('WATCH_MAX', '3')),
@@ -767,11 +769,14 @@ async function raffleKeeper(){
 // Anyone can message the bot: /price KingS · /alert KingS above 0.00003 · /alerts · /cancel 2 · /help
 // Prices are the same market prices the bot uses for pool fixes (USD, from the CavFi pools).
 const ALERT_MAX = 10;
-async function tgReply(chat, html){
+async function tgReply(chat, html, markup){
   if (!CFG.tgToken) return;
   try{ await fetch(`${CFG.tgApi}/bot${CFG.tgToken}/sendMessage`, {method:'POST', headers:{'content-type':'application/json'},
-    body: JSON.stringify({chat_id: chat, text: html, parse_mode: 'HTML', disable_web_page_preview: true})}); }catch(e){}
+    body: JSON.stringify({chat_id: chat, text: html, parse_mode: 'HTML', disable_web_page_preview: true, ...(markup ? {reply_markup: markup} : {})})}); }catch(e){}
 }
+// Telegram Mini App: the bot's menu button and an "Open CavFi" button open the site inside Telegram.
+const MINI_APP_URL = 'https://cavfi.com/?tg=1';
+const openBtn = priv => ({inline_keyboard: [[priv ? {text: '👑 Open CavFi', web_app: {url: MINI_APP_URL}} : {text: '👑 Open CavFi', url: 'https://cavfi.com'}]]});
 function findToken(sym){
   const s = String(sym || '').toLowerCase().replace(/^\$/, '');
   if (s === 'doge' || s === 'wdoge') return tokens[lk(A.wdoge)];
@@ -787,7 +792,7 @@ async function alertsPoll(){
   for (const u of r.result || []){
     state.tgOffset = Math.max(state.tgOffset || 0, u.update_id);
     const m = u.message; if (!m || !m.text || !m.chat) continue;
-    const chat = m.chat.id, parts = m.text.trim().split(/\s+/), cmd = parts[0].toLowerCase().replace(/@.*$/, '');
+    const chat = m.chat.id, parts = m.text.trim().split(/\s+/), cmd = parts[0].toLowerCase().replace(/@.*$/, ''), priv = m.chat.type === 'private';
     const mine = (state.alerts ||= []).filter(a => a.chat === chat);
     if (cmd === '/start' && /^w(0x)?[0-9a-fA-F]{40}$/.test(parts[1] || '')){
       await watchAdd(chat, parts[1].slice(1));
@@ -805,8 +810,10 @@ async function alertsPoll(){
       const f = {'/arena': arenaText, '/markets': marketsText, '/duels': duelsText, '/quests': questsText, '/raffle': raffleText}[cmd];
       const txt = f ? await f() : (await Promise.all([questsText(), marketsText(), arenaText(), duelsText(), raffleText()])).filter(Boolean).join('\n\n');
       await tgReply(chat, txt || 'Nothing to show right now.');
+    } else if (cmd === '/app' || cmd === '/open'){
+      await tgReply(chat, '👑 CavFi: swap, the Arena, DOGE price markets, duels and more.', openBtn(priv));
     } else if (cmd === '/start' || cmd === '/help'){
-      await tgReply(chat, `🐶 <b>CavFi bot</b>\n<b>Your wallet</b>\n/watch kingdoge.cav (or 0x...): private messages for Arena wins, unclaimed winnings, auto-buys, quests, raffle prizes, predictions, duels and gm streak reminders\n/me: your followed wallets\n/unwatch: stop\n\n<b>CavFi today</b>\n/today: everything below in one message\n/markets: open DOGE price markets\n/arena: the current Arena round\n/duels: open duels\n/quests: today's quests\n/raffle: this week's raffle\n\n<b>Prices</b>\n/price KingS: current price\n/alert KingS above 0.00003: tell me when KingS goes above $0.00003\n/alert DOGE below 0.05\n/alerts: your alerts\n/cancel 2: remove alert 2\n\nEverything runs on the DogeOS testnet (testnet tokens, no real value). Token prices come from the CavFi pools; prediction markets use the DOGE price from Binance.`);
+      await tgReply(chat, `🐶 <b>CavFi bot</b>\n/app: open CavFi right here in Telegram\n<b>Your wallet</b>\n/watch kingdoge.cav (or 0x...): private messages for Arena wins, unclaimed winnings, auto-buys, quests, raffle prizes, predictions, duels and gm streak reminders\n/me: your followed wallets\n/unwatch: stop\n\n<b>CavFi today</b>\n/today: everything below in one message\n/markets: open DOGE price markets\n/arena: the current Arena round\n/duels: open duels\n/quests: today's quests\n/raffle: this week's raffle\n\n<b>Prices</b>\n/price KingS: current price\n/alert KingS above 0.00003: tell me when KingS goes above $0.00003\n/alert DOGE below 0.05\n/alerts: your alerts\n/cancel 2: remove alert 2\n\nEverything runs on the DogeOS testnet (testnet tokens, no real value). Token prices come from the CavFi pools; prediction markets use the DOGE price from Binance.`, openBtn(priv));
     } else if (cmd === '/price'){
       const t = findToken(parts[1]);
       await tgReply(chat, t ? `${esc(t.symbol)}: <b>${usdStr(ref[lk(t.address)])}</b>${ref[lk(A.wdoge)] && lk(t.address) !== lk(A.wdoge) && ref[lk(t.address)] ? ` (${(ref[lk(t.address)] / ref[lk(A.wdoge)]).toPrecision(4)} DOGE)` : ''}` : 'Unknown token. Try /price KingS, /price DOGE or /price RPUP.');
@@ -930,6 +937,7 @@ async function dogeAt(ts){
 const to8 = p => ethers.BigNumber.from(Math.round(p * 1e8));
 const from8 = b => Number(b.toString()) / 1e8;
 const sig3 = p => Number(p.toPrecision(3));
+const usdP5 = p => '$' + (p >= 1 ? p.toFixed(4) : p.toPrecision(5));
 const usdP = p => '$' + (p >= 1 ? p.toFixed(2) : p.toPrecision(3).replace(/0+$/, '').replace(/\.$/, ''));
 const whenStr = ts => new Date(ts * 1000).toLocaleString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC'}) + ', 20:00 UTC';
 let predictAt = 0;
@@ -940,7 +948,7 @@ async function predictKeeper(){
   const [oracle, owner] = await Promise.all([c.oracle(), c.owner()]);
   if (lk(oracle) !== lk(me) && lk(owner) !== lk(me)){ log('predict: this wallet is not the oracle, skipping'); CFG.predict = false; return; }
   const t = (await provider.getBlock('latest')).timestamp;
-  const [ids, items] = await c.page(0, 40);
+  const [ids, items] = await c.page(0, 150);
   // 1. resolve markets whose time has come (wait a minute so the exchange candle exists)
   for (let i = 0; i < ids.length; i++){
     const m = items[i], id = ids[i].toNumber(), at = Number(m.resolveAt.toString());
@@ -950,8 +958,8 @@ async function predictKeeper(){
     const tx = await send(`predict #${id}: resolve at $${price}`, () => c.resolve(id, to8(price)));
     if (!tx) continue;
     const yes = to8(price).gt(m.strike), pot = fl(m.yesPool.add(m.noPool), 18);
-    const refund = m.yesPool.isZero() || m.noPool.isZero();
-    if (pot > 0) await tg(`🔮 <b>Predict #${id} resolved</b>\n${esc(m.question)}\nDOGE was <b>${usdP(price)}</b> (line ${usdP(from8(m.strike))}): <b>${yes ? 'YES' : 'NO'}</b>.\n` +
+    const refund = m.yesPool.isZero() || m.noPool.isZero(), hourly = m.question.startsWith('Hourly');
+    if (pot > 0 && (!hourly || pot >= CFG.predictHourlyPostMin)) await tg(`🔮 <b>Predict #${id} resolved</b>\n${esc(m.question)}\nDOGE was <b>${hourly ? usdP5(price) : usdP(price)}</b> (line ${hourly ? usdP5(from8(m.strike)) : usdP(from8(m.strike))}): <b>${yes ? 'YES' : 'NO'}</b>.\n` +
       (refund ? `Only one side was backed, so everyone gets their ${fmtN(pot)} KingS back.` : `${fmtN(pot)} KingS pot goes to the ${yes ? 'YES' : 'NO'} side.`) +
       ` Claim on <a href="https://cavfi.com/#predict">cavfi.com/#predict</a>`);
     for (const w of [...new Set((state.watch || []).map(w => lk(w.addr)))]){
@@ -973,14 +981,35 @@ async function predictKeeper(){
     let r = d20; while (new Date(r * 1000).getUTCDay() !== 0 || r - t < 36 * 3600) r += 86400;
     want.push({resolveAt: r, closeAt: r - 86400, k: 1.05, kind: 'weekly'});
   }
+  const made = (state.predictMade ||= {});
   for (const w of want){
-    if (items.some(m => Number(m.resolveAt.toString()) === w.resolveAt && m.question.startsWith('Weekly') === (w.kind === 'weekly'))) continue;
+    const key = w.kind + ':' + w.resolveAt;
+    if (made[key] || items.some(m => Number(m.resolveAt.toString()) === w.resolveAt && m.question.startsWith('Weekly') === (w.kind === 'weekly') && !m.question.startsWith('Hourly'))){ made[key] = 1; continue; }
     let p; try{ p = await dogeNow(); }catch(e){ log('predict: no DOGE price, not opening a market:', e.message); return; }
     const strike = sig3(p * w.k);
     const q = `${w.kind === 'weekly' ? 'Weekly: will' : 'Will'} DOGE be above ${usdP(strike)} on ${whenStr(w.resolveAt)}?`;
     const tx = await send(`predict: open ${w.kind} market`, () => c.create(q, to8(strike), w.closeAt, w.resolveAt));
+    if (tx){ made[key] = 1; saveState(); }
     if (tx) await tg(`🔮 <b>New ${w.kind} prediction</b>\n${esc(q)}\nDOGE now ${usdP(p)}. Back YES or NO with KingS until ${new Date(w.closeAt * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC on <a href="https://cavfi.com/#predict">cavfi.com/#predict</a>\n<i>Testnet tokens. The CavFi bot reports the price from Binance.</i>`);
   }
+
+  // 3. the hourly "up or down" market: opens a minute after each full hour, the line is DOGE's price at that
+  //    hour (the open of Binance's 1-minute candle), it resolves an hour later and stops taking bets 10 minutes before.
+  //    YES = DOGE is higher, NO = DOGE is the same or lower.
+  if (CFG.predictHourly){
+    const H = Math.floor(t / 3600) * 3600, r = H + 3600, key = 'hourly:' + r;
+    if (!made[key] && t >= H + 60 && t < H + 20 * 60 && !items.some(m => Number(m.resolveAt.toString()) === r && m.question.startsWith('Hourly'))){
+      let p = null; try{ p = await dogeAt(H); }catch(e){ log('predict: hourly line not available yet:', e.message); }
+      if (p){
+        const hh = x => new Date(x * 1000).toISOString().slice(11, 16);
+        const q = `Hourly: will DOGE be above ${usdP5(p)} at ${hh(r)} UTC? (its price at ${hh(H)})`;
+        const tx = await send('predict: open hourly market', () => c.create(q, to8(p), r - 600, r));
+        if (tx){ made[key] = 1; saveState(); }
+      }
+    }
+  }
+  // forget keys older than 10 days
+  for (const k of Object.keys(made)) if (Number(k.split(':')[1]) < t - 10 * 86400) delete made[k];
 }
 
 // ------------------------------------------------------------------ 11. Arena duels
@@ -1026,6 +1055,14 @@ async function duelKeeper(){
 
 // ------------------------------------------------------------------ 12. Telegram link for the site
 // The site's "Telegram alerts" button needs the bot's username: write it to tg.json next to the site.
+async function setMiniApp(){
+  if (!CFG.tgToken || state.miniAppSet === MINI_APP_URL) return;
+  try{
+    const r = await fetch(`${CFG.tgApi}/bot${CFG.tgToken}/setChatMenuButton`, {method: 'POST', headers: {'content-type': 'application/json'},
+      body: JSON.stringify({menu_button: {type: 'web_app', text: 'Open CavFi', web_app: {url: MINI_APP_URL}}})}).then(x => x.json());
+    if (r && r.ok){ state.miniAppSet = MINI_APP_URL; saveState(); log('telegram: menu button opens the CavFi mini app'); }
+  }catch(e){ log('telegram setChatMenuButton failed:', e.message); }
+}
 async function writeTgJson(){
   if (!CFG.tgToken) return;
   try{
@@ -1057,7 +1094,7 @@ async function marketsText(){
     const open = items.map((m, i) => ({m, id: ids[i].toNumber()})).filter(x => x.m.state === 1 && t < Number(x.m.closeAt.toString()));
     if (!open.length) return '🔮 <b>DOGE price markets</b>\nNo open market right now.';
     return `🔮 <b>DOGE price markets</b>\n` + open.map(({m, id}) => { const y = fl(m.yesPool, 18), n = fl(m.noPool, 18), tot = y + n;
-      return `• ${esc(m.question.replace(/^Weekly: w/, 'W'))}\n   ${tot ? `YES ${Math.round(y / tot * 100)}% · NO ${Math.round(n / tot * 100)}% · ${fmtN(tot)} KingS` : 'nobody yet'} · <a href="https://cavfi.com/p/${id}">bet</a>`; }).join('\n');
+      return `• ${esc(m.question.replace(/^(Weekly|Hourly): w/, 'W'))}\n   ${tot ? `YES ${Math.round(y / tot * 100)}% · NO ${Math.round(n / tot * 100)}% · ${fmtN(tot)} KingS` : 'nobody yet'} · <a href="https://cavfi.com/p/${id}">bet</a>`; }).join('\n');
   }catch(e){ return ''; }
 }
 async function arenaText(){
@@ -1225,6 +1262,7 @@ async function main(){
   if (me !== ethers.constants.AddressZero) log('balance', fmtN(fl(await provider.getBalance(me), 18)), 'DOGE');
   log(`predict: ${CFG.predict && A.predict ? 'on (bot is the DOGE price oracle)' : 'off'} · duels: ${CFG.duels && A.duel ? 'on' : 'off'} · followed wallets: ${(state.watch || []).length}`);
   await writeTgJson();
+  await setMiniApp();
   await tg(`🐶 <b>CavFi bot started</b>${me !== ethers.constants.AddressZero ? `\nwallet ${short(me)}` : ''}`);
   let errors = 0;
   for (;;){
