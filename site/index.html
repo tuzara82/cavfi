@@ -691,6 +691,8 @@ a.item{color:var(--ink);text-decoration:none}
 .hm-key{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}.hm-key i{width:12px}
 /* inside Telegram */
 html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
+/* invite card */
+.iv-p{margin:0;font-size:14.5px}.iv-card .rf-link code{overflow-wrap:anywhere}
 /* live feed */
 .fd-card{gap:0}
 .fd-row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
@@ -946,6 +948,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
       <section class="sx-card rl-card" id="rlCard" aria-labelledby="rlH"></section>
     </div>
     <section class="sx-card fd-card" id="fdCard" aria-labelledby="fdH" aria-live="polite"></section>
+    <section class="sx-card iv-card" id="ivCard" hidden aria-labelledby="ivH"></section>
     <div class="hm-ticker" id="hmTicker" aria-label="Pool prices"><div class="hm-track" id="hmTrack"><span class="hm-tk muted">Reading pool prices…</span></div></div>
     <section class="hm-grid" aria-label="Choose where to go">
       <button class="hm-card" data-go="swap">
@@ -1990,7 +1993,7 @@ function setView(v){
   if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
   if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
-  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); nfHomeFig(); loadGm(); loadQuests(); loadRaffle(); loadFeed(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
+  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); nfHomeFig(); loadGm(); loadQuests(); loadRaffle(); loadFeed(); renderInviteCard(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
   if (v === 'portfolio') loadPortfolio();
   if (v === 'faucet') loadFaucet();
   if (v === 'nft') loadNft();
@@ -3827,16 +3830,22 @@ const rf = { mine:null, busy:false, dismissed:false };
 const soC = signer => new E.Contract(A.social, SOCIAL_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
 (function captureRef(){
   try{
-    const r = new URLSearchParams(location.search).get('ref');
+    const r = (new URLSearchParams(location.search).get('ref') || '').trim();
     if (r && E.utils.isAddress(r)) localStorage.setItem(REF_KEY, E.utils.getAddress(r));
+    else if (/^[a-z0-9-]{3,32}(\.cav)?$/i.test(r)) localStorage.setItem(REF_KEY, 'name:' + r.toLowerCase().replace(/\.cav$/, ''));   // cavfi.com/?ref=borislav.cav
     rf.dismissed = localStorage.getItem(REF_KEY + '.dismissed') === '1';
   }catch(e){}
 })();
-const storedRef = () => { try{ return localStorage.getItem(REF_KEY) || ''; }catch(e){ return ''; } };
-const refLink = () => `${location.origin}/?ref=${st.account}`;
+const storedRef = () => { try{ const v = localStorage.getItem(REF_KEY) || ''; return v.startsWith('name:') ? '' : v; }catch(e){ return ''; } };
+const refLink = () => `https://cavfi.com/?ref=${myName.name && myName.addr === lk(st.account || '') ? myName.name + '.cav' : st.account}`;
+async function resolveStoredRef(){   // an invite by .cav name is turned into the address it points to
+  try{ const v = localStorage.getItem(REF_KEY) || ''; if (!v.startsWith('name:') || !A.names) return;
+    const a = await nmC().resolve(v.slice(5)); if (a && a !== E.constants.AddressZero) localStorage.setItem(REF_KEY, a); else localStorage.removeItem(REF_KEY); }catch(e){}
+}
 let rfSeq = 0;
 async function loadRef(){
   const seq = ++rfSeq;
+  await resolveStoredRef();
   if (!A.social || !st.account){ rf.mine = null; return renderRef(); }
   try{
     const c = soC();
@@ -3853,6 +3862,7 @@ function renderRef(){
   ban.hidden = !show;
   if (show) ban.innerHTML = `<span><b>You were invited by ${short(inv)}.</b> Link your wallet to the invite: one small transaction, and they earn points from your trades.</span>
     <span style="display:flex;gap:8px"><button class="btn primary" data-rf="link" ${rf.busy ? 'disabled' : ''}>${rf.busy ? 'Linking…' : 'Link invite'}</button><button class="btn" data-rf="later">Not now</button></span>`;
+  renderInviteCard();
   const box = $('aInvite'); if (!box) return;
   $('aInviteSec').hidden = !A.social || !st.account;
   if (!A.social || !st.account) return;
@@ -3873,6 +3883,19 @@ document.addEventListener('click', async e => {
     rf.busy = false; loadRef();
   }
 });
+/* the invite card on the home page */
+function renderInviteCard(){
+  const box = $('ivCard'); if (!box) return;
+  box.hidden = !A.social;
+  if (!A.social) return;
+  if (!st.account){ box.innerHTML = `<div class="sx-head"><h2 id="ivH">👑 Invite friends</h2></div><p class="iv-p">Connect your wallet to get your invite link. You earn 25% of the leaderboard points of everyone who joins with it, and 3 invitees who trade earn you the Royal Herald badge.</p>`; return; }
+  const m = rf.mine, link = refLink(), text = 'Swap, play the Arena, call the DOGE price and guess it for free on CavFi (DogeOS testnet) 👑';
+  box.innerHTML = `<div class="sx-head"><h2 id="ivH">👑 Invite friends</h2><span>${m ? `${m.count} joined with your link` : ''}</span></div>
+    <p class="iv-p">You earn <b>25% of the leaderboard points</b> of everyone who joins with your link. 3 invitees who trade earn you the <b>Royal Herald</b> badge.</p>
+    <div class="rf-link"><code>${esc(link)}</code><button class="btn" data-rf="copy">Copy</button></div>
+    <div class="up-share"><a class="btn" href="https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(link)}" target="_blank" rel="noopener">Post on X</a><a class="btn" href="https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}" target="_blank" rel="noopener">Send on Telegram</a>${navigator.share ? '<button class="btn" data-rf="share">Share…</button>' : ''}</div>
+    ${myName.name ? '' : '<small class="vt-hint">Tip: claim a <a href="#names" data-goview="names">.cav name</a> and your link becomes cavfi.com/?ref=yourname.cav</small>'}`;
+}
 /* referral map for the leaderboard: user -> referrer (all lower case) */
 async function loadRefMap(){
   if (!A.social) return {};
@@ -5369,7 +5392,7 @@ const nmValid = l => /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(l);
 const nmPrice = l => l.length === 3 ? '10 DOGE' : l.length === 4 ? '5 DOGE' : '1 DOGE';
 async function loadMyName(){
   if (!A.names || !st.account){ if (myName.name){ myName.name = ''; renderShell(); } return; }
-  try{ const n = await nmC().nameOf(st.account); const changed = n !== myName.name || myName.addr !== lk(st.account); myName.addr = lk(st.account); myName.name = nmValid(n) ? n : ''; if (changed) renderShell(); }catch(e){}
+  try{ const n = await nmC().nameOf(st.account); const changed = n !== myName.name || myName.addr !== lk(st.account); myName.addr = lk(st.account); myName.name = nmValid(n) ? n : ''; if (changed){ renderShell(); renderInviteCard(); } }catch(e){}
 }
 async function loadNames(){
   if (!A.names){ $('nmResult').innerHTML = '<small class="nm-hint">.cav names are not deployed on this network yet.</small>'; return; }
