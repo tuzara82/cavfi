@@ -51,6 +51,9 @@ const CFG = {
   predictDaily: env('PREDICT_DAILY', '1') === '1',
   predictWeekly: env('PREDICT_WEEKLY', '1') === '1',
   predictHourly: env('PREDICT_HOURLY', '1') === '1',
+  predictSeed: Number(env('PREDICT_SEED_KINGS', '250')),          // KingS the bot puts on YES and on NO of each daily/weekly market
+  predictSeedHourly: Number(env('PREDICT_SEED_HOURLY_KINGS', '100')),
+  guess: env('GUESS', '1') === '1',
   predictHourlyPostMin: Number(env('PREDICT_HOURLY_POST_MIN', '1000')),
   predictPrice: Number(env('PREDICT_PRICE', '0')), // tests only: use this DOGE/USD price instead of the exchanges
   duels: env('DUELS', '1') === '1',
@@ -94,9 +97,13 @@ const ABI = {
   gm: ['function info(address) view returns (bool gmToday, bool gnToday, uint256 streak, uint256 best, uint256 gms, uint256 gns, bool pup, uint256 nextDayAt)'],
   qinfo: ['function info(address) view returns (uint256 streak, uint256 best, uint256 fullDays, uint256 quests, bool badge, uint8 yesterday)'],
   predict: ['function create(string question, uint256 strike, uint64 closeAt, uint64 resolveAt) returns (uint256)', 'function resolve(uint256 id, uint256 price)',
+            'function bet(uint256 id, bool yes, uint256 amount)', 'function claim(uint256 id) returns (uint256)',
             'function oracle() view returns (address)', 'function owner() view returns (address)', 'function count() view returns (uint256)',
             'function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(string question, uint64 closeAt, uint64 resolveAt, uint8 state, bool yesWon, uint256 strike, uint256 price, uint256 yesPool, uint256 noPool)[] items)',
             'function yesOf(uint256, address) view returns (uint256)', 'function noOf(uint256, address) view returns (uint256)', 'function claimable(uint256, address) view returns (uint256)'],
+  guess: ['function settle(uint32 day, uint64 price)', 'function oracle() view returns (address)', 'function owner() view returns (address)', 'function count(uint32) view returns (uint256)', 'function prize() view returns (uint256)',
+          'function dayInfo(uint32 d) view returns (tuple(bool settled, uint64 price, address winner, uint64 winnerGuess, uint256 prize))',
+          'event Settled(uint32 indexed day, uint64 price, address indexed winner, uint64 winnerGuess, uint256 prize)'],
   duel: ['function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(address maker, address taker, address invited, address winner, uint64 roundId, uint8 makerIdx, uint8 takerIdx, uint8 state, uint256 stake)[] items)',
          'function settle(uint256 id)', 'function cancel(uint256 id)', 'event Settled(uint256 indexed id, address winner, uint256 paid)'],
   dca: ['function count() view returns (uint256)', 'function due(uint256 start, uint256 n) view returns (uint256[])', 'function execute(uint256 id, address[] path) returns (uint256)',
@@ -806,14 +813,14 @@ async function alertsPoll(){
       else { state.watch = (state.watch || []).filter(w => !(w.chat === chat && lk(w.addr) === lk(addr))); await tgReply(chat, 'Stopped following that wallet.'); }
     } else if (cmd === '/me'){
       await watchSummary(chat);
-    } else if (['/arena', '/markets', '/duels', '/quests', '/raffle', '/today'].includes(cmd)){
-      const f = {'/arena': arenaText, '/markets': marketsText, '/duels': duelsText, '/quests': questsText, '/raffle': raffleText}[cmd];
-      const txt = f ? await f() : (await Promise.all([questsText(), marketsText(), arenaText(), duelsText(), raffleText()])).filter(Boolean).join('\n\n');
+    } else if (['/arena', '/markets', '/duels', '/quests', '/raffle', '/guess', '/today'].includes(cmd)){
+      const f = {'/arena': arenaText, '/markets': marketsText, '/duels': duelsText, '/quests': questsText, '/raffle': raffleText, '/guess': guessText}[cmd];
+      const txt = f ? await f() : (await Promise.all([guessText(), questsText(), marketsText(), arenaText(), duelsText(), raffleText()])).filter(Boolean).join('\n\n');
       await tgReply(chat, txt || 'Nothing to show right now.');
     } else if (cmd === '/app' || cmd === '/open'){
       await tgReply(chat, '👑 CavFi: swap, the Arena, DOGE price markets, duels and more.', openBtn(priv));
     } else if (cmd === '/start' || cmd === '/help'){
-      await tgReply(chat, `🐶 <b>CavFi bot</b>\n/app: open CavFi right here in Telegram\n<b>Your wallet</b>\n/watch kingdoge.cav (or 0x...): private messages for Arena wins, unclaimed winnings, auto-buys, quests, raffle prizes, predictions, duels and gm streak reminders\n/me: your followed wallets\n/unwatch: stop\n\n<b>CavFi today</b>\n/today: everything below in one message\n/markets: open DOGE price markets\n/arena: the current Arena round\n/duels: open duels\n/quests: today's quests\n/raffle: this week's raffle\n\n<b>Prices</b>\n/price KingS: current price\n/alert KingS above 0.00003: tell me when KingS goes above $0.00003\n/alert DOGE below 0.05\n/alerts: your alerts\n/cancel 2: remove alert 2\n\nEverything runs on the DogeOS testnet (testnet tokens, no real value). Token prices come from the CavFi pools; prediction markets use the DOGE price from Binance.`, openBtn(priv));
+      await tgReply(chat, `🐶 <b>CavFi bot</b>\n/app: open CavFi right here in Telegram\n<b>Your wallet</b>\n/watch kingdoge.cav (or 0x...): private messages for Arena wins, unclaimed winnings, auto-buys, quests, raffle prizes, predictions, duels and gm streak reminders\n/me: your followed wallets\n/unwatch: stop\n\n<b>CavFi today</b>\n/today: everything below in one message\n/markets: open DOGE price markets\n/arena: the current Arena round\n/duels: open duels\n/quests: today's quests\n/raffle: this week's raffle\n/guess: today's free DOGE price game\n\n<b>Prices</b>\n/price KingS: current price\n/alert KingS above 0.00003: tell me when KingS goes above $0.00003\n/alert DOGE below 0.05\n/alerts: your alerts\n/cancel 2: remove alert 2\n\nEverything runs on the DogeOS testnet (testnet tokens, no real value). Token prices come from the CavFi pools; prediction markets use the DOGE price from Binance.`, openBtn(priv));
     } else if (cmd === '/price'){
       const t = findToken(parts[1]);
       await tgReply(chat, t ? `${esc(t.symbol)}: <b>${usdStr(ref[lk(t.address)])}</b>${ref[lk(A.wdoge)] && lk(t.address) !== lk(A.wdoge) && ref[lk(t.address)] ? ` (${(ref[lk(t.address)] / ref[lk(A.wdoge)]).toPrecision(4)} DOGE)` : ''}` : 'Unknown token. Try /price KingS, /price DOGE or /price RPUP.');
@@ -940,7 +947,7 @@ const sig3 = p => Number(p.toPrecision(3));
 const usdP5 = p => '$' + (p >= 1 ? p.toFixed(4) : p.toPrecision(5));
 const usdP = p => '$' + (p >= 1 ? p.toFixed(2) : p.toPrecision(3).replace(/0+$/, '').replace(/\.$/, ''));
 const whenStr = ts => new Date(ts * 1000).toLocaleString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC'}) + ', 20:00 UTC';
-let predictAt = 0;
+let predictAt = 0, predictLowWarned = false;
 async function predictKeeper(){
   if (!CFG.predict || !A.predict || !wallet || me === ethers.constants.AddressZero || now() - predictAt < 60) return;
   predictAt = now();
@@ -1008,8 +1015,72 @@ async function predictKeeper(){
       }
     }
   }
+  // 4. seed both sides: the bot puts the same KingS on YES and on NO of every new market, so the first player
+  //    always has someone to win from. Equal stakes mean the bot gains nothing from the result (it only pays
+  //    the 2% fee on its own stake); it claims its share back after each market. Disclosed on the site.
+  if (A.kings && (CFG.predictSeed > 0 || CFG.predictSeedHourly > 0)){
+    const seeded = (state.predictSeeded ||= {});
+    const kc = new ethers.Contract(A.kings, ABI.erc20, provider);
+    let bal = await kc.balanceOf(me);
+    for (let i = 0; i < ids.length; i++){
+      const m = items[i], id = ids[i].toNumber(), close = Number(m.closeAt.toString());
+      if (m.state !== 1 || close - t < 300 || seeded[id]) continue;
+      const amt = ethers.utils.parseEther(String(m.question.startsWith('Hourly') ? CFG.predictSeedHourly : CFG.predictSeed));
+      if (amt.isZero()) continue;
+      if (bal.lt(amt.mul(2))){ if (!predictLowWarned){ predictLowWarned = true; log('predict: not enough KingS to seed markets'); } break; }
+      const [y, n] = await Promise.all([c.yesOf(id, me), c.noOf(id, me)]);
+      if (!y.isZero() || !n.isZero()){ seeded[id] = 1; continue; }
+      await ensureAllowance(A.kings, A.predict, amt.mul(2));
+      const a1 = await send(`predict #${id}: seed YES ${fmtN(fl(amt, 18))} KingS`, () => c.bet(id, true, amt));
+      const a2 = a1 && await send(`predict #${id}: seed NO ${fmtN(fl(amt, 18))} KingS`, () => c.bet(id, false, amt));
+      if (a1 && a2){ seeded[id] = 1; bal = bal.sub(amt.mul(2)); saveState(); }
+    }
+    // claim back the bot's share of finished markets
+    for (const [k, v] of Object.entries(seeded)){
+      if (v !== 1) continue;
+      const id = Number(k), i = ids.findIndex(x => x.toNumber() === id);
+      if (i < 0){ delete seeded[k]; continue; }
+      if (items[i].state === 1) continue;
+      try{ if ((await c.claimable(id, me)).gt(0)) await send(`predict #${id}: claim the seed back`, () => c.claim(id)); seeded[k] = 2; saveState(); }catch(e){}
+    }
+    for (const k of Object.keys(seeded)) if (seeded[k] === 2 && !ids.some(x => x.toNumber() === Number(k))) delete seeded[k];
+  }
   // forget keys older than 10 days
   for (const k of Object.keys(made)) if (Number(k.split(':')[1]) < t - 10 * 86400) delete made[k];
+}
+
+// ------------------------------------------------------------------ 10b. Guess the DOGE price (free daily game)
+// After 20:00 UTC the bot reports the DOGE price (same Binance candle as Predict) and the closest guess wins
+// the day's KingS prize from the game's own prize fund.
+let guessAt = 0;
+async function guessKeeper(){
+  if (!CFG.guess || !A.guess || !wallet || me === ethers.constants.AddressZero || now() - guessAt < 60) return;
+  guessAt = now();
+  const g = new ethers.Contract(A.guess, ABI.guess, wallet);
+  const [oracle, owner] = await Promise.all([g.oracle(), g.owner()]);
+  if (lk(oracle) !== lk(me) && lk(owner) !== lk(me)){ log('guess: this wallet is not the oracle, skipping'); CFG.guess = false; return; }
+  const t = (await provider.getBlock('latest')).timestamp, today = Math.floor(t / 86400);
+  for (const day of [today - 2, today - 1, today]){
+    const target = day * 86400 + 20 * 3600;
+    if (t < target + 60) continue;
+    const info = await g.dayInfo(day);
+    if (info.settled || (await g.count(day)).isZero()) continue;   // nobody played: nothing to pay, save the gas
+    let price; try{ price = await dogeAt(target); }catch(e){ log(`guess: no DOGE price for day ${day} yet (${e.message})`); continue; }
+    const tx = await send(`guess: settle ${new Date(target * 1000).toISOString().slice(0, 10)} at $${price}`, () => g.settle(day, to8(price)));
+    if (!tx) continue;
+    const rc = await provider.getTransactionReceipt(tx.hash);
+    const ev = rc.logs.map(l => { try{ return g.interface.parseLog(l); }catch(e){ return null; } }).find(x => x && x.name === 'Settled');
+    if (!ev || ev.args.winner === ethers.constants.AddressZero) continue;
+    const n = (await g.count(day)).toNumber(), who = await labelOf(ev.args.winner), pz = fmtN(fl(ev.args.prize, 18));
+    await tg(`🎯 <b>Guess the DOGE price, ${new Date(target * 1000).toISOString().slice(0, 10)}</b>\nDOGE was <b>${usdP5(price)}</b> at 20:00 UTC. Closest of ${n} guess${n === 1 ? '' : 'es'}: <b>${esc(who)}</b> with ${usdP5(Number(ev.args.winnerGuess) / 1e8)}, wins ${pz} KingS 👑\nFree to play, one guess a day: <a href="https://cavfi.com/#guess">cavfi.com/#guess</a>`);
+    await notifyUser(ev.args.winner, `🎯 <b>You won today's Guess the DOGE price!</b> Your ${usdP5(Number(ev.args.winnerGuess) / 1e8)} was closest to ${usdP5(price)}. ${pz} KingS are in your wallet.`);
+  }
+}
+async function guessText(){
+  if (!A.guess) return '';
+  try{ const g = new ethers.Contract(A.guess, ABI.guess, provider), d = Math.floor(now() / 86400);
+    const [n, pz] = await Promise.all([g.count(d), g.prize()]);
+    return `🎯 <b>Free game: guess the DOGE price</b> at 20:00 UTC today (guesses until 18:00). Closest wins ${fmtN(fl(pz, 18))} KingS. ${n} guess${n.eq(1) ? '' : 'es'} so far · <a href="https://cavfi.com/#guess">play</a>`; }catch(e){ return ''; }
 }
 
 // ------------------------------------------------------------------ 11. Arena duels
@@ -1130,7 +1201,7 @@ async function morningDigest(){
   const t = now(), day = Math.floor(t / 86400);
   if ((t % 86400) / 3600 < CFG.digestHour || state.digestDay === day) return;
   state.digestDay = day; saveState();
-  const parts = (await Promise.all([questsText(), marketsText(), arenaText(), duelsText(), raffleText()])).filter(Boolean);
+  const parts = (await Promise.all([guessText(), questsText(), marketsText(), arenaText(), duelsText(), raffleText()])).filter(Boolean);
   await tg(`☀️ <b>gm CavFi!</b> Today on <a href="https://cavfi.com">cavfi.com</a>:\n\n${parts.join('\n\n')}\n\n<i>DogeOS testnet, tokens have no value.</i>`);
 }
 
@@ -1260,7 +1331,7 @@ async function main(){
   log(`arena: ${CFG.arena && A.arena ? `on (poke every ${CFG.arenaPokeSec}s in the price windows${CFG.arenaNoise ? `, ${CFG.arenaNoiseTrades} random trades a round` : ''})` : 'off'}`);
   log(`limit fills: ${CFG.fillLimits ? 'on' : 'off'} · rebalance: ${CFG.rebalance ? `on (≥${CFG.minDev*100}% off, ≤ ${usd(CFG.maxUsd)} a trade)` : 'off'} · telegram: ${CFG.tgToken && CFG.tgChat ? 'on' : 'off'}${CFG.dryRun ? ' · DRY RUN' : ''}`);
   if (me !== ethers.constants.AddressZero) log('balance', fmtN(fl(await provider.getBalance(me), 18)), 'DOGE');
-  log(`predict: ${CFG.predict && A.predict ? 'on (bot is the DOGE price oracle)' : 'off'} · duels: ${CFG.duels && A.duel ? 'on' : 'off'} · followed wallets: ${(state.watch || []).length}`);
+  log(`guess game: ${CFG.guess && A.guess ? 'on' : 'off'} · predict: ${CFG.predict && A.predict ? 'on (bot is the DOGE price oracle)' : 'off'} · duels: ${CFG.duels && A.duel ? 'on' : 'off'} · followed wallets: ${(state.watch || []).length}`);
   await writeTgJson();
   await setMiniApp();
   await tg(`🐶 <b>CavFi bot started</b>${me !== ethers.constants.AddressZero ? `\nwallet ${short(me)}` : ''}`);
@@ -1278,6 +1349,7 @@ async function main(){
       await questsDaily();
       await raffleKeeper();
       await predictKeeper();
+      await guessKeeper();
       await duelKeeper();
       await alertsPoll();
       await gmReminders();

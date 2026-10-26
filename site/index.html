@@ -667,6 +667,21 @@ a.item{color:var(--ink);text-decoration:none}
 .lx-team{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:999px;background:var(--well);color:var(--muted);font:700 10.5px var(--body);letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
 .lx-kmain b .lx-team{font:700 10.5px var(--body);color:var(--muted)}
 @media (max-width:560px){.lx-king{grid-template-columns:auto minmax(0,1fr)}.lx-king .lx-crown{display:none}.lx-kgo{grid-column:1/-1}}
+/* guess game */
+.gs-q{margin:0;font-size:16px}
+.du-row a{color:var(--ink);text-decoration:none}.du-row a:hover{color:var(--chestnut)}
+.gs-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.gs-in{display:flex;align-items:center;gap:6px;background:var(--well);border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.gs-in b{font:500 22px var(--mono);color:var(--muted)}.gs-in input{flex:1;min-width:0;border:0;background:none;font:500 22px var(--mono);color:var(--ink);padding:10px 0;outline:none}
+.gs-mine{margin:0;padding:12px;border-radius:12px;background:var(--well)}
+/* proclamations */
+.pc-ban{position:fixed;left:50%;top:12px;z-index:90;transform:translate(-50%,-140%);transition:transform .35s cubic-bezier(.2,.9,.3,1.2);display:flex;align-items:center;gap:12px;max-width:min(640px,calc(100vw - 24px));
+  padding:12px 14px;border-radius:16px;background:linear-gradient(120deg,#2A1A14,#3A2219 55%,#4A3010);color:#FFF4E2;border:1px solid #E7B73C;box-shadow:0 18px 40px -12px rgba(0,0,0,.5)}
+.pc-ban.in{transform:translate(-50%,0)}
+.pc-ban small{display:block;font:800 10.5px var(--body);letter-spacing:.1em;text-transform:uppercase;color:#E7B73C}
+.pc-ban a{color:#FFF4E2;font-weight:800;text-decoration:none}.pc-ban .pc-go{color:#E7B73C;white-space:nowrap;margin-left:auto}
+.pc-horn{font-size:26px}.pc-ban button{background:none;border:0;color:#FFF4E2;font-size:16px;cursor:pointer;padding:4px}
+@media (prefers-reduced-motion:reduce){.pc-ban{transition:none}}
 /* activity calendar */
 .hm-grid{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;max-width:640px}
 .hm-grid i,.hm-key i{display:block;aspect-ratio:1;border-radius:4px;background:var(--well)}
@@ -1270,6 +1285,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
       <section class="sx-card hp-sec">
         <h2>Predict, duels, profiles and alerts</h2>
         <details><summary>How do DOGE price predictions work?</summary><p>On <a href="#predict" data-goview="predict">Predict</a>, each market asks a yes/no question about the real DOGE/USD price, like "Will DOGE be above $0.20 on Sunday, 20:00 UTC?". Back YES or NO with KingS until the market closes. Everyone on the right side shares the whole pot in proportion to their stake, minus a 2% fee, so the pool sizes show the crowd's odds. If only one side was backed, everyone gets their KingS back. Testnet KingS, no real value.</p></details>
+        <details><summary>What is "Guess the DOGE price"?</summary><p>A free daily game on <a href="#guess">Predict → Free guess</a>: until 18:00 UTC, each wallet can lock one guess of the DOGE price at 20:00 UTC. After 20:00 the CavFi bot reports the real price (Binance, the same way as the markets) and the closest guess wins the day's KingS prize; on a tie the earlier guess wins. Nothing is staked, you only pay gas. Each guess is worth 20 leaderboard points and the day's winner gets 300.</p></details>
         <details><summary>What are the hourly markets?</summary><p>Every hour the CavFi bot opens a quick "up or down" market: will DOGE be higher at the end of the hour than at its start? The line is DOGE's price at the start of the hour, bets close 10 minutes before the end, and if the price is exactly the same, NO wins. Only bets of 100 KingS or more earn leaderboard points.</p></details>
         <details><summary>Who decides the price?</summary><p>The CavFi bot. It opens a daily and a weekly market and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase DOGE-USD if Binance is unavailable). That is a <b>trusted role</b>: the price comes from the bot, not from a decentralized oracle, and you can check it against the exchange yourself. If the bot doesn't report within 7 days, anyone can turn the market into a full refund.</p></details>
         <details><summary>What is an Arena duel?</summary><p>A one-on-one bet on the current Arena round: pick two of the round's tokens and a KingS stake, for example "RPUP beats KingS, 1,000 KingS". Whoever accepts takes the other token with the same stake. When the Arena round is settled, the token that rose more against DOGE (using the Arena's own start and end prices) wins, and its backer gets both stakes, with no fee. Duels can be accepted only while Arena staking is open. A tie, or too few price samples, refunds both. You can invite one person with a .cav name or address, or share the duel link with anyone.</p></details>
@@ -1315,10 +1331,11 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
   <!-- ===================== PREDICT + DUELS ===================== -->
   <div class="view" id="viewPredict" hidden>
     <div class="sx-bar">
-      <div class="chips" id="prTabs" role="group" aria-label="Markets or duels"><button class="chip" data-t="markets" aria-pressed="true">DOGE price</button><button class="chip" data-t="duels" aria-pressed="false">Arena duels</button></div>
+      <div class="chips" id="prTabs" role="group" aria-label="Markets or duels"><button class="chip" data-t="markets" aria-pressed="true">DOGE price</button><button class="chip" data-t="guess" aria-pressed="false">🎯 Free guess</button><button class="chip" data-t="duels" aria-pressed="false">Arena duels</button></div>
       <span class="sx-status" id="prStatus" aria-live="polite"></span>
     </div>
     <div class="pr-body" id="prMarkets"></div>
+    <div class="pr-body" id="prGuess" hidden></div>
     <div class="pr-body" id="prDuels" hidden></div>
   </div>
 
@@ -1474,14 +1491,14 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-<script src="quests-rules.js?v=2"></script>
+<script src="quests-rules.js?v=3"></script>
 <script>
 (() => {
 /* ================= config ================= */
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 /* WalletConnect (any mobile wallet by QR code). Free project id from https://cloud.reown.com,
    with cavfi.com in its allowed domains. Empty = the option is hidden. */
@@ -1494,7 +1511,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -1968,7 +1985,7 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : '#predict') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#predict') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
   if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
@@ -1979,19 +1996,19 @@ function setView(v){
   if (v === 'nft') loadNft();
   if (v === 'names') loadNames();
   if (v === 'profile') loadProfile();
-  if (v === 'predict'){ renderPredict(); loadPredict(); }
+  if (v === 'predict'){ renderPredict(); loadPredict(); if (pr.tab === 'guess') loadGuess(); }
   if (v === 'launch'){ loadLaunches(); if (!sx.loaded) loadStats(); renderLaunch(); }
 }
 document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => { if (b.dataset.view === 'predict'){ pr.hl = null; pr.hlm = null; } setView(b.dataset.view); }));
 document.addEventListener('click', e => { const a = e.target.closest('[data-goview]'); if (!a) return; e.preventDefault(); setView(a.dataset.goview); window.scrollTo({top:0, behavior:'smooth'}); });
 const LX_HASH = /^#t\/(0x[0-9a-fA-F]{40})$/;
 const UP_HASH = /^#u\/([A-Za-z0-9.-]{3,64})$/, DUEL_HASH = /^#duel\/(\d+)$/, MKT_HASH = /^#p\/(\d+)$/;
-function routePredict(h){ const m = h.match(DUEL_HASH), k = h.match(MKT_HASH); pr.hl = m ? Number(m[1]) : null; pr.hlm = k ? Number(k[1]) : null; pr.scrolled = false; pr.tab = m || h === '#duels' ? 'duels' : 'markets'; setView('predict'); }
+function routePredict(h){ const m = h.match(DUEL_HASH), k = h.match(MKT_HASH); pr.hl = m ? Number(m[1]) : null; pr.hlm = k ? Number(k[1]) : null; pr.scrolled = false; pr.tab = m || h === '#duels' ? 'duels' : h === '#guess' ? 'guess' : 'markets'; setView('predict'); }
 window.addEventListener('hashchange', () => { const h = location.hash, m = h.match(LX_HASH), u = decodeURIComponent(h).match(UP_HASH);
   if (m){ setView('launch'); openLaunch(E.utils.getAddress(m[1].toLowerCase())); }
   else if (u){ if (st.view !== 'profile' || u[1].toLowerCase() !== up.id) openProfile(u[1]); }
   else if (h === '#u'){ up.id = ''; setView('profile'); }
-  else if (h === '#predict' || h === '#duels' || DUEL_HASH.test(h) || MKT_HASH.test(h)) routePredict(h);
+  else if (h === '#predict' || h === '#duels' || h === '#guess' || DUEL_HASH.test(h) || MKT_HASH.test(h)) routePredict(h);
   else if (h === '#faq') setView('help'); });
 
 /* ================= price guard =================
@@ -3264,6 +3281,7 @@ const AR_STAKED = E.utils.id('Staked(uint256,address,uint256,uint256)'), AR_CLAI
 const GM_GM = E.utils.id('GM(address,uint256,uint256)'), GM_GN = E.utils.id('GN(address,uint256)'), Q_DAY = E.utils.id('QuestDay(address,uint32,uint8,uint32)');
 const PR_BET = E.utils.id('Bet(uint256,address,bool,uint256)'), PR_CLAIMED = E.utils.id('Claimed(uint256,address,uint256)');
 const DU_CREATED = E.utils.id('Created(uint256,address,uint256,uint8,uint8,uint256,address)'), DU_ACCEPTED = E.utils.id('Accepted(uint256,address)'), DU_SETTLED = E.utils.id('Settled(uint256,address,uint256)');
+const GS_GUESSED = E.utils.id('Guessed(uint32,address,uint64)');
 const board = { rows:null, loading:false, err:null, at:0, range:'7d', tab:'pts' };
 const boardSec = () => board.range === '30d' ? 30 * 86400 : 7 * 86400;
 let txFrom = {}; try{ txFrom = JSON.parse(localStorage.getItem('cavfi.txfrom') || '{}') || {}; }catch(e){ txFrom = {}; }
@@ -3369,9 +3387,14 @@ async function loadBoard(){
           for (const w of [maker[id], lk('0x' + l.topics[2].slice(26))]){ const r = row(w); r.duels = (r.duels || 0) + 1; } }
         else if (l.topics[0] === DU_SETTLED){ const w = lk('0x' + l.data.slice(26, 66)); if (w !== lk(E.constants.AddressZero)){ const r = row(w); r.duelWins = (r.duelWins || 0) + 1; } } }
     }catch(e){} }
+    if (A.guess){ try{   // free guessing game: 20 per guess, 300 more for a daily win
+      const logs = await winLogs(A.guess, [GS_GUESSED, PC_T.gsSettled]);
+      for (const l of logs){ const who = lk('0x' + l.topics[2].slice(26)); if (who === lk(E.constants.AddressZero)) continue; const r = row(who);
+        if (l.topics[0] === GS_GUESSED) r.guesses = (r.guesses || 0) + 1; else r.guessWins = (r.guessWins || 0) + 1; }
+    }catch(e){} }
     if (A.bot) delete P[lk(A.bot)];   // the CavFi bot's own trades and tips don't count
     const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.quests * 20 + r.launches * 100 + r.grads * 500
-      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50;
+      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300;
     let refMap = {}; try{ refMap = await loadRefMap(); }catch(e){}
     for (const r of Object.values(P)){ const by = refMap[r.addr]; if (by){ const x = row(by); x.refPts = (x.refPts || 0) + base(r) * 0.25; x.invites = (x.invites || 0) + 1; } }
     board.rows = Object.values(P).map(r => ({...r, refPts: Math.round(r.refPts || 0), pts: Math.round(base(r) + (r.refPts || 0))}))
@@ -3387,12 +3410,12 @@ async function loadBoard(){
   if (st.view === 'profile') renderProfile();
 }
 const LB_TABS = {
-  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
+  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
   swap:  {key: r => r.swapUsd, legend: 'Ranked by swap volume, valued at today\'s CavFi pool prices.', val: r => sxUsd(r.swapUsd)},
   arena: {key: r => r.arenaWins * 1e12 + r.arenaK, legend: 'Ranked by Arena rounds won, then by KingS staked.', val: r => r.arenaWins ? `${r.arenaWins} 🏆` : sxNum(r.arenaK) + ' KingS'},
   quest: {key: r => r.quests * 2 + r.gms, legend: 'Ranked by daily quests done (recorded by the bot after each day), then by gm and gn.', val: r => `${r.quests} quests`},
   launch:{key: r => r.grads * 1e9 + r.launches * 1e6 + r.launchUsd, legend: 'Ranked by tokens that graduated, then tokens launched, then launchpad volume.', val: r => `${r.launches} launched`},
-  pred:  {key: r => ((r.predWins || 0) + (r.duelWins || 0)) * 1e6 + (r.preds || 0) + (r.duels || 0), legend: 'Ranked by right calls on DOGE price markets plus duels won, then by markets backed and duels played.', val: r => `${(r.predWins || 0) + (r.duelWins || 0)} won`},
+  pred:  {key: r => ((r.predWins || 0) + (r.duelWins || 0) + (r.guessWins || 0)) * 1e6 + (r.preds || 0) + (r.duels || 0) + (r.guesses || 0), legend: 'Ranked by right calls on DOGE price markets plus duels won, then by markets backed and duels played.', val: r => `${(r.predWins || 0) + (r.duelWins || 0)} won`},
   ref:   {key: r => r.invites || 0, legend: 'Ranked by people invited with an invite link (Badges & invite link in your account).', val: r => `${r.invites || 0} invited`},
 };
 $('lbTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; board.tab = b.dataset.t; renderBoard(); });
@@ -5801,12 +5824,13 @@ const prKind = m => m.question.startsWith('Weekly') ? 'weekly' : m.question.star
 const prWho = a => pr.names[lk(a)] || short(a);
 function renderPredict(){
   document.querySelectorAll('#prTabs .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === pr.tab)));
-  $('prMarkets').hidden = pr.tab !== 'markets'; $('prDuels').hidden = pr.tab !== 'duels';
+  $('prMarkets').hidden = pr.tab !== 'markets'; $('prDuels').hidden = pr.tab !== 'duels'; $('prGuess').hidden = pr.tab !== 'guess';
+  if (pr.tab === 'guess' && !gs.data) loadGuess();
   $('prStatus').textContent = st.account && pr.kbal ? `You have ${sxNum(fl(pr.kbal, 18))} KingS` : '';
   const gate = walletGate();
   // ---- markets
   const now = Math.floor(Date.now()/1000) + (pr.skew || 0);   // chain time
-  const disclosure = `<p class="pr-note"><b>How prices are decided:</b> the CavFi bot opens these markets and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase if Binance is down). It is a trusted oracle, not a decentralized one, so you can check every result against the exchange. If it doesn't report within 7 days, anyone can refund the market. Winners share the pot minus a 2% fee. <b>Hourly</b> markets open every hour: the line is DOGE's price at the start of the hour (the same Binance candle), bets close 10 minutes before the end, and the same price counts as NO. Testnet KingS, no real value.</p>`;
+  const disclosure = `<p class="pr-note"><b>How prices are decided:</b> the CavFi bot opens these markets and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase if Binance is down). It is a trusted oracle, not a decentralized one, so you can check every result against the exchange. If it doesn't report within 7 days, anyone can refund the market. Winners share the pot minus a 2% fee. <b>Seeding:</b> so there is always someone to win from, the CavFi bot puts the same amount of its own KingS on YES and on NO of every market (100 on hourly, 250 on daily and weekly). Equal stakes mean it gains nothing from the result, and its bets don't count on the leaderboard. <b>Hourly</b> markets open every hour: the line is DOGE's price at the start of the hour (the same Binance candle), bets close 10 minutes before the end, and the same price counts as NO. Testnet KingS, no real value.</p>`;
   if (!A.predict) $('prMarkets').innerHTML = `<div class="empty-card">DOGE price markets are not deployed on this network yet.</div>`;
   else if (!pr.markets) $('prMarkets').innerHTML = `<div class="empty-card">${pr.err ? esc(pr.err) : 'Reading the markets…'}</div>`;
   else {
@@ -5888,7 +5912,7 @@ function renderPredict(){
   if (pr.hlm != null && pr.tab === 'markets'){ const el = document.getElementById('mkt-' + pr.hlm); if (el && !pr.scrolled){ pr.scrolled = true; el.scrollIntoView({block: 'center'}); } }
   if (pr.hl != null){ const el = document.getElementById('duel-' + pr.hl); if (el && !pr.scrolled){ pr.scrolled = true; el.scrollIntoView({block: 'center'}); } }
 }
-$('prTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; pr.tab = b.dataset.t; pr.hl = null; pr.hlm = null; renderPredict(); try{ history.replaceState(null, '', pr.tab === 'duels' ? '#duels' : '#predict'); }catch(_){} });
+$('prTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; pr.tab = b.dataset.t; pr.hl = null; pr.hlm = null; renderPredict(); if (pr.tab === 'guess') loadGuess(); try{ history.replaceState(null, '', pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#predict'); }catch(_){} });
 const prAmt = v => { try{ const s = String(v || '').trim().replace(',', '.'); return /^\d*\.?\d+$/.test(s) && Number(s) > 0 ? E.utils.parseUnits(s, 18) : null; }catch(e){ return null; } };
 async function prRun(key, fn, okMsg){
   pr.busy = key; renderPredict();
@@ -5962,8 +5986,8 @@ async function loadFeed(){
   FD.loading = true;
   try{
     const rp = RP(), head = await rp.getBlockNumber(), hb = await rp.getBlock(head), bt = sx.bt || 3;
-    const addrs = [A.arena, A.predict, A.duel, A.launch, A.names, A.nft].filter(Boolean);
-    const topics = [FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
+    const addrs = [A.arena, A.predict, A.duel, A.launch, A.names, A.nft, A.guess].filter(Boolean);
+    const topics = [GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
     const logs = [];
     for (let z = head; z > head - 20000 && z > 0; z -= SX_CHUNK){
       const a = Math.max(0, z - SX_CHUNK + 1);
@@ -6001,6 +6025,8 @@ async function loadFeed(){
           items.push({...base, who: null, ic: '🎓', txt: `<b>$${esc(await lxSym(E.utils.getAddress(tok)))}</b> graduated: its pool is live and the LP is burned`, href: '#t/' + E.utils.getAddress(tok)}); }
         else if (A0 === lk(A.names) && t0 === FD_T.registered){ const lab = E.utils.defaultAbiCoder.decode(['string', 'uint256'], l.data)[0];
           items.push({...base, who: topic1a(l), ic: '🏷️', txt: `claimed <b>${esc(lab)}.cav</b>`, href: '#names', noName: true}); }
+        else if (A0 === lk(A.guess) && t0 === GS_GUESSED){
+          items.push({...base, who: topic2(l), ic: '🎯', txt: `guessed DOGE will be <b>$${(Number(BigInt('0x' + l.data.slice(2, 66))) / 1e8).toPrecision(5)}</b> at 20:00 UTC`, href: '#guess'}); }
         else if (A0 === lk(A.nft) && t0 === FD_T.minted){ const who = topic1a(l);
           items.push({...base, who, ic: '🐶', txt: `minted Cavalier #${Number(BigInt(l.topics[2]))}`, href: '#nft'}); }
       }catch(e){}
@@ -6036,6 +6062,129 @@ setInterval(() => { if (st.view === 'home' && !document.hidden) loadFeed(); }, 6
 document.addEventListener('click', e => { const b = e.target.closest('[data-fd]'); if (!b) return; FD.tab = b.dataset.fd; try{ localStorage.setItem('cavfi.fdtab', FD.tab); }catch(_){} renderFeed(); });
 try{ FD.tab = localStorage.getItem('cavfi.fdtab') || 'all'; }catch(e){}
 
+/* ================= GUESS THE DOGE PRICE (free daily game) ================= */
+const GUESS_ABI = ['function guess(uint64 price)', 'function today() view returns (uint32)', 'function closeAt(uint32) view returns (uint64)', 'function targetAt(uint32) view returns (uint64)',
+  'function count(uint32) view returns (uint256)', 'function prize() view returns (uint256)', 'function guessOf(uint32, address) view returns (uint64 price, uint64 at)',
+  'function guesses(uint32 day, uint256 start, uint256 n) view returns (tuple(address who, uint64 price, uint64 at)[] out)',
+  'function dayInfo(uint32 d) view returns (tuple(bool settled, uint64 price, address winner, uint64 winnerGuess, uint256 prize))'];
+const guC = signer => new E.Contract(A.guess, GUESS_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const gs = { data:null, live:null, busy:false, names:{} };
+const usd5 = v => '$' + (v >= 1 ? v.toFixed(4) : v.toPrecision(5));
+async function loadGuessLive(){ try{ const j = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=DOGEUSDT').then(r => r.json()); if (+j.price > 0) gs.live = +j.price; }catch(e){ try{ const j = await fetch('https://api.exchange.coinbase.com/products/DOGE-USD/ticker').then(r => r.json()); if (+j.price > 0) gs.live = +j.price; }catch(_){} } }
+async function loadGuess(){
+  if (!A.guess){ gs.data = {none: true}; return renderGuess(); }
+  try{
+    const c = guC(), d = await c.today();
+    const [close, target, n, prize, past] = await Promise.all([c.closeAt(d), c.targetAt(d), c.count(d), c.prize(),
+      Promise.all([1, 2, 3].map(k => c.dayInfo(d - k).then(x => ({day: d - k, x})).catch(() => null)))]);
+    const list = n.gt(0) ? await c.guesses(d, 0, Math.min(n.toNumber(), 300)) : [];
+    const mine = st.account ? await c.guessOf(d, st.account) : null;
+    gs.data = {d, close: Number(close.toString()), target: Number(target.toString()), n: n.toNumber(), prize, past: past.filter(Boolean), list, mine};
+    const who = [...new Set([...list.map(g => lk(g.who)), ...gs.data.past.filter(p => p.x.winner !== E.constants.AddressZero).map(p => lk(p.x.winner))])].filter(a => gs.names[a] == null);
+    if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); who.forEach((a, k) => gs.names[a] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
+  }catch(e){ gs.data = {err: true}; }
+  await loadGuessLive();
+  renderGuess();
+}
+function renderGuess(){
+  const box = $('prGuess'); if (!box) return;
+  const D = gs.data;
+  if (!D){ box.innerHTML = '<div class="empty-card">Reading today\'s game…</div>'; return; }
+  if (D.none){ box.innerHTML = '<div class="empty-card">The free guessing game is not deployed on this network yet.</div>'; return; }
+  if (D.err){ box.innerHTML = '<div class="empty-card">Could not read the game right now.</div>'; return; }
+  const now = Math.floor(Date.now() / 1000) + (pr.skew || 0), open = now < D.close, gate = walletGate();
+  const nm = a => gs.names[lk(a)] || short(a);
+  const myP = D.mine && Number(D.mine.price.toString()) > 0 ? Number(D.mine.price.toString()) / 1e8 : null;
+  const ref = gs.live;
+  const ranked = D.list.map(g => ({who: g.who, p: Number(g.price.toString()) / 1e8, at: Number(g.at.toString())}))
+    .sort((a, b) => ref ? Math.abs(a.p - ref) - Math.abs(b.p - ref) || a.at - b.at : a.at - b.at).slice(0, 10);
+  let act;
+  if (myP) act = `<p class="gs-mine">Your guess today: <b>${usd5(myP)}</b>${ref ? ` · ${Math.abs(myP - ref) / ref * 100 < 0.05 ? 'right on it' : (myP > ref ? 'above' : 'below') + ' the price now by ' + (Math.abs(myP - ref) / ref * 100).toFixed(2) + '%'}` : ''}. Result after 20:00 UTC.</p>`;
+  else if (!open) act = '<p class="gs-mine">Guesses are closed for today. The result comes after 20:00 UTC; the next game opens at midnight UTC.</p>';
+  else if (gate) act = `<button class="btn primary" data-gs="gate">${gate.label}</button>`;
+  else act = `<div class="gs-form"><span class="gs-in"><b>$</b><input id="gsIn" inputmode="decimal" placeholder="${ref ? ref.toPrecision(5) : '0.07700'}" autocomplete="off" aria-label="Your DOGE price guess in USD"></span><button class="btn primary" data-gs="go" ${gs.busy ? 'disabled' : ''}>${gs.busy ? 'Saving…' : 'Lock my guess'}</button></div>
+    <p class="pr-note">One guess a day, it can't be changed. Free: you only pay gas.</p>`;
+  const past = D.past.filter(p => p.x.settled).map(p => `<div class="du-row"><div><b>${new Date((p.day * 86400 + 72000) * 1000).toISOString().slice(0, 10)}</b> · DOGE ${usd5(Number(p.x.price.toString()) / 1e8)}<small>${p.x.winner !== E.constants.AddressZero ? `${esc(nm(p.x.winner))} guessed ${usd5(Number(p.x.winnerGuess.toString()) / 1e8)} and won ${sxNum(fl(p.x.prize, 18))} KingS` : 'nobody played'}</small></div></div>`).join('');
+  box.innerHTML = `<section class="sx-card gs-card"><div class="sx-head"><h2>🎯 Guess the DOGE price</h2><span>${open ? `guesses close in ${inT(D.close - now)}` : now < D.target ? `result in ${inT(D.target - now)}` : 'waiting for the bot to report the price'}</span></div>
+      <p class="gs-q">What will DOGE cost at <b>20:00 UTC today</b>? The closest guess wins <b>${sxNum(fl(D.prize, 18))} KingS</b>.</p>
+      <div class="pr-sides"><div><span>DOGE now (Binance)</span><b>${ref ? usd5(ref) : '…'}</b><small>updates every 30 s</small></div><div><span>Players today</span><b>${D.n}</b><small>one guess each</small></div></div>
+      ${act}</section>
+    <section class="sx-card"><div class="sx-head"><h2>Closest right now</h2><span>by today's live price</span></div>
+      ${ranked.length ? ranked.map((g, k) => `<div class="du-row${st.account && same(g.who, st.account) ? ' me' : ''}"><div>${k === 0 ? '👑 ' : `${k + 1}. `}<a href="#u/${esc(gs.names[lk(g.who)] || g.who)}"><b>${esc(nm(g.who))}</b></a><small>guessed ${usd5(g.p)}${ref ? ` · ${(Math.abs(g.p - ref) / ref * 100).toFixed(2)}% away now` : ''}</small></div></div>`).join('') : '<div class="empty-card">No guesses yet today. Be the first.</div>'}</section>
+    ${past ? `<section class="sx-card"><div class="sx-head"><h2>Last days</h2></div>${past}</section>` : ''}
+    <p class="pr-note">How it works: the CavFi bot reports the opening price of Binance's 1-minute DOGEUSDT candle at 20:00 UTC (the same oracle as the price markets). The closest guess wins; on a tie the earlier guess wins. Prizes are testnet KingS from the game's prize fund, no real value.</p>`;
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-gs]'); if (!b) return;
+  if (b.dataset.gs === 'gate'){ const g = walletGate(); if (g && g.act) g.act(); return; }
+  const v = Number(String(($('gsIn') || {}).value || '').replace(',', '.').replace(/^\$/, ''));
+  if (!(v > 0) || v > 100) return toast('Type your guess in USD, for example 0.0775.', 'bad');
+  gs.busy = true; renderGuess();
+  try{ const tx = await sendTx(() => guC(true).guess(Math.round(v * 1e8)), 'Saving your guess…', () => {}); toast(`Guess locked: ${usd5(v)}. ${txLink(tx.hash)}`, 'ok', 8000); celebrate(b, 18); }
+  catch(err){ toast(errMsg(err), 'bad', 8000); }
+  gs.busy = false; loadGuess();
+});
+setInterval(() => { if (st.view === 'predict' && pr.tab === 'guess' && !document.hidden){ loadGuessLive().then(renderGuess); } }, 30000);
+
+/* ================= ROYAL PROCLAMATIONS =================
+   Every 40 seconds, on every page: new wins on CavFi (Arena, duels, DOGE markets, the raffle, the guessing game)
+   are announced in a banner at the top, with confetti, and a short fanfare if you switched sound on. */
+const PC = { from:0, queue:[], showing:false, names:{}, seen:new Set() };
+const PC_T = { arClaimed: E.utils.id('Claimed(uint256,address,uint256)'), drawn: E.utils.id('Drawn(uint256,address[3],uint256[3],uint256)'),
+  gsSettled: E.utils.id('Settled(uint32,uint64,address,uint64,uint256)') };
+const pcSound = () => { try{ return localStorage.getItem('cavfi.sound') === '1'; }catch(e){ return false; } };
+function fanfare(){
+  if (!pcSound()) return;
+  try{ const ac = new (window.AudioContext || window.webkitAudioContext)(), t = ac.currentTime;
+    [[523, 0, .14], [659, .15, .14], [784, .3, .14], [1047, .45, .45]].forEach(([f, d, len]) => {
+      const o = ac.createOscillator(), g = ac.createGain(); o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(.18, t + d + .02); g.gain.exponentialRampToValueAtTime(.001, t + d + len);
+      o.connect(g).connect(ac.destination); o.start(t + d); o.stop(t + d + len + .05); });
+    setTimeout(() => ac.close(), 1500); }catch(e){}
+}
+async function pcPoll(){
+  if (document.hidden) return;
+  try{
+    const rp = RP(), head = await rp.getBlockNumber();
+    if (!PC.from){ PC.from = head; return; }   // only wins that happen while you are here
+    if (head <= PC.from) return;
+    const addrs = [A.arena, A.duel, A.predict, A.raffle, A.guess].filter(Boolean);
+    const logs = await rp.send('eth_getLogs', [{address: addrs, fromBlock: E.utils.hexValue(PC.from + 1), toBlock: E.utils.hexValue(Math.min(head, PC.from + 2000)), topics: [[PC_T.arClaimed, DU_SETTLED, PR_CLAIMED, PC_T.drawn, PC_T.gsSettled]]}]);
+    PC.from = Math.min(head, PC.from + 2000);
+    const bot = lk(A.bot || ''), K = h => sxNum(Number(BigInt(h)) / 1e18);
+    for (const l of logs){
+      const key = l.transactionHash + l.logIndex; if (PC.seen.has(key)) continue; PC.seen.add(key);
+      const a = lk(l.address), t0 = l.topics[0], w = i => '0x' + l.data.slice(2 + 64 * i, 66 + 64 * i);
+      if (a === lk(A.arena) && t0 === PC_T.arClaimed){ const who = lk('0x' + l.topics[2].slice(26)); if (who !== bot) PC.queue.push({who, txt: `won <b>${K(w(0))} KingS</b> in the Arena`, href: 'arena.html'}); }
+      else if (a === lk(A.duel) && t0 === DU_SETTLED){ const who = lk('0x' + w(0).slice(26)); if (who !== lk(E.constants.AddressZero) && who !== bot) PC.queue.push({who, txt: `won duel #${Number(BigInt(l.topics[1]))} and <b>${K(w(1))} KingS</b>`, href: '#duels'}); }
+      else if (a === lk(A.predict) && t0 === PR_CLAIMED){ const who = lk('0x' + l.topics[2].slice(26)), id = Number(BigInt(l.topics[1])); if (who === bot) continue;
+        try{ const total = (await prC().count()).toNumber(), [ids, items] = await prC().page(total - 1 - id, 1); if (items[0] && items[0].state === 2) PC.queue.push({who, txt: `called the DOGE price right and won <b>${K(w(0))} KingS</b>`, href: '#p/' + id}); }catch(e){} }
+      else if (a === lk(A.raffle) && t0 === PC_T.drawn){ for (let i = 0; i < 3; i++){ const who = lk('0x' + w(i).slice(26)); if (who !== lk(E.constants.AddressZero)) PC.queue.push({who, txt: `won <b>${K(w(3 + i))} KingS</b> in the Royal Raffle`, href: '#'}); } }
+      else if (a === lk(A.guess) && t0 === PC_T.gsSettled){ const who = lk('0x' + l.topics[2].slice(26)); if (who !== lk(E.constants.AddressZero)) PC.queue.push({who, txt: `guessed the DOGE price closest and won <b>${K(w(2))} KingS</b>`, href: '#guess'}); }
+    }
+    const need = [...new Set(PC.queue.map(x => x.who))].filter(x => PC.names[x] == null);
+    if (A.names && need.length){ try{ const ns = await nmC().namesOf(need); need.forEach((x, k) => PC.names[x] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
+    pcNext();
+  }catch(e){}
+}
+function pcNext(){
+  if (PC.showing || !PC.queue.length) return;
+  const x = PC.queue.shift(); PC.showing = true;
+  const el = document.createElement('div'); el.className = 'pc-ban'; el.setAttribute('role', 'status');
+  const name = x.who ? (PC.names[x.who] || short(E.utils.getAddress(x.who))) : '';
+  el.innerHTML = `<span class="pc-horn" aria-hidden="true">📯</span><span><small>Hear ye, hear ye!</small><a href="#u/${esc(PC.names[x.who] || x.who)}">${esc(name)}</a> ${x.txt}</span>
+    <a class="pc-go" href="${x.href}">See →</a><button class="pc-snd" title="Fanfare sound" aria-label="${pcSound() ? 'Turn fanfare off' : 'Turn fanfare on'}">${pcSound() ? '🔊' : '🔇'}</button><button class="pc-x" aria-label="Close">×</button>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('in'));
+  celebrate(el, 30); fanfare();
+  const done = () => { el.classList.remove('in'); setTimeout(() => { el.remove(); PC.showing = false; pcNext(); }, 400); };
+  const timer = setTimeout(done, 7000);
+  el.querySelector('.pc-x').onclick = () => { clearTimeout(timer); done(); };
+  el.querySelector('.pc-snd').onclick = ev => { ev.stopPropagation(); try{ localStorage.setItem('cavfi.sound', pcSound() ? '0' : '1'); }catch(_){} ev.target.textContent = pcSound() ? '🔊' : '🔇'; if (pcSound()) fanfare(); };
+}
+setInterval(pcPoll, 40000); setTimeout(pcPoll, 4000);
+if (/[?&]proclaim=test/.test(location.search)) setTimeout(() => { PC.queue.push({who: lk(A.bot || '0x0000000000000000000000000000000000000001'), txt: 'won <b>23,520 KingS</b> in the Arena (test)', href: 'arena.html'}); pcNext(); }, 2500);
+
 $('aProfile').addEventListener('click', () => { $('acctModal').hidden = true; });
 /* ================= light / dark ================= */
 const THEME_KEY = 'cavfi.theme';
@@ -6069,7 +6218,7 @@ paintTheme();
   const lxDeep = location.hash.match(LX_HASH);
   const upPath = decodeURIComponent(location.pathname).match(/^\/u\/([A-Za-z0-9.-]{3,64})\/?$/), upHash = decodeURIComponent(location.hash).match(UP_HASH);
   if (upPath || upHash){ up.id = (upPath || upHash)[1].toLowerCase(); setView('profile'); if (upPath) try{ history.replaceState(null, '', '/#u/' + up.id); }catch(e){} }
-  else if (location.hash === '#predict' || location.hash === '#duels' || DUEL_HASH.test(location.hash) || MKT_HASH.test(location.hash)) routePredict(location.hash);
+  else if (location.hash === '#predict' || location.hash === '#duels' || location.hash === '#guess' || DUEL_HASH.test(location.hash) || MKT_HASH.test(location.hash)) routePredict(location.hash);
   else if (location.hash === '#u') setView('profile');
   else setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#leaderboard' ? 'board' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
   if (lxDeep) openLaunch(E.utils.getAddress(lxDeep[1].toLowerCase()));

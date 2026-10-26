@@ -24,6 +24,7 @@ const TX_TASKS = {
   farm:   {keys: ['farm', 'stake'], sel: ['0xe2bbb158', '0x608fc37a', '0xddc63262'], need: 'Stake or harvest on cavfi.com Farms.'},
   predict:{keys: ['predict'], sel: ['0x8decaec0'], need: 'Back YES or NO on a DOGE price market: cavfi.com/#predict'},
   duel:   {keys: ['duel'], sel: ['0xc139da6f', '0x19b05f49'], need: 'Start or accept an Arena duel: cavfi.com/#duels'},
+  guess:  {keys: ['guess'], sel: ['0x1e997a6d'], need: 'Make your free daily guess of the DOGE price: cavfi.com/#guess'},
 };
 // tasks checked from contract state
 const STATE_TASKS = {
