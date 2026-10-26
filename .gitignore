@@ -22,3 +22,5 @@ publish/
 demo/
 noah-upload/
 KingGM.json
+bot/bot-state.json.bak
+contracts/cavfi-verify-json.zip
