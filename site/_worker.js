@@ -179,9 +179,34 @@ async function marketPage(env, url, id){
   }catch(e){ return fallback(); }
 }
 
+/* RedStone proxy for the site's "Resolve with RedStone" / "Settle" buttons. RedStone's authenticated gateway
+   needs an API key that must not reach the browser: it lives in the worker secret REDSTONE_API_KEY.
+   Only DOGE prices at full hours of the last 2 days are served (that is all the site ever asks for), and they
+   are cached, so RedStone's rate limit (1 request a second) is never reached. */
+async function redstoneProxy(request, env, ctx, url){
+  const cors = {'access-control-allow-origin': '*', 'content-type': 'application/json'};
+  const m = url.pathname.match(/^\/api\/redstone\/v2\/data-packages\/historical-by-data-feeds\/redstone-primary-prod\/(\d{13})$/);
+  const ms = m ? Number(m[1]) : 0, nowMs = Date.now();
+  if (!m || url.searchParams.get('dataFeedIds') !== 'DOGE' || ms % 3600000 !== 0 || ms > nowMs || ms < nowMs - 2 * 86400000)
+    return new Response('{"error":"not allowed"}', {status: 400, headers: cors});
+  if (!env.REDSTONE_API_KEY) return new Response('{"error":"no RedStone API key on this site"}', {status: 503, headers: cors});
+  const cache = caches.default, key = new Request(`https://cavfi.com/api/redstone/doge/${ms}`);
+  const hit = await cache.match(key); if (hit) return hit;
+  const up = await fetch(`${env.REDSTONE_GATEWAY_URL || 'https://oracle-gateway.a.redstone.finance'}/v2/data-packages/historical-by-data-feeds/redstone-primary-prod/${ms}?dataFeedIds=DOGE`,
+    {headers: {'x-api-key': env.REDSTONE_API_KEY}});
+  const body = await up.text();
+  if (!up.ok || body[0] !== '{') return new Response(JSON.stringify({error: 'RedStone gateway ' + up.status}), {status: 502, headers: cors});
+  const res = new Response(body, {headers: {...cors, 'cache-control': 'public, max-age=86400'}});
+  ctx.waitUntil(cache.put(key, res.clone()));
+  return res;
+}
+
 export default {
   async fetch(request, env, ctx){
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/redstone/') && request.method === 'GET'){
+      try{ return await redstoneProxy(request, env, ctx, url); }catch(e){ return new Response('{"error":"proxy"}', {status: 502, headers: {'access-control-allow-origin': '*'}}); }
+    }
     const um = url.pathname.match(/^\/u\/([^/]{3,80})\/?$/);
     if (um && request.method === 'GET'){ let id = um[1]; try{ id = decodeURIComponent(id); }catch(e){} return profilePage(env, url, id); }
     const dm = url.pathname.match(/^\/duel\/(\d{1,9})\/?$/);

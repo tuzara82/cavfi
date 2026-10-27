@@ -55,7 +55,9 @@ const CFG = {
   predictSeedHourly: Number(env('PREDICT_SEED_HOURLY_KINGS', '100')),
   guess: env('GUESS', '1') === '1',
   predictHourlyPostMin: Number(env('PREDICT_HOURLY_POST_MIN', '1000')),
-  redstoneGateways: env('REDSTONE_GATEWAYS', '').split(',').map(x => x.trim()).filter(Boolean),   // empty = RedStone's public gateways
+  redstoneGateways: env('REDSTONE_GATEWAYS', '').split(',').map(x => x.trim()).filter(Boolean),   // empty = RedStone's public gateways (closing 2026-10-29)
+  // RedStone API key(s) for its authenticated gateway (request one: docs.redstone.finance, pull model)
+  redstoneKeys: [[env('REDSTONE_GATEWAY_URL', ''), env('REDSTONE_API_KEY', '')], [env('REDSTONE_GATEWAY_URL_2', ''), env('REDSTONE_API_KEY_2', '')]].filter(([, k]) => k),
   predictPrice: Number(env('PREDICT_PRICE', '0')), // tests only: use this DOGE/USD price instead of the exchanges
   duels: env('DUELS', '1') === '1',
   watchMax: Number(env('WATCH_MAX', '3')),
@@ -963,9 +965,17 @@ let predictAt = 0, predictLowWarned = false;
 let RSmod = null;
 const RS = () => RSmod || (RSmod = requireLocal(path.join(path.dirname(CFG.addresses), 'redstone-payload.js')));
 const isoT = x => new Date(x * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+let rsWarned = false;
 async function redstoneAt(at){
-  const pk = await RS().fetchPackages(at, 'DOGE', {gateways: CFG.redstoneGateways.length ? CFG.redstoneGateways : undefined});
-  if (!pk.length) throw new Error('RedStone has no signed DOGE price for ' + isoT(at) + ' yet');
+  const auth = CFG.redstoneKeys.map(([url, apiKey]) => ({url: url || RS().AUTH_URL, apiKey}));
+  const gateways = auth.concat(CFG.redstoneGateways.length ? CFG.redstoneGateways : RS().PUBLIC);
+  let err = null;
+  const pk = await RS().fetchPackages(at, 'DOGE', {gateways, recover: ethers.utils.recoverAddress, keccak: ethers.utils.keccak256, throw: true}).catch(e => { err = e; return []; });
+  if (!pk.length){
+    if (err && /public_gateway_rejected|HTTP 403/.test(err.message) && !auth.length && !rsWarned){ rsWarned = true;
+      log('RedStone: the public gateways are closing (off for good from 2026-10-29). Put REDSTONE_API_KEY=... in bot/.env (key from RedStone) and restart the bot.'); }
+    throw new Error('RedStone has no signed DOGE price for ' + isoT(at) + ' yet' + (err ? ` (${err.message.slice(0, 80)})` : ''));
+  }
   return {hex: RS().buildPayload(pk), price: from8(RS().priceOf(pk))};
 }
 // a contract call with RedStone's signed data appended to the calldata
@@ -1413,7 +1423,7 @@ async function main(){
   log(`arena: ${CFG.arena && A.arena ? `on (poke every ${CFG.arenaPokeSec}s in the price windows${CFG.arenaNoise ? `, ${CFG.arenaNoiseTrades} random trades a round` : ''})` : 'off'}`);
   log(`limit fills: ${CFG.fillLimits ? 'on' : 'off'} · rebalance: ${CFG.rebalance ? `on (≥${CFG.minDev*100}% off, ≤ ${usd(CFG.maxUsd)} a trade)` : 'off'} · telegram: ${CFG.tgToken && CFG.tgChat ? 'on' : 'off'}${CFG.dryRun ? ' · DRY RUN' : ''}`);
   if (me !== ethers.constants.AddressZero) log('balance', fmtN(fl(await provider.getBalance(me), 18)), 'DOGE');
-  log(`guess game: ${CFG.guess && A.guess ? 'on' : 'off'} · predict: ${CFG.predict && A.predict ? 'on (bot is the DOGE price oracle)' : 'off'} · duels: ${CFG.duels && A.duel ? 'on' : 'off'} · followed wallets: ${(state.watch || []).length}`);
+  log(`guess game: ${CFG.guess && A.guess ? 'on' : 'off'} · predict: ${CFG.predict && A.predict ? (A.predictV1 ? `on (RedStone, ${CFG.redstoneKeys.length ? CFG.redstoneKeys.length + ' API key' + (CFG.redstoneKeys.length > 1 ? 's' : '') : 'public gateways, no API key'})` : 'on (bot is the DOGE price oracle)') : 'off'} · duels: ${CFG.duels && A.duel ? 'on' : 'off'} · followed wallets: ${(state.watch || []).length}`);
   await writeTgJson();
   await setMiniApp();
   await tg(`🐶 <b>CavFi bot started</b>${me !== ethers.constants.AddressZero ? `\nwallet ${short(me)}` : ''}`);

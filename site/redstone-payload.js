@@ -10,10 +10,16 @@
  */
 (function (root) {
   'use strict';
-  const GATEWAYS = [
+  // Public gateways (RedStone is switching them off by 2026-10-29). An authenticated gateway is
+  // {url, apiKey}: RedStone's own (https://oracle-gateway.a.redstone.finance + your API key, for bots and
+  // scripts) or a proxy that adds the key itself (cavfi.com/api/redstone, apiKey ''), for the site.
+  const PUBLIC = [
     'https://oracle-gateway-2.a.redstone.finance',
     'https://oracle-gateway-1.a.redstone.finance',
   ];
+  const AUTH_URL = 'https://oracle-gateway.a.redstone.finance';
+  const isBrowser = typeof location !== 'undefined' && /^https?:/.test(location.protocol || '');
+  const GATEWAYS = isBrowser ? [{url: location.origin + '/api/redstone', apiKey: ''}].concat(PUBLIC) : PUBLIC.slice();
   const SERVICE = 'redstone-primary-prod';
   const SIGNERS = [   // redstone-primary-prod, the same list the contracts accept
     '0x8bb8f32df04c8b654987daaed53d6b6091e3b774',
@@ -49,17 +55,28 @@
     const ms = Number(tsSec) * 1000;
     let lastErr = null;
     for (const g of gws) {
+      const auth = typeof g === 'object' && g !== null, base = String(auth ? g.url : g).replace(/\/+$/, '');
       try {
-        const r = await doFetch(`${g}/data-packages/historical/${SERVICE}/${ms}`);
-        if (!r.ok) { lastErr = new Error(`${g}: HTTP ${r.status}`); continue; }
+        const r = auth
+          ? await doFetch(`${base}/v2/data-packages/historical-by-data-feeds/${SERVICE}/${ms}?dataFeedIds=${encodeURIComponent(feed)}`, g.apiKey ? {headers: {'x-api-key': g.apiKey}} : undefined)
+          : await doFetch(`${base}/data-packages/historical/${SERVICE}/${ms}`);
+        if (!r.ok) { lastErr = new Error(`${base}: HTTP ${r.status}`); continue; }
         const txt = await r.text();
-        if (txt[0] !== '{') { lastErr = new Error(`${g}: no data`); continue; }
-        const j = JSON.parse(txt), list = (j[feed] || []).filter(p => Number(p.timestampMilliseconds) === ms
-          && SIGNERS.includes(String(p.signerAddress).toLowerCase()) && p.dataPoints && p.dataPoints.length === 1 && p.dataPoints[0].dataFeedId === feed);
+        if (txt[0] !== '{') { lastErr = new Error(`${base}: no data`); continue; }
+        const j = JSON.parse(txt);
+        if (j.error) { lastErr = new Error(`${base}: ${j.error}`); continue; }
+        const recover = opts.recover || ((h, sig) => { const E = typeof self !== 'undefined' && self.ethers; if (!E) return ''; return E.utils.recoverAddress(h, sig); });
+        const keccak = opts.keccak || (hex => { const E = typeof self !== 'undefined' && self.ethers; return E ? E.utils.keccak256(hex) : ''; });
+        const list = (j[feed] || []).filter(p => Number(p.timestampMilliseconds) === ms && p.dataPoints && p.dataPoints.length === 1 && p.dataPoints[0].dataFeedId === feed);
+        for (const p of list) {   // authenticated gateways may leave out signerAddress: recover it from the signature
+          if (p.signerAddress) continue;
+          try { const h = keccak('0x' + signedBytes(p)); if (h) p.signerAddress = recover(h, '0x' + b64hex(p.signature)); } catch (e) {}
+        }
+        for (let i = list.length - 1; i >= 0; i--) if (!SIGNERS.includes(String(list[i].signerAddress || '').toLowerCase())) list.splice(i, 1);
         const seen = new Set(), out = [];
         for (const p of list) { const s = String(p.signerAddress).toLowerCase(); if (!seen.has(s)) { seen.add(s); out.push(p); } }
         if (out.length >= NEED) return out;
-        lastErr = new Error(`${g}: only ${out.length} signers`);
+        lastErr = new Error(`${base}: only ${out.length} signers`);
       } catch (e) { lastErr = e; }
     }
     if (opts.throw && lastErr) throw lastErr;
@@ -91,7 +108,7 @@
     return feedHex(dp.dataFeedId) + hexN(units(dp.value), 32) + hexN(p.timestampMilliseconds, 6) + hexN(32, 4) + hexN(1, 3);
   }
 
-  const api = { GATEWAYS, SIGNERS, fetchPackages, buildPayload, priceOf, signedBytes, units };
+  const api = { GATEWAYS, PUBLIC, AUTH_URL, SIGNERS, fetchPackages, buildPayload, priceOf, signedBytes, units };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.CavRedstone = api;
 })(typeof self !== 'undefined' ? self : this);
