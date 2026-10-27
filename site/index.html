@@ -736,6 +736,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 .btn.yes{background:var(--ok);border-color:var(--ok);color:#fff}.btn.no{background:var(--bad);border-color:var(--bad);color:#fff}
 .pr-res{font-weight:700}.pr-res.yes{color:var(--ok)}.pr-res.no{color:var(--bad)}
 .pr-note{font-size:12.5px;color:var(--muted);margin:0}
+.pr-warn{border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));background:color-mix(in srgb,var(--warn) 10%,var(--surface));color:var(--ink);border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.5;margin:0 0 14px}
 .du-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .du-form label{display:grid;gap:5px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .du-form .wide{grid-column:1/-1}
@@ -5872,6 +5873,17 @@ async function loadPredict(){
   await Promise.all(jobs);
   pr.at = Date.now(); renderPredict();
 }
+/* Is RedStone's signed data reachable right now (through our proxy or a public gateway)? Checked every 10 minutes;
+   while it isn't, Predict and Guess show a notice so nobody is surprised by a late result. */
+const rsState = { ok: null, at: 0 };
+async function rsCheck(){
+  if (!prV2() || !window.CavRedstone || Date.now() - rsState.at < 600000) return;
+  rsState.at = Date.now();
+  const H = Math.floor(Date.now() / 3600000) * 3600 - 3600;
+  try{ rsState.ok = (await CavRedstone.fetchPackages(H, 'DOGE')).length > 0; }catch(e){ rsState.ok = false; }
+  if (st.view === 'predict'){ renderPredict(); if (gs.data) renderGuess(); }
+}
+const rsNotice = () => rsState.ok === false ? `<div class="pr-warn" role="status">⚠️ <b>Results may come late.</b> RedStone is moving its price data behind API keys and we're waiting for ours. Until then, markets and the daily game may be settled late. Your KingS are safe: a market nobody resolves within 1 day refunds everyone, and an unsettled game day keeps its prize in the fund.</div>` : '';
 const prKind = m => m.question.startsWith('Weekly') ? 'weekly' : m.question.startsWith('Hourly') ? '⏱ hourly · up or down' : 'daily';
 const prWho = a => pr.names[lk(a)] || short(a);
 function renderPredict(){
@@ -5886,6 +5898,7 @@ function renderPredict(){
   const disclosure = prV2()
     ? `<p class="pr-note"><b>How prices are decided:</b> every market is decided by <b>RedStone's DOGE/USD price, signed by its oracle nodes at exactly the resolve time</b>. Anyone can resolve a market after that moment (the CavFi bot usually does it within a minute, or press <i>Resolve with RedStone</i>): the transaction carries RedStone's signed data, and the contract itself checks the signatures (3 of RedStone's 5 signers) and the time. Nobody, CavFi included, can pick the price. If nobody resolves a market within 1 day, anyone can refund it. The CavFi bot opens the markets and picks the line of daily and weekly ones. <b>Hourly</b> markets open every hour: the line is RedStone's price at the start of the hour, set by the contract the same way; bets close 10 minutes before the end, and the same price counts as NO. Winners share the pot minus a 2% fee. ${seedTxt} Markets marked <b>v1</b> were opened before the RedStone upgrade and finish the old way: the bot reports Binance's price. Testnet KingS, no real value.</p>`
     : `<p class="pr-note"><b>How prices are decided:</b> the CavFi bot opens these markets and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase if Binance is down). It is a trusted oracle, not a decentralized one, so you can check every result against the exchange. If it doesn't report within 7 days, anyone can refund the market. Winners share the pot minus a 2% fee. <b>Seeding:</b> so there is always someone to win from, the CavFi bot puts the same amount of its own KingS on YES and on NO of every market (100 on hourly, 250 on daily and weekly). Equal stakes mean it gains nothing from the result, and its bets don't count on the leaderboard. <b>Hourly</b> markets open every hour: the line is DOGE's price at the start of the hour (the same Binance candle), bets close 10 minutes before the end, and the same price counts as NO. Testnet KingS, no real value.</p>`;
+  rsCheck();
   if (!A.predict) $('prMarkets').innerHTML = `<div class="empty-card">DOGE price markets are not deployed on this network yet.</div>`;
   else if (!pr.markets) $('prMarkets').innerHTML = `<div class="empty-card">${pr.err ? esc(pr.err) : 'Reading the markets…'}</div>`;
   else {
@@ -5921,7 +5934,7 @@ function renderPredict(){
     const hourlyOld = new Set(pr.markets.filter(x => x.m.state !== 1 && x.m.question.startsWith('Hourly')).slice(3).map(x => x.id));
     const done = pr.markets.filter(x => x.m.state !== 1 && !hourlyOld.has(x.id));
     const claimables = pr.markets.filter(x => pr.mine[x.id] && pr.mine[x.id].cl.gt(0) && x.m.state !== 1);
-    $('prMarkets').innerHTML = (live.length ? `<div class="pr-grid">${live.map(card).join('')}</div>` : `<div class="empty-card">No open markets right now. The CavFi bot opens a daily and a weekly DOGE market.</div>`)
+    $('prMarkets').innerHTML = rsNotice() + (live.length ? `<div class="pr-grid">${live.map(card).join('')}</div>` : `<div class="empty-card">No open markets right now. The CavFi bot opens a daily and a weekly DOGE market.</div>`)
       + (claimables.length ? `<div class="sx-head"><h2>To claim</h2></div><div class="pr-grid">${claimables.map(card).join('')}</div>` : '')
       + (done.filter(x => !claimables.includes(x)).length ? `<div class="sx-head"><h2>Resolved</h2></div><div class="pr-grid">${done.filter(x => !claimables.includes(x)).slice(0, 6).map(card).join('')}</div>` : '')
       + disclosure;
@@ -6172,7 +6185,7 @@ function renderGuess(){
   else act = `<div class="gs-form"><span class="gs-in"><b>$</b><input id="gsIn" inputmode="decimal" placeholder="${ref ? ref.toPrecision(5) : '0.07700'}" autocomplete="off" aria-label="Your DOGE price guess in USD"></span><button class="btn primary" data-gs="go" ${gs.busy ? 'disabled' : ''}>${gs.busy ? 'Saving…' : 'Lock my guess'}</button></div>
     <p class="pr-note">One guess a day, it can't be changed. Free: you only pay gas.</p>`;
   const past = D.past.filter(p => p.x.settled).map(p => `<div class="du-row"><div><b>${new Date((p.day * 86400 + 72000) * 1000).toISOString().slice(0, 10)}</b> · DOGE ${usd5(Number(p.x.price.toString()) / 1e8)}<small>${p.x.winner !== E.constants.AddressZero ? `${esc(nm(p.x.winner))} guessed ${usd5(Number(p.x.winnerGuess.toString()) / 1e8)} and won ${sxNum(fl(p.x.prize, 18))} KingS` : 'nobody played'}</small></div></div>`).join('');
-  box.innerHTML = `<section class="sx-card gs-card"><div class="sx-head"><h2>🎯 Guess the DOGE price</h2><span>${open ? `guesses close in ${inT(D.close - now)}` : now < D.target ? `result in ${inT(D.target - now)}` : D.today && D.today.settled ? 'today is decided' : gsV2() ? 'settling with RedStone\'s 20:00 price' : 'waiting for the bot to report the price'}</span></div>
+  box.innerHTML = rsNotice() + `<section class="sx-card gs-card"><div class="sx-head"><h2>🎯 Guess the DOGE price</h2><span>${open ? `guesses close in ${inT(D.close - now)}` : now < D.target ? `result in ${inT(D.target - now)}` : D.today && D.today.settled ? 'today is decided' : gsV2() ? 'settling with RedStone\'s 20:00 price' : 'waiting for the bot to report the price'}</span></div>
       <p class="gs-q">What will DOGE cost at <b>20:00 UTC today</b>? The closest guess wins <b>${sxNum(fl(D.prize, 18))} KingS</b>.</p>
       <div class="pr-sides"><div><span>DOGE now (Binance)</span><b>${ref ? usd5(ref) : '…'}</b><small>updates every 30 s</small></div><div><span>Players today</span><b>${D.n}</b><small>one guess each</small></div></div>
       ${act}${settleBtn}</section>
@@ -6191,6 +6204,12 @@ document.addEventListener('click', async e => {
     gs.busy = false; return loadGuess(); }
   const v = Number(String(($('gsIn') || {}).value || '').replace(',', '.').replace(/^\$/, ''));
   if (!(v > 0) || v > 100) return toast('Type your guess in USD, for example 0.0775.', 'bad');
+  const ref = gs.live, off = ref ? Math.abs(v - ref) / ref : 0;
+  if (ref && off > 0.2 && gs.confirmV !== v){   // probably a typo (a zero too many or too few): ask once
+    gs.confirmV = v;
+    return toast(`${usd5(v)} is ${(off * 100).toFixed(0)}% ${v > ref ? 'above' : 'below'} DOGE now (${usd5(ref)}). Check the zeros, or press <b>Lock my guess</b> again to keep it.`, 'bad', 10000);
+  }
+  gs.confirmV = null;
   gs.busy = true; renderGuess();
   try{ const tx = await sendTx(() => guC(true).guess(Math.round(v * 1e8)), 'Saving your guess…', () => {}); toast(`Guess locked: ${usd5(v)}. ${txLink(tx.hash)}`, 'ok', 8000); celebrate(b, 18); }
   catch(err){ toast(errMsg(err), 'bad', 8000); }
