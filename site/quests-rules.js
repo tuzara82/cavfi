@@ -19,9 +19,9 @@
     {id: 'dca',    key: ['dca'],            sel: ['0x7b070932', '0xd5c55b52'],               title: 'Start an auto-buy',        hint: 'Swap page, Auto-buy', view: 'swap'},
     {id: 'name',   key: ['names'],          sel: ['0xf2c298be', '0x38e74feb'],               title: 'Claim or set a .cav name', hint: 'On the Names page', view: 'names'},
     // added later: "from" is the first UTC day they can be picked, so earlier days keep exactly the same quests
-    {id: 'predict', key: ['predict'],       sel: ['0x8decaec0'],                             title: 'Call the DOGE price',      hint: 'Back YES or NO on any open market', view: 'predict', from: 20752},
+    {id: 'predict', key: ['predict', 'predictV1'], sel: ['0x8decaec0'],                             title: 'Call the DOGE price',      hint: 'Back YES or NO on any open market', view: 'predict', from: 20752},
     {id: 'duel',   key: ['duel'],           sel: ['0xc139da6f', '0x19b05f49'],               title: 'Start or accept a duel',   hint: 'Predict page, Arena duels tab', href: '#duels', from: 20752},
-    {id: 'guess',  key: ['guess'],          sel: ['0x1e997a6d'],                             title: 'Guess the DOGE price',     hint: 'Free: Predict page, Free guess tab', href: '#guess', from: 20754}
+    {id: 'guess',  key: ['guess', 'guessV1'], sel: ['0x1e997a6d'],                             title: 'Guess the DOGE price',     hint: 'Free: Predict page, Free guess tab', href: '#guess', from: 20754}
   ];
   var GM = {id: 'gm', key: ['gm'], sel: ['0xc0129d43'], title: 'Say gm', hint: 'GM card on the home page', view: 'home'};
   var GN = {id: 'gn', key: ['gm'], sel: ['0x3118f543'], title: 'Say gn', hint: 'GM card on the home page', view: 'home'};

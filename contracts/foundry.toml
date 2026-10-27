@@ -8,7 +8,7 @@ src = "src"
 out = "out"
 libs = ["lib"]
 
-remappings = ["@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/","forge-std/=lib/forge-std/src/"]
+remappings = ["@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/","forge-std/=lib/forge-std/src/","@redstone-finance/evm-connector/=vendor/redstone-evm-connector/"]
 fs_permissions = [{ access = "read-write", path = "../site" }]
 
 [rpc_endpoints]

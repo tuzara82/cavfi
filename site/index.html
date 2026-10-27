@@ -1288,9 +1288,9 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
       <section class="sx-card hp-sec">
         <h2>Predict, duels, profiles and alerts</h2>
         <details><summary>How do DOGE price predictions work?</summary><p>On <a href="#predict" data-goview="predict">Predict</a>, each market asks a yes/no question about the real DOGE/USD price, like "Will DOGE be above $0.20 on Sunday, 20:00 UTC?". Back YES or NO with KingS until the market closes. Everyone on the right side shares the whole pot in proportion to their stake, minus a 2% fee, so the pool sizes show the crowd's odds. If only one side was backed, everyone gets their KingS back. Testnet KingS, no real value.</p></details>
-        <details><summary>What is "Guess the DOGE price"?</summary><p>A free daily game on <a href="#guess">Predict → Free guess</a>: until 18:00 UTC, each wallet can lock one guess of the DOGE price at 20:00 UTC. After 20:00 the CavFi bot reports the real price (Binance, the same way as the markets) and the closest guess wins the day's KingS prize; on a tie the earlier guess wins. Nothing is staked, you only pay gas. Each guess is worth 20 leaderboard points and the day's winner gets 300.</p></details>
+        <details><summary>What is "Guess the DOGE price"?</summary><p>A free daily game on <a href="#guess">Predict → Free guess</a>: until 18:00 UTC, each wallet can lock one guess of the DOGE price at 20:00 UTC. The answer is RedStone's DOGE/USD price signed at exactly 20:00:00 UTC: after 20:00 anyone can settle the day (the CavFi bot usually does), the contract checks RedStone's signatures itself, and the closest guess wins the day's KingS prize; on a tie the earlier guess wins. Nothing is staked, you only pay gas. Each guess is worth 20 leaderboard points and the day's winner gets 300.</p></details>
         <details><summary>What are the hourly markets?</summary><p>Every hour the CavFi bot opens a quick "up or down" market: will DOGE be higher at the end of the hour than at its start? The line is DOGE's price at the start of the hour, bets close 10 minutes before the end, and if the price is exactly the same, NO wins. Only bets of 100 KingS or more earn leaderboard points.</p></details>
-        <details><summary>Who decides the price?</summary><p>The CavFi bot. It opens a daily and a weekly market and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase DOGE-USD if Binance is unavailable). That is a <b>trusted role</b>: the price comes from the bot, not from a decentralized oracle, and you can check it against the exchange yourself. If the bot doesn't report within 7 days, anyone can turn the market into a full refund.</p></details>
+        <details><summary>Who decides the price?</summary><p><b>RedStone</b>, a decentralized oracle. Every market is decided by RedStone's DOGE/USD price, signed by its oracle nodes at exactly the resolve time. Anyone can resolve a market after that moment: the transaction carries RedStone's signed data and the CavFi contract itself checks the signatures (3 of RedStone's 5 primary signers) and that the data is from that exact second. Nobody, CavFi included, can choose the price. The CavFi bot opens the markets, picks the line of the daily and weekly ones and usually resolves them within a minute; if nobody resolves a market within a day, anyone can turn it into a full refund. Markets opened before this upgrade (marked v1) finish the old way: the bot reports Binance's price.</p></details>
         <details><summary>What is an Arena duel?</summary><p>A one-on-one bet on the current Arena round: pick two of the round's tokens and a KingS stake, for example "RPUP beats KingS, 1,000 KingS". Whoever accepts takes the other token with the same stake. When the Arena round is settled, the token that rose more against DOGE (using the Arena's own start and end prices) wins, and its backer gets both stakes, with no fee. Duels can be accepted only while Arena staking is open. A tie, or too few price samples, refunds both. You can invite one person with a .cav name or address, or share the duel link with anyone.</p></details>
         <details><summary>What is a profile?</summary><p>Every wallet has a public page at cavfi.com/u/name.cav (or the 0x address): its Living Cavaliers, badges, leaderboard rank, gm and quest streaks, Arena wins, duels, names and raffle tickets, all read from the chain. Share it on X or download it as an image card.</p></details>
         <details><summary>Can the bot message me on Telegram?</summary><p>Yes. Press <b>Telegram alerts</b> on your profile, or send <code>/watch yourname.cav</code> to the CavFi bot. It messages you about Arena wins, unclaimed winnings, auto-buys, daily quest results, raffle prizes, predictions, duels, and when your gm streak is about to break. It only needs your public address, never a key. <code>/unwatch</code> stops it.</p></details>
@@ -1494,7 +1494,8 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-<script src="quests-rules.js?v=3"></script>
+<script src="quests-rules.js?v=4"></script>
+<script src="redstone-payload.js?v=1"></script>
 <script>
 (() => {
 /* ================= config ================= */
@@ -1514,7 +1515,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { guess:'', predict:'', guessV1:'', predictV1:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -3371,9 +3372,8 @@ async function loadBoard(){
       return out;
     };
     if (A.predict){ try{
-      const logs = await winLogs(A.predict, [PR_BET]);
-      const total = (await prC().count()).toNumber(), [ids, items] = total ? await prC().page(0, Math.min(total, 300)) : [[], []];
-      const res = {}; ids.forEach((id, k) => { if (items[k].state === 2) res[id.toNumber()] = items[k].yesWon; });
+      const logs = await winLogs(PR_ADDRS(), [PR_BET]);
+      const res = {}; (await prAllMarkets(300)).forEach(x => { if (x.m.state === 2) res[x.id] = x.m.yesWon; });
       const seen = new Set(), right = new Set();
       for (const l of logs){ const id = Number(BigInt(l.topics[1])), who = lk('0x' + l.topics[2].slice(26)), r = row(who), yes = BigInt('0x' + l.data.slice(2, 66)) !== 0n;
         if (BigInt('0x' + l.data.slice(66, 130)) < 100n * 10n ** 18n) continue;   // bets under 100 KingS don't earn points
@@ -3391,7 +3391,7 @@ async function loadBoard(){
         else if (l.topics[0] === DU_SETTLED){ const w = lk('0x' + l.data.slice(26, 66)); if (w !== lk(E.constants.AddressZero)){ const r = row(w); r.duelWins = (r.duelWins || 0) + 1; } } }
     }catch(e){} }
     if (A.guess){ try{   // free guessing game: 20 per guess, 300 more for a daily win
-      const logs = await winLogs(A.guess, [GS_GUESSED, PC_T.gsSettled]);
+      const logs = await winLogs([A.guess, A.guessV1].filter(Boolean), [GS_GUESSED, PC_T.gsSettled]);
       for (const l of logs){ const who = lk('0x' + l.topics[2].slice(26)); if (who === lk(E.constants.AddressZero)) continue; const r = row(who);
         if (l.topics[0] === GS_GUESSED) r.guesses = (r.guesses || 0) + 1; else r.guessWins = (r.guessWins || 0) + 1; }
     }catch(e){} }
@@ -5598,7 +5598,8 @@ setInterval(() => { if (st.view === 'home' && !document.hidden){ loadQuests(); l
 const PRED_ABI = ['function count() view returns (uint256)', 'function bet(uint256 id, bool yes, uint256 amount)', 'function claim(uint256 id) returns (uint256)', 'function expire(uint256 id)',
   'function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(string question, uint64 closeAt, uint64 resolveAt, uint8 state, bool yesWon, uint256 strike, uint256 price, uint256 yesPool, uint256 noPool)[] items)',
   'function yesOf(uint256, address) view returns (uint256)', 'function noOf(uint256, address) view returns (uint256)', 'function claimable(uint256, address) view returns (uint256)',
-  'function idsOf(address) view returns (uint256[])', 'function oracle() view returns (address)', 'function FEE_BPS() view returns (uint16)'];
+  'function idsOf(address) view returns (uint256[])', 'function oracle() view returns (address)', 'function FEE_BPS() view returns (uint16)',
+  'function resolve(uint256 id)', 'function firstId() view returns (uint256)'];
 const DUEL_ABI = ['function create(uint8 makerIdx, uint8 takerIdx, uint256 stake, address invited) returns (uint256)', 'function accept(uint256 id)', 'function cancel(uint256 id)', 'function settle(uint256 id)',
   'function count() view returns (uint256)', 'function idsOf(address) view returns (uint256[])',
   'function get(uint256 id) view returns (tuple(address maker, address taker, address invited, address winner, uint64 roundId, uint8 makerIdx, uint8 takerIdx, uint8 state, uint256 stake))',
@@ -5606,7 +5607,27 @@ const DUEL_ABI = ['function create(uint8 makerIdx, uint8 takerIdx, uint256 stake
 const ARENA_RD_ABI = ['function currentRound() view returns (uint256 id, uint64 start, uint64 end, uint64 stakingEndsAt, uint256 secondsLeft, uint256 pot, uint16 feeBps, bool live)',
   'function roundTokens(uint256) view returns (address[] tokens, address[] pairs)',
   'function getRound(uint256 id) view returns (tuple(uint64 start, uint64 end, uint16 feeBps, uint8 winnerMask, bool settled, uint256 staked, uint256 rollover, uint256 winnerStake, uint256 payout))'];
-const prC = signer => new E.Contract(A.predict, PRED_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const prC = (signer, addr) => new E.Contract(addr || A.predict, PRED_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+/* After the RedStone upgrade (DeployV6) "predict"/"guess" are the v2 contracts, decided by RedStone's signed DOGE/USD price,
+   and "predictV1"/"guessV1" keep the older ones (the bot reported the price). v2 market ids continue after v1's. */
+const prV2 = () => !!A.predictV1, gsV2 = () => !!A.guessV1;
+const PR_ADDRS = () => [A.predict, A.predictV1].filter(Boolean);
+const isPr = a => PR_ADDRS().some(x => lk(x) === a), isGs = a => [A.guess, A.guessV1].some(x => x && lk(x) === a);
+/* every market of both contracts, newest first (up to n from each) */
+async function prAllMarkets(n){
+  const out = [];
+  for (const a of PR_ADDRS()){ try{ const c = prC(false, a), t = (await c.count()).toNumber(); if (!t) continue;
+    const [ids, items] = await c.page(0, Math.min(t, n)); ids.forEach((id, k) => out.push({id: id.toNumber(), m: items[k], v1: a !== A.predict || !prV2()})); }catch(e){} }
+  return out;
+}
+/* a call that carries RedStone's signed DOGE price for the moment `at` at the end of the calldata */
+async function rsTx(to, frag, args, at){
+  if (!window.CavRedstone) throw new Error('Could not load the RedStone helper. Reload the page.');
+  const pk = await CavRedstone.fetchPackages(at, 'DOGE');
+  if (!pk.length) throw new Error('RedStone has no signed DOGE price for that moment yet. Try again in a minute.');
+  const i = new E.utils.Interface([frag]);
+  return st.signer.sendTransaction({to, data: i.encodeFunctionData(i.fragments[0].name, args) + CavRedstone.buildPayload(pk)});
+}
 const duC = signer => new E.Contract(A.duel, DUEL_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
 const arRdC = () => new E.Contract(A.arena, ARENA_RD_ABI, onRightChain() ? st.provider : RP());
 let tgBot = null;
@@ -5641,8 +5662,9 @@ async function loadProfile(){
     if (A.raffle) jobs.push(raffleC().current().then(c => raffleC().ticketsOf(c.id, addr)).then(t => { d.tickets = t.toNumber(); }).catch(() => {}));
     if (A.duel) jobs.push((async () => { const ids = await duC().idsOf(addr); const ds = await Promise.all(ids.slice(-50).map(i => duC().get(i)));
       for (const x of ds) if (x.state === 3){ d.duels.played++; if (same(x.winner, addr)) d.duels.won++; } })().catch(() => {}));
-    if (A.predict) jobs.push((async () => { const c = prC(), ids = await c.idsOf(addr);
-      d.preds.ids = await Promise.all(ids.slice(-50).map(async i => ({i: i.toNumber(), y: await c.yesOf(i, addr), n: await c.noOf(i, addr)}))); })().catch(() => {}));
+    if (A.predict) jobs.push((async () => { d.preds.ids = [];
+      for (const a of PR_ADDRS()){ const c = prC(false, a), ids = await c.idsOf(addr);
+        d.preds.ids.push(...await Promise.all(ids.slice(-50).map(async i => ({i: i.toNumber(), y: await c.yesOf(i, addr), n: await c.noOf(i, addr)})))); } })().catch(() => {}));
     jobs.push((async () => {   // activity calendar: CavFi transactions per UTC day, last 16 weeks
       const set = new Set(Object.values(A).filter(v => typeof v === 'string' && /^0x[0-9a-fA-F]{40}$/.test(v)).map(lk));
       const since = Math.floor(Date.now() / 1000) - 112 * 86400, days = {};
@@ -5665,7 +5687,7 @@ async function loadProfile(){
     })().catch(() => {}));
     await Promise.all(jobs);
     if (d.preds.ids && d.preds.ids.length && A.predict){ // which predictions this wallet got right
-      try{ const total = (await prC().count()).toNumber(); const [ids, items] = await prC().page(0, Math.min(total, 200)); const by = {}; ids.forEach((id, k) => by[id.toNumber()] = items[k]);
+      try{ const by = {}; (await prAllMarkets(200)).forEach(x => by[x.id] = x.m);
         d.preds.played = 0; for (const p of d.preds.ids){ const m = by[p.i]; if (!m || m.state !== 2) continue; d.preds.played++; if ((m.yesWon ? p.y : p.n).gt(0)) d.preds.won++; } }catch(e){}
     }
     if (seq !== up.seq) return;
@@ -5814,11 +5836,18 @@ async function loadPredict(){
   }
   if (A.predict) jobs.push((async () => {
     const c = prC(), n = (await c.count()).toNumber();
-    const [ids, items] = await c.page(0, Math.min(n, 80));
-    pr.markets = ids.map((id, k) => ({id: id.toNumber(), m: items[k]}));
+    const [ids, items] = n ? await c.page(0, Math.min(n, 80)) : [[], []];
+    const list = ids.map((id, k) => ({id: id.toNumber(), m: items[k], v1: !prV2()}));
+    if (prV2()){ try{   // older v1 markets: the ones still open and the ones you are in
+      const c1 = prC(false, A.predictV1), n1 = (await c1.count()).toNumber();
+      const [i1, it1] = n1 ? await c1.page(0, Math.min(n1, 80)) : [[], []];
+      const mineIds = new Set(me ? (await c1.idsOf(me)).map(x => x.toNumber()) : []);
+      i1.forEach((id, k) => { const i = id.toNumber(); if (it1[k].state === 1 || mineIds.has(i)) list.push({id: i, m: it1[k], v1: true}); });
+    }catch(e){} }
+    pr.markets = list;
     pr.mine = {};
     // hourly markets add up fast: look up your stake only in open ones, the 30 newest, and every daily/weekly one
-    if (me) await Promise.all(pr.markets.filter((x, k) => k < 30 || x.m.state === 1 || !x.m.question.startsWith('Hourly')).map(async x => { const [y, no, cl] = await Promise.all([c.yesOf(x.id, me), c.noOf(x.id, me), c.claimable(x.id, me)]); pr.mine[x.id] = {y, n: no, cl}; }));
+    if (me) await Promise.all(pr.markets.filter((x, k) => k < 30 || x.m.state === 1 || (x.v1 && prV2()) || !x.m.question.startsWith('Hourly')).map(async x => { const cc = x.v1 && prV2() ? prC(false, A.predictV1) : c; const [y, no, cl] = await Promise.all([cc.yesOf(x.id, me), cc.noOf(x.id, me), cc.claimable(x.id, me)]); pr.mine[x.id] = {y, n: no, cl}; }));
   })().catch(() => { pr.err = 'Could not read the markets right now.'; }));
   if (A.duel && A.arena) jobs.push((async () => {
     const ar = arRdC(), r = await ar.currentRound();
@@ -5853,29 +5882,36 @@ function renderPredict(){
   const gate = walletGate();
   // ---- markets
   const now = Math.floor(Date.now()/1000) + (pr.skew || 0);   // chain time
-  const disclosure = `<p class="pr-note"><b>How prices are decided:</b> the CavFi bot opens these markets and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase if Binance is down). It is a trusted oracle, not a decentralized one, so you can check every result against the exchange. If it doesn't report within 7 days, anyone can refund the market. Winners share the pot minus a 2% fee. <b>Seeding:</b> so there is always someone to win from, the CavFi bot puts the same amount of its own KingS on YES and on NO of every market (100 on hourly, 250 on daily and weekly). Equal stakes mean it gains nothing from the result, and its bets don't count on the leaderboard. <b>Hourly</b> markets open every hour: the line is DOGE's price at the start of the hour (the same Binance candle), bets close 10 minutes before the end, and the same price counts as NO. Testnet KingS, no real value.</p>`;
+  const seedTxt = `<b>Seeding:</b> so there is always someone to win from, the CavFi bot puts the same amount of its own KingS on YES and on NO of every market (100 on hourly, 250 on daily and weekly). Equal stakes mean it gains nothing from the result, and its bets don't count on the leaderboard.`;
+  const disclosure = prV2()
+    ? `<p class="pr-note"><b>How prices are decided:</b> every market is decided by <b>RedStone's DOGE/USD price, signed by its oracle nodes at exactly the resolve time</b>. Anyone can resolve a market after that moment (the CavFi bot usually does it within a minute, or press <i>Resolve with RedStone</i>): the transaction carries RedStone's signed data, and the contract itself checks the signatures (3 of RedStone's 5 signers) and the time. Nobody, CavFi included, can pick the price. If nobody resolves a market within 1 day, anyone can refund it. The CavFi bot opens the markets and picks the line of daily and weekly ones. <b>Hourly</b> markets open every hour: the line is RedStone's price at the start of the hour, set by the contract the same way; bets close 10 minutes before the end, and the same price counts as NO. Winners share the pot minus a 2% fee. ${seedTxt} Markets marked <b>v1</b> were opened before the RedStone upgrade and finish the old way: the bot reports Binance's price. Testnet KingS, no real value.</p>`
+    : `<p class="pr-note"><b>How prices are decided:</b> the CavFi bot opens these markets and, after the resolve time, reports the opening price of the 1-minute DOGEUSDT candle on Binance at that moment (Coinbase if Binance is down). It is a trusted oracle, not a decentralized one, so you can check every result against the exchange. If it doesn't report within 7 days, anyone can refund the market. Winners share the pot minus a 2% fee. <b>Seeding:</b> so there is always someone to win from, the CavFi bot puts the same amount of its own KingS on YES and on NO of every market (100 on hourly, 250 on daily and weekly). Equal stakes mean it gains nothing from the result, and its bets don't count on the leaderboard. <b>Hourly</b> markets open every hour: the line is DOGE's price at the start of the hour (the same Binance candle), bets close 10 minutes before the end, and the same price counts as NO. Testnet KingS, no real value.</p>`;
   if (!A.predict) $('prMarkets').innerHTML = `<div class="empty-card">DOGE price markets are not deployed on this network yet.</div>`;
   else if (!pr.markets) $('prMarkets').innerHTML = `<div class="empty-card">${pr.err ? esc(pr.err) : 'Reading the markets…'}</div>`;
   else {
     const card = x => {
       const m = x.m, my = pr.mine[x.id], yes = fl(m.yesPool, 18), no = fl(m.noPool, 18), tot = yes + no;
       const close = Number(m.closeAt.toString()), res = Number(m.resolveAt.toString()), open = m.state === 1 && now < close;
+      const rs = prV2() && !x.v1, old = x.v1 && prV2(), grace = rs ? 86400 : 7 * 86400;
+      const u5 = v => { const n = Number(v.toString()) / 1e8; return '$' + (n >= 1 ? n.toFixed(4) : n.toPrecision(5)); };
       const pY = tot ? yes / tot * 100 : 50, mult = s => s > 0 ? (tot * 0.98 / s) : 0;
       let status;
-      if (m.state === 2) status = `<span class="pr-res ${m.yesWon ? 'yes' : 'no'}">${m.yesWon ? 'YES' : 'NO'} won</span> · DOGE was ${usd8(m.price)} (line ${usd8(m.strike)})`;
+      if (m.state === 2) status = `<span class="pr-res ${m.yesWon ? 'yes' : 'no'}">${m.yesWon ? 'YES' : 'NO'} won</span> · DOGE was ${rs ? u5(m.price) : usd8(m.price)} (line ${rs ? u5(m.strike) : usd8(m.strike)})${rs ? ' · RedStone' : ''}`;
       else if (m.state === 3) status = m.price.isZero() ? 'Refunded: everyone gets their stake back' : `Refunded (only one side was backed) · DOGE was ${usd8(m.price)}`;
       else if (open) status = `Open · closes in ${inT(close - now)} · decided ${new Date(res * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`;
       else if (now < res) status = `Closed · decided in ${inT(res - now)}`;
-      else if (now > res + 7 * 86400) status = 'The oracle did not report: anyone can refund it';
-      else status = 'Waiting for the bot to report the price';
+      else if (now > res + grace) status = rs ? 'Nobody resolved it within a day: anyone can refund it' : 'The oracle did not report: anyone can refund it';
+      else status = rs ? 'Ready: anyone can resolve it with RedStone\'s price (the bot usually does within a minute)' : 'Waiting for the bot to report the price';
       const mineTxt = my && (my.y.gt(0) || my.n.gt(0)) ? `<p class="pr-note">Your stake: ${my.y.gt(0) ? `<b>${sxNum(fl(my.y, 18))}</b> YES` : ''}${my.y.gt(0) && my.n.gt(0) ? ' · ' : ''}${my.n.gt(0) ? `<b>${sxNum(fl(my.n, 18))}</b> NO` : ''}</p>` : '';
       let act = '';
-      if (open) act = gate ? `<button class="btn primary" data-pr="gate">${gate.label}</button>`
+      if (open && old) act = `<p class="pr-note">Older market (v1): the CavFi bot reports its price as before. New bets go to the RedStone markets.</p>`;
+      else if (open) act = gate ? `<button class="btn primary" data-pr="gate">${gate.label}</button>`
         : `<div class="pr-bet"><input inputmode="decimal" placeholder="KingS amount" id="prAmt${x.id}" aria-label="KingS to stake" autocomplete="off"><button class="btn yes" data-pr="bet" data-id="${x.id}" data-side="1" ${pr.busy ? 'disabled' : ''}>YES</button><button class="btn no" data-pr="bet" data-id="${x.id}" data-side="0" ${pr.busy ? 'disabled' : ''}>NO</button></div>`;
       if (my && my.cl.gt(0)) act += `<button class="btn primary" data-pr="claim" data-id="${x.id}" ${pr.busy ? 'disabled' : ''}>${pr.busy === 'claim' + x.id ? 'Claiming…' : `Claim ${sxNum(fl(my.cl, 18))} KingS`}</button>`;
-      if (m.state === 1 && now > res + 7 * 86400 && !gate) act += `<button class="btn" data-pr="expire" data-id="${x.id}">Refund this market</button>`;
+      if (rs && m.state === 1 && now >= res && now <= res + grace) act += gate ? `<button class="btn" data-pr="gate">${gate.label}</button>` : `<button class="btn" data-pr="resolve" data-id="${x.id}" ${pr.busy ? 'disabled' : ''}>${pr.busy === 'resolve' + x.id ? 'Resolving…' : 'Resolve with RedStone'}</button>`;
+      if (m.state === 1 && now > res + grace && !gate) act += `<button class="btn" data-pr="expire" data-id="${x.id}">Refund this market</button>`;
       act += `<div class="up-share"><button class="btn fc-sm" data-pr="mshare" data-id="${x.id}">Copy link</button><a class="btn fc-sm" href="https://x.com/intent/post?text=${encodeURIComponent(`${m.question.replace(/^(Weekly|Hourly): w/, 'W')} YES or NO? 🔮`)}&url=${encodeURIComponent(`https://cavfi.com/p/${x.id}`)}" target="_blank" rel="noopener">Post on X</a></div>`;
-      return `<section class="sx-card${pr.hlm === x.id ? ' pr-hl' : ''}" id="mkt-${x.id}"><div class="sx-head"><span class="pr-meta">#${x.id} · ${prKind(m)}</span><span class="pr-meta">${sxNum(tot)} KingS pot</span></div>
+      return `<section class="sx-card${pr.hlm === x.id ? ' pr-hl' : ''}" id="mkt-${x.id}"><div class="sx-head"><span class="pr-meta">#${x.id} · ${prKind(m)}${old ? ' · v1' : ''}</span><span class="pr-meta">${sxNum(tot)} KingS pot</span></div>
         <h3 class="pr-q">${esc(m.question.replace(/^(Weekly|Hourly): w/, 'W'))}</h3>
         <div class="pr-bar" role="img" aria-label="YES ${pY.toFixed(0)}%, NO ${(100 - pY).toFixed(0)}%"><i style="width:${pY}%"></i><i style="width:${100 - pY}%"></i></div>
         <div class="pr-sides"><div><span>YES · ${tot ? pY.toFixed(0) + '%' : '–'}</span><b>${sxNum(yes)}</b><small>${yes ? 'pays ×' + mult(yes).toFixed(2) : 'nobody yet'}</small></div><div><span>NO · ${tot ? (100 - pY).toFixed(0) + '%' : '–'}</span><b>${sxNum(no)}</b><small>${no ? 'pays ×' + mult(no).toFixed(2) : 'nobody yet'}</small></div></div>
@@ -5960,8 +5996,11 @@ document.addEventListener('click', async e => {
     if (!(await prApprove(A.predict, pr.allowP, amt))){ pr.busy = ''; return renderPredict(); }
     return prRun('bet', () => prC(true).bet(id, b.dataset.side === '1', amt), `Backed ${b.dataset.side === '1' ? 'YES' : 'NO'}.`);
   }
-  if (a === 'claim') return prRun('claim' + id, () => prC(true).claim(id), 'Claimed.');
-  if (a === 'expire') return prRun('expire', () => prC(true).expire(id), 'Market refunded: claim your stake.');
+  const prOf = i => { const x = (pr.markets || []).find(q => q.id === i); return x && x.v1 && prV2() ? A.predictV1 : A.predict; };
+  if (a === 'claim') return prRun('claim' + id, () => prC(true, prOf(id)).claim(id), 'Claimed.');
+  if (a === 'expire') return prRun('expire', () => prC(true, prOf(id)).expire(id), 'Market refunded: claim your stake.');
+  if (a === 'resolve'){ const x = (pr.markets || []).find(q => q.id === id); if (!x) return;
+    return prRun('resolve' + id, () => rsTx(A.predict, 'function resolve(uint256 id)', [id], Number(x.m.resolveAt.toString())), `Market #${id} resolved with RedStone's price.`); }
   if (a === 'duel'){
     const mi = Number($('duMine').value), ti = Number($('duOther').value), amt = prAmt($('duStake').value), inv = $('duInvite').value.trim();
     if (mi === ti) return toast('Pick two different tokens.', 'bad');
@@ -6009,7 +6048,7 @@ async function loadFeed(){
   FD.loading = true;
   try{
     const rp = RP(), head = await rp.getBlockNumber(), hb = await rp.getBlock(head), bt = sx.bt || 3;
-    const addrs = [A.arena, A.predict, A.duel, A.launch, A.names, A.nft, A.guess].filter(Boolean);
+    const addrs = [A.arena, A.predict, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV1].filter(Boolean);
     const topics = [GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
     const logs = [];
     for (let z = head; z > head - 20000 && z > 0; z -= SX_CHUNK){
@@ -6021,7 +6060,7 @@ async function loadFeed(){
     const K = v => sxNum(Number(v) / 1e18);
     const items = [];
     const roundSyms = {}, symOf = async (rid, i) => { if (!roundSyms[rid]){ try{ const [ts] = await arRdC().roundTokens(rid); roundSyms[rid] = await Promise.all(ts.map(async a => { const t = TOKENS.find(x => same(x.address, a)); return t ? t.symbol : await new E.Contract(a, ERC20_ABI, RP()).symbol().catch(() => '?'); })); }catch(e){ roundSyms[rid] = []; } } return roundSyms[rid][i] || '?'; };
-    let markets = null; const mOf = async id => { if (!markets){ markets = {}; try{ const c = (await prC().count()).toNumber(); const [ids, its] = c ? await prC().page(0, Math.min(c, 60)) : [[], []]; ids.forEach((x, k) => markets[x.toNumber()] = its[k]); }catch(e){} } return markets[id]; };
+    let markets = null; const mOf = async id => { if (!markets){ markets = {}; (await prAllMarkets(60)).forEach(x => markets[x.id] = x.m); } return markets[id]; };
     const duels = {}; const dOf = async id => duels[id] || (duels[id] = await duC().get(id).catch(() => null));
     const lxSym = async a => { const x = lxByAddr(a); if (x) return x.L.symbol; return new E.Contract(a, ERC20_ABI, RP()).symbol().catch(() => 'a token'); };
     for (const l of logs){
@@ -6031,9 +6070,9 @@ async function loadFeed(){
           items.push({...base, who, ic: '🏟️', txt: `backed <b>${esc(await symOf(id, Number(BigInt(l.topics[3]))))}</b> in Arena round #${id} with ${K(n(l, 0))} KingS`, href: 'arena.html'}); }
         else if (A0 === lk(A.arena) && t0 === FD_T.arClaimed){ const who = topic2(l); if (who === bot) continue;
           items.push({...base, who, ic: '🏆', txt: `won ${K(n(l, 0))} KingS in Arena round #${Number(BigInt(l.topics[1]))}`, href: 'arena.html'}); }
-        else if (A0 === lk(A.predict) && t0 === PR_BET){ const who = topic2(l), id = Number(BigInt(l.topics[1])), m = await mOf(id);
+        else if (isPr(A0) && t0 === PR_BET){ const who = topic2(l), id = Number(BigInt(l.topics[1])), m = await mOf(id);
           items.push({...base, who, ic: '🔮', txt: `bet ${K(n(l, 1))} KingS on <b>${n(l, 0) ? 'YES' : 'NO'}</b>${m ? ': ' + esc(m.question.replace(/^(Weekly|Hourly): w/, 'W').replace(/^Will /, 'will ')) : ''}`, href: '#predict'}); }
-        else if (A0 === lk(A.predict) && t0 === PR_CLAIMED){ const id = Number(BigInt(l.topics[1])), m = await mOf(id); if (!m || m.state !== 2) continue;
+        else if (isPr(A0) && t0 === PR_CLAIMED){ const id = Number(BigInt(l.topics[1])), m = await mOf(id); if (!m || m.state !== 2) continue;
           items.push({...base, who: topic2(l), ic: '🎯', txt: `called DOGE right and won ${K(n(l, 0))} KingS (market #${id})`, href: '#predict'}); }
         else if (A0 === lk(A.duel) && t0 === DU_CREATED){ const id = Number(BigInt(l.topics[1])), rid = Number(BigInt(l.topics[3]));
           items.push({...base, who: topic2(l), ic: '⚔️', txt: `opened duel #${id}: <b>${esc(await symOf(rid, Number(n(l, 0))))}</b> beats ${esc(await symOf(rid, Number(n(l, 1))))} · ${K(n(l, 2))} KingS`, href: '#duel/' + id}); }
@@ -6048,7 +6087,7 @@ async function loadFeed(){
           items.push({...base, who: null, ic: '🎓', txt: `<b>$${esc(await lxSym(E.utils.getAddress(tok)))}</b> graduated: its pool is live and the LP is burned`, href: '#t/' + E.utils.getAddress(tok)}); }
         else if (A0 === lk(A.names) && t0 === FD_T.registered){ const lab = E.utils.defaultAbiCoder.decode(['string', 'uint256'], l.data)[0];
           items.push({...base, who: topic1a(l), ic: '🏷️', txt: `claimed <b>${esc(lab)}.cav</b>`, href: '#names', noName: true}); }
-        else if (A0 === lk(A.guess) && t0 === GS_GUESSED){
+        else if (isGs(A0) && t0 === GS_GUESSED){
           items.push({...base, who: topic2(l), ic: '🎯', txt: `guessed DOGE will be <b>$${(Number(BigInt('0x' + l.data.slice(2, 66))) / 1e8).toPrecision(5)}</b> at 20:00 UTC`, href: '#guess'}); }
         else if (A0 === lk(A.nft) && t0 === FD_T.minted){ const who = topic1a(l);
           items.push({...base, who, ic: '🐶', txt: `minted Cavalier #${Number(BigInt(l.topics[2]))}`, href: '#nft'}); }
@@ -6089,7 +6128,7 @@ try{ FD.tab = localStorage.getItem('cavfi.fdtab') || 'all'; }catch(e){}
 const GUESS_ABI = ['function guess(uint64 price)', 'function today() view returns (uint32)', 'function closeAt(uint32) view returns (uint64)', 'function targetAt(uint32) view returns (uint64)',
   'function count(uint32) view returns (uint256)', 'function prize() view returns (uint256)', 'function guessOf(uint32, address) view returns (uint64 price, uint64 at)',
   'function guesses(uint32 day, uint256 start, uint256 n) view returns (tuple(address who, uint64 price, uint64 at)[] out)',
-  'function dayInfo(uint32 d) view returns (tuple(bool settled, uint64 price, address winner, uint64 winnerGuess, uint256 prize))'];
+  'function dayInfo(uint32 d) view returns (tuple(bool settled, uint64 price, address winner, uint64 winnerGuess, uint256 prize))', 'function settle(uint32 day)'];
 const guC = signer => new E.Contract(A.guess, GUESS_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
 const gs = { data:null, live:null, busy:false, names:{} };
 const usd5 = v => '$' + (v >= 1 ? v.toFixed(4) : v.toPrecision(5));
@@ -6098,11 +6137,12 @@ async function loadGuess(){
   if (!A.guess){ gs.data = {none: true}; return renderGuess(); }
   try{
     const c = guC(), d = await c.today();
-    const [close, target, n, prize, past] = await Promise.all([c.closeAt(d), c.targetAt(d), c.count(d), c.prize(),
-      Promise.all([1, 2, 3].map(k => c.dayInfo(d - k).then(x => ({day: d - k, x})).catch(() => null)))]);
+    const [close, target, n, prize, past, todayInfo, nPrev] = await Promise.all([c.closeAt(d), c.targetAt(d), c.count(d), c.prize(),
+      Promise.all([1, 2, 3].map(k => c.dayInfo(d - k).then(x => ({day: d - k, x})).catch(() => null))), c.dayInfo(d), c.count(d - 1)]);
     const list = n.gt(0) ? await c.guesses(d, 0, Math.min(n.toNumber(), 300)) : [];
     const mine = st.account ? await c.guessOf(d, st.account) : null;
-    gs.data = {d, close: Number(close.toString()), target: Number(target.toString()), n: n.toNumber(), prize, past: past.filter(Boolean), list, mine};
+    gs.data = {d, close: Number(close.toString()), target: Number(target.toString()), n: n.toNumber(), prize, past: past.filter(Boolean), list, mine, today: todayInfo, nPrev: nPrev.toNumber()};
+    if (todayInfo.settled) gs.data.past.unshift({day: d, x: todayInfo});
     const who = [...new Set([...list.map(g => lk(g.who)), ...gs.data.past.filter(p => p.x.winner !== E.constants.AddressZero).map(p => lk(p.x.winner))])].filter(a => gs.names[a] == null);
     if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); who.forEach((a, k) => gs.names[a] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
   }catch(e){ gs.data = {err: true}; }
@@ -6122,24 +6162,33 @@ function renderGuess(){
   const ranked = D.list.map(g => ({who: g.who, p: Number(g.price.toString()) / 1e8, at: Number(g.at.toString())}))
     .sort((a, b) => ref ? Math.abs(a.p - ref) - Math.abs(b.p - ref) || a.at - b.at : a.at - b.at).slice(0, 10);
   let act;
+  // RedStone version: after 20:00 UTC anyone can settle a day that has players (within a day)
+  const pend = !gsV2() ? [] : [[D.d, D.n, D.today && D.today.settled], [D.d - 1, D.nPrev, (D.past.find(p => p.day === D.d - 1) || {x: {settled: true}}).x.settled]]
+    .filter(([day, n, done]) => !done && n > 0 && now >= day * 86400 + 72000 && now <= day * 86400 + 72000 + 86400).map(([day]) => day);
+  const settleBtn = pend.map(day => gate ? '' : `<button class="btn" data-gs="settle" data-day="${day}" ${gs.busy ? 'disabled' : ''}>Settle ${new Date(day * 86400000).toISOString().slice(0, 10)} with RedStone</button>`).join('');
   if (myP) act = `<p class="gs-mine">Your guess today: <b>${usd5(myP)}</b>${ref ? ` · ${Math.abs(myP - ref) / ref * 100 < 0.05 ? 'right on it' : (myP > ref ? 'above' : 'below') + ' the price now by ' + (Math.abs(myP - ref) / ref * 100).toFixed(2) + '%'}` : ''}. Result after 20:00 UTC.</p>`;
   else if (!open) act = '<p class="gs-mine">Guesses are closed for today. The result comes after 20:00 UTC; the next game opens at midnight UTC.</p>';
   else if (gate) act = `<button class="btn primary" data-gs="gate">${gate.label}</button>`;
   else act = `<div class="gs-form"><span class="gs-in"><b>$</b><input id="gsIn" inputmode="decimal" placeholder="${ref ? ref.toPrecision(5) : '0.07700'}" autocomplete="off" aria-label="Your DOGE price guess in USD"></span><button class="btn primary" data-gs="go" ${gs.busy ? 'disabled' : ''}>${gs.busy ? 'Saving…' : 'Lock my guess'}</button></div>
     <p class="pr-note">One guess a day, it can't be changed. Free: you only pay gas.</p>`;
   const past = D.past.filter(p => p.x.settled).map(p => `<div class="du-row"><div><b>${new Date((p.day * 86400 + 72000) * 1000).toISOString().slice(0, 10)}</b> · DOGE ${usd5(Number(p.x.price.toString()) / 1e8)}<small>${p.x.winner !== E.constants.AddressZero ? `${esc(nm(p.x.winner))} guessed ${usd5(Number(p.x.winnerGuess.toString()) / 1e8)} and won ${sxNum(fl(p.x.prize, 18))} KingS` : 'nobody played'}</small></div></div>`).join('');
-  box.innerHTML = `<section class="sx-card gs-card"><div class="sx-head"><h2>🎯 Guess the DOGE price</h2><span>${open ? `guesses close in ${inT(D.close - now)}` : now < D.target ? `result in ${inT(D.target - now)}` : 'waiting for the bot to report the price'}</span></div>
+  box.innerHTML = `<section class="sx-card gs-card"><div class="sx-head"><h2>🎯 Guess the DOGE price</h2><span>${open ? `guesses close in ${inT(D.close - now)}` : now < D.target ? `result in ${inT(D.target - now)}` : D.today && D.today.settled ? 'today is decided' : gsV2() ? 'settling with RedStone\'s 20:00 price' : 'waiting for the bot to report the price'}</span></div>
       <p class="gs-q">What will DOGE cost at <b>20:00 UTC today</b>? The closest guess wins <b>${sxNum(fl(D.prize, 18))} KingS</b>.</p>
       <div class="pr-sides"><div><span>DOGE now (Binance)</span><b>${ref ? usd5(ref) : '…'}</b><small>updates every 30 s</small></div><div><span>Players today</span><b>${D.n}</b><small>one guess each</small></div></div>
-      ${act}</section>
+      ${act}${settleBtn}</section>
     <section class="sx-card"><div class="sx-head"><h2>Closest right now</h2><span>by today's live price</span></div>
       ${ranked.length ? ranked.map((g, k) => `<div class="du-row${st.account && same(g.who, st.account) ? ' me' : ''}"><div>${k === 0 ? '👑 ' : `${k + 1}. `}<a href="#u/${esc(gs.names[lk(g.who)] || g.who)}"><b>${esc(nm(g.who))}</b></a><small>guessed ${usd5(g.p)}${ref ? ` · ${(Math.abs(g.p - ref) / ref * 100).toFixed(2)}% away now` : ''}</small></div></div>`).join('') : '<div class="empty-card">No guesses yet today. Be the first.</div>'}</section>
     ${past ? `<section class="sx-card"><div class="sx-head"><h2>Last days</h2></div>${past}</section>` : ''}
-    <p class="pr-note">How it works: the CavFi bot reports the opening price of Binance's 1-minute DOGEUSDT candle at 20:00 UTC (the same oracle as the price markets). The closest guess wins; on a tie the earlier guess wins. Prizes are testnet KingS from the game's prize fund, no real value.</p>`;
+    <p class="pr-note">${gsV2() ? `How it works: the answer is <b>RedStone's DOGE/USD price, signed by its oracle nodes at exactly 20:00:00 UTC</b>. After 20:00 anyone can settle the day (the CavFi bot usually does it within a minute): the transaction carries RedStone's signed data and the contract itself checks the signatures and the time, so nobody can pick the price. A day nobody settles within 24 hours keeps its prize in the fund. "DOGE now" above is Binance's live price, only as a guide.` : `How it works: the CavFi bot reports the opening price of Binance's 1-minute DOGEUSDT candle at 20:00 UTC (the same oracle as the price markets).`} The closest guess wins; on a tie the earlier guess wins. Prizes are testnet KingS from the game's prize fund, no real value.</p>`;
 }
 document.addEventListener('click', async e => {
   const b = e.target.closest('[data-gs]'); if (!b) return;
   if (b.dataset.gs === 'gate'){ const g = walletGate(); if (g && g.act) g.act(); return; }
+  if (b.dataset.gs === 'settle'){ const day = Number(b.dataset.day);
+    gs.busy = true; renderGuess();
+    try{ const tx = await sendTx(() => rsTx(A.guess, 'function settle(uint32 day)', [day], day * 86400 + 72000), 'Settling with RedStone…', () => {}); toast(`Day settled with RedStone's 20:00 UTC price. ${txLink(tx.hash)}`, 'ok', 8000); celebrate(b, 18); }
+    catch(err){ toast(errMsg(err), 'bad', 8000); }
+    gs.busy = false; return loadGuess(); }
   const v = Number(String(($('gsIn') || {}).value || '').replace(',', '.').replace(/^\$/, ''));
   if (!(v > 0) || v > 100) return toast('Type your guess in USD, for example 0.0775.', 'bad');
   gs.busy = true; renderGuess();
@@ -6171,7 +6220,7 @@ async function pcPoll(){
     const rp = RP(), head = await rp.getBlockNumber();
     if (!PC.from){ PC.from = head; return; }   // only wins that happen while you are here
     if (head <= PC.from) return;
-    const addrs = [A.arena, A.duel, A.predict, A.raffle, A.guess].filter(Boolean);
+    const addrs = [A.arena, A.duel, A.predict, A.predictV1, A.raffle, A.guess, A.guessV1].filter(Boolean);
     const logs = await rp.send('eth_getLogs', [{address: addrs, fromBlock: E.utils.hexValue(PC.from + 1), toBlock: E.utils.hexValue(Math.min(head, PC.from + 2000)), topics: [[PC_T.arClaimed, DU_SETTLED, PR_CLAIMED, PC_T.drawn, PC_T.gsSettled]]}]);
     PC.from = Math.min(head, PC.from + 2000);
     const bot = lk(A.bot || ''), K = h => sxNum(Number(BigInt(h)) / 1e18);
@@ -6180,10 +6229,10 @@ async function pcPoll(){
       const a = lk(l.address), t0 = l.topics[0], w = i => '0x' + l.data.slice(2 + 64 * i, 66 + 64 * i);
       if (a === lk(A.arena) && t0 === PC_T.arClaimed){ const who = lk('0x' + l.topics[2].slice(26)); if (who !== bot) PC.queue.push({who, txt: `won <b>${K(w(0))} KingS</b> in the Arena`, href: 'arena.html'}); }
       else if (a === lk(A.duel) && t0 === DU_SETTLED){ const who = lk('0x' + w(0).slice(26)); if (who !== lk(E.constants.AddressZero) && who !== bot) PC.queue.push({who, txt: `won duel #${Number(BigInt(l.topics[1]))} and <b>${K(w(1))} KingS</b>`, href: '#duels'}); }
-      else if (a === lk(A.predict) && t0 === PR_CLAIMED){ const who = lk('0x' + l.topics[2].slice(26)), id = Number(BigInt(l.topics[1])); if (who === bot) continue;
+      else if (isPr(a) && t0 === PR_CLAIMED){ const who = lk('0x' + l.topics[2].slice(26)), id = Number(BigInt(l.topics[1])); if (who === bot) continue;
         try{ const total = (await prC().count()).toNumber(), [ids, items] = await prC().page(total - 1 - id, 1); if (items[0] && items[0].state === 2) PC.queue.push({who, txt: `called the DOGE price right and won <b>${K(w(0))} KingS</b>`, href: '#p/' + id}); }catch(e){} }
       else if (a === lk(A.raffle) && t0 === PC_T.drawn){ for (let i = 0; i < 3; i++){ const who = lk('0x' + w(i).slice(26)); if (who !== lk(E.constants.AddressZero)) PC.queue.push({who, txt: `won <b>${K(w(3 + i))} KingS</b> in the Royal Raffle`, href: '#'}); } }
-      else if (a === lk(A.guess) && t0 === PC_T.gsSettled){ const who = lk('0x' + l.topics[2].slice(26)); if (who !== lk(E.constants.AddressZero)) PC.queue.push({who, txt: `guessed the DOGE price closest and won <b>${K(w(2))} KingS</b>`, href: '#guess'}); }
+      else if (isGs(a) && t0 === PC_T.gsSettled){ const who = lk('0x' + l.topics[2].slice(26)); if (who !== lk(E.constants.AddressZero)) PC.queue.push({who, txt: `guessed the DOGE price closest and won <b>${K(w(2))} KingS</b>`, href: '#guess'}); }
     }
     const need = [...new Set(PC.queue.map(x => x.who))].filter(x => PC.names[x] == null);
     if (A.names && need.length){ try{ const ns = await nmC().namesOf(need); need.forEach((x, k) => PC.names[x] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
