@@ -337,6 +337,15 @@ a.item{color:var(--ink);text-decoration:none}
 /* ---- launchpad ---- */
 #viewLaunch>*{width:100%;max-width:880px}
 .lx-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.lx-sect{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:4px 0 8px}.lx-sect h3{margin:0;font:400 21px var(--display)}.lx-sect small{color:var(--muted);font-size:12.5px}
+.lx-moon{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(168px,1fr);gap:10px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;scroll-snap-type:x proximity}
+.lx-mc{all:unset;box-sizing:border-box;cursor:pointer;scroll-snap-align:start;border-radius:18px;padding:12px 14px;display:grid;gap:4px;color:#fff;background:linear-gradient(145deg,hsl(var(--h) 62% 46%),hsl(calc(var(--h) + 35) 58% 28%));box-shadow:0 10px 24px -14px rgba(0,0,0,.5);transition:transform .2s}
+.lx-mc:hover,.lx-mc:focus-visible{transform:translateY(-2px)}.lx-mc:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.lx-mc .lx-top{display:flex;gap:8px;align-items:center}.lx-mc b{font:700 17px var(--body)}.lx-mc small{opacity:.85;font-size:12px}.lx-mc .up{font:800 20px var(--body);color:#D6FFE3}
+.co-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:6px 14px;margin-bottom:16px}
+.co-row{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.co-row:first-child{border-top:0}.co-row small{color:var(--muted)}.co-row.static{cursor:default}
+.co-x{font:700 14px var(--mono);white-space:nowrap}.co-x.up{color:var(--ok)}.co-x.dn{color:var(--bad)}
 .lx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 .lx-card{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:10px;align-content:start;transition:border-color .2s,transform .2s,box-shadow .2s}
 .lx-card:hover,.lx-card:focus-visible{border-color:var(--chestnut);transform:translateY(-2px);box-shadow:0 18px 40px -28px rgba(80,30,10,.55)}
@@ -1163,6 +1172,8 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 
     <section id="lxExplore" aria-label="Launches">
       <div id="lxKing"></div>
+      <div id="lxMoon"></div>
+      <div id="lxCalls"></div>
       <div class="lx-grid" id="lxList"><div class="empty-card">Loading launches…</div></div>
     </section>
 
@@ -1192,6 +1203,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
             <div class="sx-head"><h2>Price</h2><span id="lxPxNote">DOGE per token</span></div>
             <div class="sx-chart" id="lxChart"></div>
           </div>
+          <div class="sx-card" id="lxCallCard" hidden></div>
           <div class="sx-card">
             <div class="sx-head"><h2>Trades</h2><span id="lxTradesN"></span></div>
             <div id="lxTrades"></div>
@@ -1290,6 +1302,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <h2>Predict, duels, profiles and alerts</h2>
         <details><summary>How do DOGE price predictions work?</summary><p>On <a href="#predict" data-goview="predict">Predict</a>, each market asks a yes/no question about the real DOGE/USD price, like "Will DOGE be above $0.20 on Sunday, 20:00 UTC?". Back YES or NO with KingS until the market closes. Everyone on the right side shares the whole pot in proportion to their stake, minus a 2% fee, so the pool sizes show the crowd's odds. If only one side was backed, everyone gets their KingS back. Testnet KingS, no real value.</p></details>
         <details><summary>What is "Guess the DOGE price"?</summary><p>A free daily game on <a href="#guess">Predict → Free guess</a>: until 18:00 UTC, each wallet can lock one guess of the DOGE price at 20:00 UTC. The answer is RedStone's DOGE/USD price signed at exactly 20:00:00 UTC: after 20:00 anyone can settle the day (the CavFi bot usually does), the contract checks RedStone's signatures itself, and the closest guess wins the day's KingS prize; on a tie the earlier guess wins. Nothing is staked, you only pay gas. Each guess is worth 20 leaderboard points and the day's winner gets 300.</p></details>
+        <details><summary>What are Callouts?</summary><p>On any Launchpad token page you can press <b>Call it</b> to put your name on the token at today's price. The callout is saved on-chain (free, you only pay gas), and everyone can see how many times the token has grown since: 2×, 10×… One callout per token, up to 3 a day. Each callout is worth 20 leaderboard points, and one that is 2× or more after at least an hour earns 100 more (Leaderboards → Callers). A callout is a public record of who spotted a token early, not financial advice.</p></details>
         <details><summary>What are the hourly markets?</summary><p>Every hour the CavFi bot opens a quick "up or down" market: will DOGE be higher at the end of the hour than at its start? The line is DOGE's price at the start of the hour, bets close 10 minutes before the end, and if the price is exactly the same, NO wins. Only bets of 100 KingS or more earn leaderboard points.</p></details>
         <details><summary>Who decides the price?</summary><p><b>RedStone</b>, a decentralized oracle. Every market is decided by RedStone's DOGE/USD price, signed by its oracle nodes at exactly the resolve time. Anyone can resolve a market after that moment: the transaction carries RedStone's signed data and the CavFi contract itself checks the signatures (3 of RedStone's 5 primary signers) and that the data is from that exact second. Nobody, CavFi included, can choose the price. The CavFi bot opens the markets, picks the line of the daily and weekly ones and usually resolves them within a minute; if nobody resolves a market within a day, anyone can turn it into a full refund. Markets opened before this upgrade (marked v1) finish the old way: the bot reports Binance's price.</p></details>
         <details><summary>What is an Arena duel?</summary><p>A one-on-one bet on the current Arena round: pick two of the round's tokens and a KingS stake, for example "RPUP beats KingS, 1,000 KingS". Whoever accepts takes the other token with the same stake. When the Arena round is settled, the token that rose more against DOGE (using the Arena's own start and end prices) wins, and its backer gets both stakes, with no fee. Duels can be accepted only while Arena staking is open. A tie, or too few price samples, refunds both. You can invite one person with a .cav name or address, or share the duel link with anyone.</p></details>
@@ -1352,7 +1365,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     <section class="sx-card" aria-labelledby="sxBoardH">
       <div class="sx-head"><h2 id="sxBoardH">Leaderboard</h2><span id="lbNote">points have no value</span></div>
       <div class="chips lb-tabs" id="lbTabs" role="group" aria-label="Which leaderboard">
-        <button class="chip" data-t="pts" aria-pressed="true">Points</button><button class="chip" data-t="swap">Traders</button><button class="chip" data-t="arena">Arena</button><button class="chip" data-t="quest">Quests & gm</button><button class="chip" data-t="pred">Predictors</button><button class="chip" data-t="launch">Launchers</button><button class="chip" data-t="ref">Inviters</button>
+        <button class="chip" data-t="pts" aria-pressed="true">Points</button><button class="chip" data-t="swap">Traders</button><button class="chip" data-t="arena">Arena</button><button class="chip" data-t="quest">Quests & gm</button><button class="chip" data-t="pred">Predictors</button><button class="chip" data-t="launch">Launchers</button><button class="chip" data-t="call">Callers</button><button class="chip" data-t="ref">Inviters</button>
       </div>
       <div class="lb-pod" id="lbPod"></div>
       <p class="sx-legend" id="lbLegend"></p>
@@ -1495,7 +1508,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-<script src="quests-rules.js?v=4"></script>
+<script src="quests-rules.js?v=5"></script>
 <script src="redstone-payload.js?v=2"></script>
 <script>
 (() => {
@@ -1516,7 +1529,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { guess:'', predict:'', guessV1:'', predictV1:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { guess:'', predict:'', guessV1:'', predictV1:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -3396,9 +3409,16 @@ async function loadBoard(){
       for (const l of logs){ const who = lk('0x' + l.topics[2].slice(26)); if (who === lk(E.constants.AddressZero)) continue; const r = row(who);
         if (l.topics[0] === GS_GUESSED) r.guesses = (r.guesses || 0) + 1; else r.guessWins = (r.guessWins || 0) + 1; }
     }catch(e){} }
+    if (A.callouts){ try{   // callouts: 20 per callout, 100 more for each one that is 2x or more after at least an hour
+      const logs = await winLogs(A.callouts, [CO_CALLED]), ids = new Set(logs.map(l => Number(BigInt(l.topics[1]))));
+      const c = coC(), n = (await c.count()).toNumber(), [pid, items, nowP] = n ? await c.page(0, Math.min(n, 400)) : [[], [], []], nowS = (await RP().getBlock('latest')).timestamp;   // chain time
+      pid.forEach((id, k) => { if (!ids.has(id.toNumber())) return; const r = row(lk(items[k].caller)), p0 = fl(items[k].price, 18), m = p0 > 0 ? fl(nowP[k], 18) / p0 : 0;
+        r.calls = (r.calls || 0) + 1;
+        if (nowS - Number(items[k][2]) >= 3600){ if (m >= 2) r.callWins = (r.callWins || 0) + 1; if (m > (r.bestCall || 0)) r.bestCall = m; } });
+    }catch(e){} }
     if (A.bot) delete P[lk(A.bot)];   // the CavFi bot's own trades and tips don't count
     const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.quests * 20 + r.launches * 100 + r.grads * 500
-      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300;
+      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100;
     let refMap = {}; try{ refMap = await loadRefMap(); }catch(e){}
     for (const r of Object.values(P)){ const by = refMap[r.addr]; if (by){ const x = row(by); x.refPts = (x.refPts || 0) + base(r) * 0.25; x.invites = (x.invites || 0) + 1; } }
     board.rows = Object.values(P).map(r => ({...r, refPts: Math.round(r.refPts || 0), pts: Math.round(base(r) + (r.refPts || 0))}))
@@ -3414,12 +3434,13 @@ async function loadBoard(){
   if (st.view === 'profile') renderProfile();
 }
 const LB_TABS = {
-  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
+  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · 20 per callout, 100 more when a callout is 2× or more after an hour · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
   swap:  {key: r => r.swapUsd, legend: 'Ranked by swap volume, valued at today\'s CavFi pool prices.', val: r => sxUsd(r.swapUsd)},
   arena: {key: r => r.arenaWins * 1e12 + r.arenaK, legend: 'Ranked by Arena rounds won, then by KingS staked.', val: r => r.arenaWins ? `${r.arenaWins} 🏆` : sxNum(r.arenaK) + ' KingS'},
   quest: {key: r => r.quests * 2 + r.gms, legend: 'Ranked by daily quests done (recorded by the bot after each day), then by gm and gn.', val: r => `${r.quests} quests`},
   launch:{key: r => r.grads * 1e9 + r.launches * 1e6 + r.launchUsd, legend: 'Ranked by tokens that graduated, then tokens launched, then launchpad volume.', val: r => `${r.launches} launched`},
   pred:  {key: r => ((r.predWins || 0) + (r.duelWins || 0) + (r.guessWins || 0)) * 1e6 + (r.preds || 0) + (r.duels || 0) + (r.guesses || 0), legend: 'Ranked by right calls on DOGE price markets plus duels won, then by markets backed and duels played.', val: r => `${(r.predWins || 0) + (r.duelWins || 0)} won`},
+  call:  {key: r => (r.bestCall || 0) * 1e6 + (r.calls || 0), legend: 'Ranked by the best multiple of a callout at least 1 hour old, then by callouts made. Call a token on its Launchpad page.', val: r => r.bestCall ? `${r.bestCall >= 100 ? Math.round(r.bestCall).toLocaleString('en-US') : r.bestCall.toFixed(2)}× best` : `${r.calls || 0} call${r.calls === 1 ? '' : 's'}`},
   ref:   {key: r => r.invites || 0, legend: 'Ranked by people invited with an invite link (Badges & invite link in your account).', val: r => `${r.invites || 0} invited`},
 };
 $('lbTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; board.tab = b.dataset.t; renderBoard(); });
@@ -3442,6 +3463,7 @@ function renderBoard(){
     const cols = {swap: ['Swaps', r => r.swaps, 'Volume', r => sxUsd(r.swapUsd)], arena: ['Rounds won', r => r.arenaWins || '–', 'KingS staked', r => sxNum(r.arenaK)],
       quest: ['gm / gn', r => r.gms || '–', 'Quests', r => r.quests || '–'], launch: ['Launched', r => r.launches + (r.grads ? ` · ${r.grads}🎓` : ''), 'Launchpad volume', r => sxUsd(r.launchUsd)],
       pred: ['Markets · right', r => `${r.preds || 0} · ${r.predWins || 0}`, 'Duels · won', r => `${r.duels || 0} · ${r.duelWins || 0}`],
+      call: ['Callouts · 2× or more', r => `${r.calls || 0} · ${r.callWins || 0}`, 'Best multiple', r => r.bestCall ? (r.bestCall >= 100 ? Math.round(r.bestCall).toLocaleString('en-US') : r.bestCall.toFixed(2)) + '×' : '–'],
       ref: ['Bonus points', r => r.refPts ? '+' + r.refPts.toLocaleString('en-US') : '–', 'Invited', r => r.invites || 0]}[board.tab];
     const tr2 = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="#u/${esc((board.names || {})[r.addr] || r.addr)}" title="Open profile">${esc(nameOf(r))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td><td>${cols[1](r)}</td><td><b>${cols[3](r)}</b></td></tr>`;
     box.innerHTML = `<table><thead><tr><th scope="col">#</th><th scope="col">Wallet</th><th scope="col">${cols[0]}</th><th scope="col">${cols[2]}</th></tr></thead><tbody>${top.map(tr2).join('')}${myIdx >= 20 ? tr2(rows[myIdx], myIdx) : ''}</tbody></table>`;
@@ -4567,6 +4589,28 @@ const LX_COMMENT = E.utils.id('Comment(address,address,uint256,string)');
 const LX_CURVE = 800e6, LX_SUPPLY = 1e9;
 const lx = { vol1h:{}, holders:null, comments:[], cText:'', cBusy:false, tab:'explore', filter:'new', list:[], loaded:false, loading:false, err:null, open:null, side:'buy', amt:'', quote:null, bal:null, allow:true, busy:false, trades:[], tradesFor:null, target:null, createFee:null, firstQ:null };
 const lxC = (signer) => new E.Contract(A.launch, LAUNCH_ABI, signer ? st.signer : RP());
+/* Callouts: put your name on a Launchpad token at today's price; everyone sees how many times it grew since */
+const CALL_TUPLE = 'tuple(address caller, address token, uint64 at, uint256 price)';
+const CALLOUT_ABI = ['function call(address token) returns (uint256)', 'function count() view returns (uint256)',
+  `function page(uint256 start, uint256 n) view returns (uint256[] ids, ${CALL_TUPLE}[] items, uint256[] nowPrices)`,
+  'function idsOfToken(address) view returns (uint256[])', `function get(uint256) view returns (${CALL_TUPLE})`, 'function priceOf(address) view returns (uint256)',
+  'function callsLeftToday(address) view returns (uint256)', 'function called(address, address) view returns (bool)'];
+const CO_CALLED = E.utils.id('Called(uint256,address,address,uint256)');
+const coC = signer => new E.Contract(A.callouts, CALLOUT_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const coMcap = p => { const d = p * LX_SUPPLY, u = lxDogeUsd(); return u ? sxUsd(d * u) : sxNum(d) + ' DOGE'; };   // p: DOGE per token
+const coMult = c => c.p0 > 0 ? c.p1 / c.p0 : 0;
+const coX = m => `<span class="co-x ${m >= 1.005 ? 'up' : m <= 0.995 ? 'dn' : ''}">${m >= 100 ? Math.round(m).toLocaleString('en-US') : m.toFixed(2)}×</span>`;
+const coWho = a => (lx.coNames || {})[lk(a)] || (same(a, st.account) ? 'you' : short(a));
+async function loadCallouts(){
+  if (!A.callouts) return;
+  try{
+    const c = coC(), n = (await c.count()).toNumber(); if (!n){ lx.calls = []; return; }
+    const [ids, items, nowP] = await c.page(0, Math.min(n, 200));
+    lx.calls = ids.map((id, k) => ({id: id.toNumber(), who: items[k].caller, token: items[k].token, at: Number(items[k][2]), p0: fl(items[k].price, 18), p1: fl(nowP[k], 18)}));
+    const who = [...new Set(lx.calls.map(x => lk(x.who)))].filter(a => (lx.coNames || {})[a] == null);
+    if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); lx.coNames = lx.coNames || {}; who.forEach((a, k) => lx.coNames[a] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
+  }catch(e){}
+}
 const lxPrice = L => fl(L.vDoge, 18) / fl(L.vTok, 18);                       // DOGE per token
 const lxDogeUsd = () => sx.ref[lk(A.wdoge)] ?? guard.ref[lk(A.wdoge)];
 const lxProgress = L => L.graduated ? 1 : 1 - fl(L.tokensLeft, 18) / LX_CURVE;
@@ -4604,13 +4648,25 @@ async function loadLaunches(){
       const [addrs, items] = await c.page(s, 50);
       addrs.forEach((a, i) => list.push({address:a, L:items[i]}));
     }
-    // curve volume in the last hour, for Trending
+    // curve trades of the last 24 hours: volume of the last hour (Trending) and the biggest pumps (Only Moon)
     try{
-      const rp = RP(), head = await rp.getBlockNumber(), back = Math.ceil(3600 / (sx.bt || 3));
-      const logs = await rp.send('eth_getLogs', [{address:A.launch, fromBlock:E.utils.hexValue(Math.max(0, head - back)), toBlock:E.utils.hexValue(head), topics:[LX_TRADE]}]);
-      const v = {}; for (const l of logs){ const t = lk('0x' + l.topics[1].slice(26)); v[t] = (v[t] || 0) + fl(word(l.data, 1), 18); }
+      const rp = RP(), head = await rp.getBlockNumber(), bt = sx.bt || 3, back1 = Math.ceil(3600 / bt), back24 = Math.ceil(86400 / bt), logs = [];
+      for (let z = head; z > head - back24 && z > 0; z -= SX_CHUNK){
+        const a = Math.max(0, z - SX_CHUNK + 1, head - back24);
+        logs.unshift(...await rp.send('eth_getLogs', [{address:A.launch, fromBlock:E.utils.hexValue(a), toBlock:E.utils.hexValue(z), topics:[LX_TRADE]}]));
+      }
+      const v = {}, first = {};
+      for (const l of logs){ const t = lk('0x' + l.topics[1].slice(26));
+        if (parseInt(l.blockNumber, 16) >= head - back1) v[t] = (v[t] || 0) + fl(word(l.data, 1), 18);
+        if (first[t] == null) first[t] = fl(word(l.data, 4), 18) / fl(word(l.data, 5), 18); }
       lx.vol1h = v;
+      const since = Math.floor(Date.now() / 1000) - 86400;
+      lx.moon = list.filter(x => !x.L.graduated && (first[lk(x.address)] != null || x.L.createdAt.toNumber() >= since)).map(x => {
+        const base = x.L.createdAt.toNumber() >= since ? fl(x.L.target, 18) / 3 / (LX_CURVE * 4 / 3) : first[lk(x.address)];
+        return {...x, chg: base > 0 ? lxPrice(x.L) / base - 1 : 0};
+      }).filter(x => x.chg > 0.001).sort((a, b) => b.chg - a.chg).slice(0, 8);
     }catch(e){}
+    await loadCallouts();
     if (seq !== lxSeq) return;
     lx.list = list; lx.loaded = true; lx.err = null;
   }catch(e){ lx.err = 'Could not read the launchpad. ' + (e.message || '').slice(0, 80); }
@@ -4639,6 +4695,15 @@ function renderLaunch(){
       <span class="lx-kmain"><small>King of the Hill · closest to graduating</small><b>${esc(king.L.name)} <span>$${esc(king.L.symbol)}</span>${lxTeam(king.L) ? ' <span class="lx-team">CavFi team</span>' : ''}</b>
       <span class="lx-prog"><span class="track"><span class="fill" style="width:${(pr*100).toFixed(1)}%"></span></span><span><span>${left != null ? `about ${left < 10 ? left.toFixed(2) : sxNum(left)} DOGE more fills the curve` : 'Bonding curve'}</span><b>${(pr*100).toFixed(pr < 0.01 ? 2 : 0)}%</b></span></span></span>
       <span class="lx-kgo">Trade →</span></button>`; })() : '';
+  const moon = lx.moon || [];
+  $('lxMoon').innerHTML = moon.length ? `<div class="lx-sect"><h3>🚀 Only Moon</h3><small>biggest pumps on the curve · last 24h</small></div>
+    <div class="lx-moon">${moon.map(({address, L, chg}) => { let h = 0; for (const ch of lk(address)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+      return `<button class="lx-mc" style="--h:${h % 360}" data-open="${address}"><span class="lx-top">${lxAvatar(address, L.symbol, L.image)}<b>$${esc(L.symbol)}</b></span><small>Market cap ${lxMcap(L)}</small><span class="up">+${chg >= 10 ? Math.round(chg * 100).toLocaleString('en-US') : (chg * 100).toFixed(1)}%</span></button>`; }).join('')}</div>` : '';
+  const calls = (lx.calls || []).filter(c => lxByAddr(c.token)).slice(0, 6);
+  $('lxCalls').innerHTML = A.callouts ? `<div class="lx-sect"><h3>📣 Recent callouts</h3><small>who spotted a token early · open a token to call it</small></div>
+    <div class="co-box">${calls.length ? calls.map(c => { const T = lxByAddr(c.token).L;
+      return `<button class="co-row" data-open="${c.token}"><span><b>${esc(coWho(c.who))}</b> called <b>$${esc(T.symbol)}</b> at ${coMcap(c.p0)}<br><small>${lxAge(c.at)}</small></span>${coX(coMult(c))}</button>`; }).join('')
+      : '<div class="empty-card" style="border:0">No callouts yet. Open a token you believe in and press <b>Call it</b>: if it moons, everyone sees you were first.</div>'}</div>` : '';
   let rows = lx.list.slice();
   if (lx.filter === 'grad') rows = rows.filter(x => x.L.graduated);
   else if (lx.filter === 'hot') rows = rows.filter(x => !x.L.graduated).sort((a, b) => lxProgress(b.L) - lxProgress(a.L));
@@ -4723,7 +4788,9 @@ async function loadLxDetail(){
     if (L.creator === E.constants.AddressZero){ if (seq === lxDSeq){ lx.missing = lk(addr); renderLxDetail(); } return; }
     if (x) x.L = L; else lx.list.unshift({address:addr, L});
     if (seq !== lxDSeq) return;
+    if (!lx.co || lx.co.token !== lk(addr)) lx.co = null;
     renderLxDetail();
+    loadLxCalls(addr);
     const t = await resolveToken(addr);
     if (onRightChain() && st.account){
       const tk = new E.Contract(addr, ERC20_ABI, st.provider);
@@ -4836,7 +4903,49 @@ function renderLxDetail(){
       <span class="when">${lxAge(Math.floor(r.t))}<a href="${NET.explorer}/tx/${r.tx}" target="_blank" rel="noopener" aria-label="View transaction">↗</a></span></div>`).join('')
     : `<div class="empty-card">${lx.dErr ? esc(lx.dErr) : 'No trades yet.'}</div>`;
   renderLxTrade(x);
+  renderLxCall(x);
 }
+function renderLxCall(x){
+  const box = $('lxCallCard'); if (!box) return;
+  box.hidden = !A.callouts; if (!A.callouts) return;
+  const {address, L} = x, d = lx.co && lx.co.token === lk(address) ? lx.co : null, gate = walletGate();
+  const nowP = d && d.now != null ? d.now : lxPrice(L);
+  let btn;
+  if (gate) btn = `<button class="btn primary" data-co="gate">${gate.label}</button>`;
+  else if (!d) btn = '<button class="btn" disabled>Loading…</button>';
+  else if (d.mine) btn = '<button class="btn" disabled>You called this token ✓</button>';
+  else if (d.left === 0) btn = '<button class="btn" disabled>3 callouts a day: back tomorrow</button>';
+  else btn = `<button class="btn primary" data-co="call" ${lx.coBusy ? 'disabled' : ''}>${lx.coBusy ? 'Calling…' : `📣 Call $${esc(L.symbol)} at ${coMcap(nowP)}`}</button>`;
+  const list = d ? d.calls : [];
+  box.innerHTML = `<div class="sx-head"><h2>📣 Callouts</h2><span>${list.length ? `${list.length} caller${list.length === 1 ? '' : 's'}` : ''}</span></div>
+    <p class="pr-note" style="margin:0 0 10px">Think $${esc(L.symbol)} will moon? Put your name on it at today's price. The callout is recorded on-chain, and everyone can see how many times the token grew since. Free (only gas), one callout per token, up to 3 a day.</p>
+    ${btn}${d && d.left > 0 && !d.mine && !gate ? `<small style="display:block;margin-top:6px;color:var(--muted)">${d.left} callout${d.left === 1 ? '' : 's'} left today</small>` : ''}
+    <div style="margin-top:10px">${list.map(c => `<div class="co-row static"><span><b>${esc(coWho(c.who))}</b> at ${coMcap(c.p0)}<br><small>${lxAge(c.at)}</small></span>${coX(c.p0 > 0 ? nowP / c.p0 : 0)}</div>`).join('')}</div>`;
+}
+async function loadLxCalls(addr){
+  if (!A.callouts) return;
+  try{
+    const c = coC(), ids = (await c.idsOfToken(addr)).slice(-30).reverse();
+    const [items, now] = await Promise.all([Promise.all(ids.map(i => c.get(i))), c.priceOf(addr)]);
+    const d = {token: lk(addr), now: fl(now, 18), calls: items.map(x => ({who: x.caller, at: Number(x[2]), p0: fl(x.price, 18)})), mine: false, left: 3};
+    if (st.account){ const [m, l] = await Promise.all([c.called(st.account, addr), c.callsLeftToday(st.account)]); d.mine = m; d.left = l.toNumber(); }
+    const who = [...new Set(d.calls.map(x => lk(x.who)))].filter(a => (lx.coNames || {})[a] == null);
+    if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); lx.coNames = lx.coNames || {}; who.forEach((a, k) => lx.coNames[a] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
+    if (lk(lx.open || '') !== lk(addr)) return;
+    lx.co = d; const x = lxByAddr(addr); if (x) renderLxCall(x);
+  }catch(e){ console.warn('CO callouts:', e.message); }
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-co]'); if (!b) return;
+  if (b.dataset.co === 'gate'){ const g = walletGate(); if (g && g.act) g.act(); return; }
+  const addr = lx.open, x = lxByAddr(addr); if (!addr || !x) return;
+  lx.coBusy = true; renderLxCall(x);
+  try{
+    const tx = await sendTx(() => coC(true).call(addr), 'Calling it…', () => {});
+    toast(`📣 You called $${esc(x.L.symbol)}. If it moons, everyone sees you were early. ${txLink(tx.hash)}`, 'ok', 9000); celebrate(b, 24);
+  }catch(err){ toast(errMsg(err), 'bad', 8000); }
+  lx.coBusy = false; await Promise.all([loadLxCalls(addr), loadCallouts()]); renderLxCall(x);
+});
 function renderLxTrade(x){
   const {address, L} = x, box = $('lxTrade');
   if (L.graduated){
@@ -6061,8 +6170,8 @@ async function loadFeed(){
   FD.loading = true;
   try{
     const rp = RP(), head = await rp.getBlockNumber(), hb = await rp.getBlock(head), bt = sx.bt || 3;
-    const addrs = [A.arena, A.predict, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV1].filter(Boolean);
-    const topics = [GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
+    const addrs = [A.arena, A.predict, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV1, A.callouts].filter(Boolean);
+    const topics = [CO_CALLED, GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
     const logs = [];
     for (let z = head; z > head - 20000 && z > 0; z -= SX_CHUNK){
       const a = Math.max(0, z - SX_CHUNK + 1);
@@ -6096,6 +6205,8 @@ async function loadFeed(){
         else if (A0 === lk(A.launch) && t0 === FD_T.launched){ const tok = topic1a(l), who = topic2(l);
           const sym = E.utils.defaultAbiCoder.decode(['string', 'string', 'uint256'], l.data)[1];
           items.push({...base, who, ic: '🚀', txt: `launched <b>$${esc(sym)}</b> on the Launchpad`, href: '#t/' + E.utils.getAddress(tok)}); }
+        else if (A.callouts && A0 === lk(A.callouts) && t0 === CO_CALLED){ const tok = E.utils.getAddress('0x' + l.topics[3].slice(26)), p = Number(n(l, 0)) / 1e18;
+          items.push({...base, who: topic2(l), ic: '📣', txt: `called <b>$${esc(await lxSym(tok))}</b> at a ${coMcap(p)} market cap`, href: '#t/' + tok}); }
         else if (A0 === lk(A.launch) && t0 === FD_T.graduated){ const tok = topic1a(l);
           items.push({...base, who: null, ic: '🎓', txt: `<b>$${esc(await lxSym(E.utils.getAddress(tok)))}</b> graduated: its pool is live and the LP is burned`, href: '#t/' + E.utils.getAddress(tok)}); }
         else if (A0 === lk(A.names) && t0 === FD_T.registered){ const lab = E.utils.defaultAbiCoder.decode(['string', 'uint256'], l.data)[0];

@@ -25,6 +25,7 @@ const TX_TASKS = {
   predict:{keys: ['predict', 'predictV1'], sel: ['0x8decaec0'], need: 'Back YES or NO on a DOGE price market: cavfi.com/#predict'},
   duel:   {keys: ['duel'], sel: ['0xc139da6f', '0x19b05f49'], need: 'Start or accept an Arena duel: cavfi.com/#duels'},
   guess:  {keys: ['guess', 'guessV1'], sel: ['0x1e997a6d'], need: 'Make your free daily guess of the DOGE price: cavfi.com/#guess'},
+  callout:{keys: ['callouts'], sel: ['0xf55332ab'], need: 'Call a Launchpad token: open it on cavfi.com/#launch and press Call it.'},
 };
 // tasks checked from contract state
 const STATE_TASKS = {

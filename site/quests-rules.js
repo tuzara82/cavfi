@@ -21,7 +21,8 @@
     // added later: "from" is the first UTC day they can be picked, so earlier days keep exactly the same quests
     {id: 'predict', key: ['predict', 'predictV1'], sel: ['0x8decaec0'],                             title: 'Call the DOGE price',      hint: 'Back YES or NO on any open market', view: 'predict', from: 20752},
     {id: 'duel',   key: ['duel'],           sel: ['0xc139da6f', '0x19b05f49'],               title: 'Start or accept a duel',   hint: 'Predict page, Arena duels tab', href: '#duels', from: 20752},
-    {id: 'guess',  key: ['guess', 'guessV1'], sel: ['0x1e997a6d'],                             title: 'Guess the DOGE price',     hint: 'Free: Predict page, Free guess tab', href: '#guess', from: 20754}
+    {id: 'guess',  key: ['guess', 'guessV1'], sel: ['0x1e997a6d'],                             title: 'Guess the DOGE price',     hint: 'Free: Predict page, Free guess tab', href: '#guess', from: 20754},
+    {id: 'callout', key: ['callouts'],       sel: ['0xf55332ab'],                             title: 'Call a Launchpad token',   hint: 'Open a token on the Launch page, press Call it', view: 'launch', from: 20756}
   ];
   var GM = {id: 'gm', key: ['gm'], sel: ['0xc0129d43'], title: 'Say gm', hint: 'GM card on the home page', view: 'home'};
   var GN = {id: 'gn', key: ['gm'], sel: ['0x3118f543'], title: 'Say gn', hint: 'GM card on the home page', view: 'home'};
