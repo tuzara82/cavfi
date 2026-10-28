@@ -22,9 +22,9 @@ const TX_TASKS = {
   limit:  {keys: ['limit'], sel: ['0x391560b2', '0xb0987adb'], need: 'Place a limit order on cavfi.com (Swap page, Limit tab).'},
   dca:    {keys: ['dca'], sel: ['0x7b070932', '0xd5c55b52'], need: 'Start an auto-buy on cavfi.com (Swap page, Auto-buy tab).'},
   farm:   {keys: ['farm', 'stake'], sel: ['0xe2bbb158', '0x608fc37a', '0xddc63262'], need: 'Stake or harvest on cavfi.com Farms.'},
-  predict:{keys: ['predict', 'predictV1'], sel: ['0x8decaec0'], need: 'Back YES or NO on a DOGE price market: cavfi.com/#predict'},
+  predict:{keys: ['predict', 'predictV2', 'predictV1'], sel: ['0x8decaec0'], need: 'Back YES or NO on a DOGE price market: cavfi.com/#predict'},
   duel:   {keys: ['duel'], sel: ['0xc139da6f', '0x19b05f49'], need: 'Start or accept an Arena duel: cavfi.com/#duels'},
-  guess:  {keys: ['guess', 'guessV1'], sel: ['0x1e997a6d'], need: 'Make your free daily guess of the DOGE price: cavfi.com/#guess'},
+  guess:  {keys: ['guess', 'guessV2', 'guessV1'], sel: ['0x1e997a6d'], need: 'Make your free daily guess of the DOGE price: cavfi.com/#guess'},
   callout:{keys: ['callouts'], sel: ['0xf55332ab'], need: 'Call a Launchpad token: open it on cavfi.com/#launch and press Call it.'},
 };
 // tasks checked from contract state
@@ -165,9 +165,14 @@ async function marketPage(env, url, id){
     rpcUrl = env.RPC || RPC;
     const A = await addresses(env, url); if (!A.predict) return fallback();
     // v2 (RedStone) continues the ids of v1: older ids live on predictV1
-    let r, v2 = !!A.predictV1;
-    try{ r = await call(A.predict, '0x9507d39a' + pad(BigInt(id).toString(16))); }
-    catch(e){ if (!A.predictV1) throw e; r = await call(A.predictV1, '0x9507d39a' + pad(BigInt(id).toString(16))); v2 = false; }
+    // newer versions continue the ids of older ones: try each contract, newest first
+    let r = null, ver = A.predictV2 ? 3 : A.predictV1 ? 2 : 1;
+    for (const [a, v] of [[A.predict, ver], [A.predictV2, 2], [A.predictV1, 1]]){
+      if (!a) continue;
+      try{ r = await call(a, '0x9507d39a' + pad(BigInt(id).toString(16))); ver = v; break; }catch(e){}
+    }
+    if (!r) return fallback();
+    const v2 = ver >= 2;
     const t = Number(word(r, 0)), w = i => word('0x' + r.slice(2 + t * 2), i);
     const q = strAt(r, t + Number(w(0))).replace(/^(Weekly|Hourly): w/, 'W');
     const state = Number(w(3)), yesWon = w(4) === 1n, price = Number(w(6)) / 1e8, yes = w(7), no = w(8), tot = yes + no;
@@ -176,7 +181,7 @@ async function marketPage(env, url, id){
     if (state === 2) desc = `${yesWon ? 'YES' : 'NO'} won: DOGE was $${price.toPrecision(3)}. ${fmtK(tot)} KingS pot.`;
     else if (state === 3) desc = 'Refunded: everyone got their KingS back.';
     else desc = tot ? `YES ${pY}% · NO ${100 - pY}% · ${fmtK(tot)} KingS pot. Back YES or NO with testnet KingS.` : 'Nobody has picked a side yet. Back YES or NO with testnet KingS.';
-    return sharePage(env, url, q || `DOGE market #${id}`, desc + (v2 ? ' Decided by RedStone\'s signed DOGE/USD price.' : ' The CavFi bot reported the price from Binance.'), path);
+    return sharePage(env, url, q || `DOGE market #${id}`, desc + (ver === 3 ? ' Decided by RedStone\'s DOGE/USD price on DogeOS.' : v2 ? ' Decided by RedStone\'s signed DOGE/USD price.' : ' The CavFi bot reported the price from Binance.'), path);
   }catch(e){ return fallback(); }
 }
 

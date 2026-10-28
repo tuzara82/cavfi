@@ -114,6 +114,7 @@ const ABI = {
   guess: ['function settle(uint32 day, uint64 price)', 'function oracle() view returns (address)', 'function owner() view returns (address)', 'function count(uint32) view returns (uint256)', 'function prize() view returns (uint256)',
           'function dayInfo(uint32 d) view returns (tuple(bool settled, uint64 price, address winner, uint64 winnerGuess, uint256 prize))',
           'event Settled(uint32 indexed day, uint64 price, address indexed winner, uint64 winnerGuess, uint256 prize)'],
+  predict3: [],   // filled below: predict2 + the per-market price source
   guess2: ['function settle(uint32 day)', 'function count(uint32) view returns (uint256)', 'function prize() view returns (uint256)',
           'function dayInfo(uint32 d) view returns (tuple(bool settled, uint64 price, address winner, uint64 winnerGuess, uint256 prize))',
           'event Settled(uint32 indexed day, uint64 price, address indexed winner, uint64 winnerGuess, uint256 prize)'],
@@ -966,6 +967,8 @@ let RSmod = null;
 const RS = () => RSmod || (RSmod = requireLocal(path.join(path.dirname(CFG.addresses), 'redstone-payload.js')));
 const isoT = x => new Date(x * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
 let rsWarned = false;
+// RedStone's public gateways stop for good on 2026-10-29: after that, signed data needs an API key
+const rsReachable = () => CFG.redstoneKeys.length > 0 || CFG.redstoneGateways.length > 0 || Date.now() < Date.UTC(2026, 9, 29);
 async function redstoneAt(at){
   const auth = CFG.redstoneKeys.map(([url, apiKey]) => ({url: url || RS().AUTH_URL, apiKey}));
   const gateways = auth.concat(CFG.redstoneGateways.length ? CFG.redstoneGateways : RS().PUBLIC);
@@ -980,11 +983,17 @@ async function redstoneAt(at){
 }
 // a contract call with RedStone's signed data appended to the calldata
 const withRs = (c, fn, args, hex) => async () => { const tx = await c.populateTransaction[fn](...args); tx.data += hex; return wallet.sendTransaction(tx); };
+ABI.predict3 = ABI.predict2.concat(['function byPull(uint256) view returns (bool)',
+  'function get(uint256 id) view returns (tuple(string question, uint64 closeAt, uint64 resolveAt, uint8 state, bool yesWon, uint256 strike, uint256 price, uint256 yesPool, uint256 noPool))']);
 const V2 = () => !!A.predictV1;   // after DeployV6: "predict" is v2 (RedStone) and "predictV1" holds the older markets
 async function predictKeeper(){
   if (!CFG.predict || !A.predict || !wallet || me === ethers.constants.AddressZero || now() - predictAt < 60) return;
   predictAt = now();
-  if (V2()){
+  if (A.predictV2){   // after DeployV8: "predict" is v3 (RedStone feed on DogeOS), v2 and v1 finish their markets
+    await predictRun(A.predict, 'v3');
+    await predictRun(A.predictV2, 'v2finish').catch(e => log('predict v2:', e.message));
+    if (A.predictV1) await predictRun(A.predictV1, 'v1finish').catch(e => log('predict v1:', e.message));
+  } else if (V2()){
     await predictRun(A.predict, 'v2');
     if (A.predictV1) await predictRun(A.predictV1, 'v1finish').catch(e => log('predict v1:', e.message));
   } else await predictRun(A.predict, 'v1');
@@ -1009,8 +1018,11 @@ async function predictNotify(c, id, price, yes){
 // mode 'v1': the original contract, the bot reports the exchange price (before DeployV6)
 // mode 'v2': RedStone contract: resolve with RedStone data, open markets, seed them
 // mode 'v1finish': after DeployV6, finish the open v1 markets the old way and take the seeds back, open nothing new
+// mode 'v3': fixed-line markets are decided by RedStone's DOGE/USD push feed on DogeOS (no key needed), hourly
+//            "up or down" markets by RedStone's signed data (only opened when the bot has a RedStone API key)
+// mode 'v2finish': after DeployV8, resolve what v2 still can (signed data), refund the rest, open nothing new
 async function predictRun(addr, mode){
-  const v2 = mode === 'v2', c = new ethers.Contract(addr, v2 ? ABI.predict2 : ABI.predict, wallet);
+  const v2 = mode === 'v2' || mode === 'v2finish' || mode === 'v3', c = new ethers.Contract(addr, mode === 'v3' ? ABI.predict3 : v2 ? ABI.predict2 : ABI.predict, wallet);
   const [oracle, owner] = await Promise.all([c.oracle(), c.owner()]);
   const canCreate = lk(oracle) === lk(me) || lk(owner) === lk(me);
   if (!v2 && !canCreate){ log('predict: this wallet is not the oracle of ' + short(addr) + ', skipping'); if (mode === 'v1') CFG.predict = false; return; }
@@ -1025,22 +1037,35 @@ async function predictRun(addr, mode){
       if (!m.yesPool.isZero() || !m.noPool.isZero()) await send(`predict #${id}: refund (not resolved in time)`, () => c.expire(id)).catch(e => log(`predict #${id}: refund failed: ${e.message}`));
       continue;
     }
-    let price, tx;
-    if (v2){
+    let price, tx, how = '';
+    const pull = v2 && (mode !== 'v3' || await c.byPull(id));
+    if (pull && mode === 'v2finish' && !rsReachable()) continue;   // public gateways are gone: wait for a key or the refund
+    if (pull){
       let rs; try{ rs = await redstoneAt(at); }catch(e){ log(`predict #${id}: ${e.message}`); continue; }
-      price = rs.price;
+      price = rs.price; how = 'Decided by RedStone\'s signed DOGE/USD price for that second, checked on chain.';
       tx = await send(`predict #${id}: resolve with RedStone DOGE ${usdP5(price)} at ${isoT(at)}`, withRs(c, 'resolve', [id], rs.hex)).catch(e => { log(`predict #${id}: resolve failed: ${e.message}`); return null; });
+    } else if (v2){   // v3 fixed-line market: RedStone's push feed on DogeOS, read by the contract itself
+      const fm = (state.feedMiss ||= {}); if (fm[id]) continue;
+      try{ await c.callStatic.resolve(id); }catch(e){
+        const r = String(e.reason || (e.error && e.error.message) || e.message || '');
+        if (/feed updated after/.test(r)){ fm[id] = 1; saveState(); log(`predict #${id}: the RedStone feed updated after ${isoT(at)}, so that moment's price is gone; it refunds after a day`); }
+        else log(`predict #${id}: cannot resolve with the feed yet: ${r.slice(0, 90)}`);
+        continue;
+      }
+      tx = await send(`predict #${id}: resolve with the RedStone DOGE/USD feed`, () => c.resolve(id)).catch(e => { log(`predict #${id}: resolve failed: ${e.message}`); return null; });
+      if (tx) price = from8((await c.get(id)).price);
+      how = 'Decided by RedStone\'s DOGE/USD feed on DogeOS, read on chain.';
     } else {
       try{ price = await dogeAt(at); }catch(e){ log(`predict #${id}: price not available yet (${e.message})`); continue; }
       tx = await send(`predict #${id}: resolve at $${price}`, () => c.resolve(id, to8(price)));
     }
     if (!tx) continue;
     const yes = to8(price).gt(m.strike);
-    await predictTg(id, m, price, yes, hourly, v2 ? 'Decided by RedStone\'s signed DOGE/USD price, checked on chain.' : '');
+    await predictTg(id, m, price, yes, hourly, how);
     await predictNotify(c, id, price, yes);
   }
   const made = (state.predictMade ||= {});
-  if (mode !== 'v1finish' && canCreate){
+  if ((mode === 'v1' || mode === 'v2' || mode === 'v3') && canCreate){
     // 2. open new markets: a daily one (20:00 UTC, at least 20 h away, closes 4 h before)
     //    and a weekly one (Sunday 20:00 UTC, line +5%, closes a day before)
     const want = [];
@@ -1051,20 +1076,20 @@ async function predictRun(addr, mode){
       want.push({resolveAt: r, closeAt: r - 86400, k: 1.05, kind: 'weekly'});
     }
     for (const w of want){
-      const key = w.kind + ':' + w.resolveAt + (v2 ? ':v2' : '');
+      const key = w.kind + ':' + w.resolveAt + (v2 ? ':' + mode : '');
       if (made[key] || items.some(m => Number(m.resolveAt.toString()) === w.resolveAt && m.question.startsWith('Weekly') === (w.kind === 'weekly') && !m.question.startsWith('Hourly'))){ made[key] = 1; continue; }
       let p; try{ p = await dogeNow(); }catch(e){ log('predict: no DOGE price, not opening a market:', e.message); break; }
       const strike = sig3(p * w.k);
       const q = `${w.kind === 'weekly' ? 'Weekly: will' : 'Will'} DOGE be above ${usdP(strike)} on ${whenStr(w.resolveAt)}?`;
       const tx = await send(`predict: open ${w.kind} market`, () => c.create(q, to8(strike), w.closeAt, w.resolveAt));
       if (tx){ made[key] = 1; saveState(); }
-      if (tx) await tg(`🔮 <b>New ${w.kind} prediction</b>\n${esc(q)}\nDOGE now ${usdP(p)}. Back YES or NO with KingS until ${new Date(w.closeAt * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC on <a href="https://cavfi.com/#predict">cavfi.com/#predict</a>\n<i>Testnet tokens. ${v2 ? 'Decided by RedStone\'s signed DOGE/USD price at that moment.' : 'The CavFi bot reports the price from Binance.'}</i>`);
+      if (tx) await tg(`🔮 <b>New ${w.kind} prediction</b>\n${esc(q)}\nDOGE now ${usdP(p)}. Back YES or NO with KingS until ${new Date(w.closeAt * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC on <a href="https://cavfi.com/#predict">cavfi.com/#predict</a>\n<i>Testnet tokens. ${mode === 'v3' ? 'Decided by RedStone\'s DOGE/USD feed on DogeOS at that moment.' : v2 ? 'Decided by RedStone\'s signed DOGE/USD price at that moment.' : 'The CavFi bot reports the price from Binance.'}</i>`);
     }
     // 3. the hourly "up or down" market: opens a minute after each full hour, the line is DOGE's price at that
     //    hour (v2: RedStone's signed price, set by the contract; v1: the open of Binance's 1-minute candle),
     //    it resolves an hour later and stops taking bets 10 minutes before. YES = higher, NO = the same or lower.
-    if (CFG.predictHourly){
-      const H = Math.floor(t / 3600) * 3600, r = H + 3600, key = 'hourly:' + r + (v2 ? ':v2' : '');
+    if (CFG.predictHourly && (mode !== 'v3' || CFG.redstoneKeys.length)){   // v3 hourly markets need RedStone's signed data: only with an API key
+      const H = Math.floor(t / 3600) * 3600, r = H + 3600, key = 'hourly:' + r + (v2 ? ':' + mode : '');
       if (!made[key] && t >= H + 60 && t < H + 20 * 60 && !items.some(m => Number(m.resolveAt.toString()) === r && m.question.startsWith('Hourly'))){
         const hh = x => new Date(x * 1000).toISOString().slice(11, 16);
         if (v2){
@@ -1092,7 +1117,7 @@ async function predictRun(addr, mode){
     const seeded = (state.predictSeeded ||= {});
     const lo = ids.length ? ids[ids.length - 1].toNumber() : 0, hi = ids.length ? ids[0].toNumber() : -1;
     const mine = id => id >= lo && id <= hi;   // ids are unique across v1 and v2: only touch this contract's
-    if (mode !== 'v1finish'){
+    if (mode !== 'v1finish' && mode !== 'v2finish'){
       const kc = new ethers.Contract(A.kings, ABI.erc20, provider);
       let bal = await kc.balanceOf(me);
       for (let i = 0; i < ids.length; i++){
@@ -1132,13 +1157,17 @@ let guessAt = 0;
 async function guessKeeper(){
   if (!CFG.guess || !A.guess || !wallet || me === ethers.constants.AddressZero || now() - guessAt < 60) return;
   guessAt = now();
-  if (A.guessV1){
-    await guessRun(A.guess, true);
-    await guessRun(A.guessV1, false).catch(e => log('guess v1:', e.message));
-  } else await guessRun(A.guess, false);
+  if (A.guessV2){   // after DeployV8: v3 settles with RedStone's DOGE/USD feed on DogeOS
+    await guessRun(A.guess, 'v3');
+    await guessRun(A.guessV2, 'v2').catch(e => log('guess v2:', e.message));
+    if (A.guessV1) await guessRun(A.guessV1, 'v1').catch(e => log('guess v1:', e.message));
+  } else if (A.guessV1){
+    await guessRun(A.guess, 'v2');
+    await guessRun(A.guessV1, 'v1').catch(e => log('guess v1:', e.message));
+  } else await guessRun(A.guess, 'v1');
 }
-async function guessRun(addr, v2){
-  const g = new ethers.Contract(addr, v2 ? ABI.guess2 : ABI.guess, wallet);
+async function guessRun(addr, mode){
+  const v2 = mode !== 'v1', g = new ethers.Contract(addr, v2 ? ABI.guess2 : ABI.guess, wallet);
   if (!v2){
     const [oracle, owner] = await Promise.all([g.oracle(), g.owner()]);
     if (lk(oracle) !== lk(me) && lk(owner) !== lk(me)){ log('guess: this wallet is not the oracle of ' + short(addr) + ', skipping'); if (!A.guessV1) CFG.guess = false; return; }
@@ -1150,7 +1179,17 @@ async function guessRun(addr, v2){
     const info = await g.dayInfo(day);
     if (info.settled || (await g.count(day)).isZero()) continue;   // nobody played: nothing to pay, save the gas
     let price, tx;
-    if (v2){
+    if (mode === 'v3'){
+      const fm = (state.feedMissG ||= {}); if (fm[day]) continue;
+      try{ await g.callStatic.settle(day); }catch(e){
+        const r = String(e.reason || (e.error && e.error.message) || e.message || '');
+        if (/feed updated after/.test(r)){ fm[day] = 1; saveState(); log(`guess: the RedStone feed updated after 20:00 UTC on day ${day}; that day cannot be settled`); }
+        else log(`guess: cannot settle day ${day} with the feed yet: ${r.slice(0, 90)}`);
+        continue;
+      }
+      tx = await send(`guess: settle ${isoT(target).slice(0, 10)} with the RedStone DOGE/USD feed`, () => g.settle(day)).catch(e => { log('guess: settle failed: ' + e.message); return null; });
+    } else if (v2){
+      if (A.guessV2 && !rsReachable()) continue;
       let rs; try{ rs = await redstoneAt(target); }catch(e){ log(`guess: ${e.message}`); continue; }
       price = rs.price;
       tx = await send(`guess: settle ${isoT(target).slice(0, 10)} with RedStone DOGE ${usdP5(price)}`, withRs(g, 'settle', [day], rs.hex)).catch(e => { log('guess: settle failed: ' + e.message); return null; });
@@ -1423,7 +1462,7 @@ async function main(){
   log(`arena: ${CFG.arena && A.arena ? `on (poke every ${CFG.arenaPokeSec}s in the price windows${CFG.arenaNoise ? `, ${CFG.arenaNoiseTrades} random trades a round` : ''})` : 'off'}`);
   log(`limit fills: ${CFG.fillLimits ? 'on' : 'off'} · rebalance: ${CFG.rebalance ? `on (≥${CFG.minDev*100}% off, ≤ ${usd(CFG.maxUsd)} a trade)` : 'off'} · telegram: ${CFG.tgToken && CFG.tgChat ? 'on' : 'off'}${CFG.dryRun ? ' · DRY RUN' : ''}`);
   if (me !== ethers.constants.AddressZero) log('balance', fmtN(fl(await provider.getBalance(me), 18)), 'DOGE');
-  log(`guess game: ${CFG.guess && A.guess ? 'on' : 'off'} · predict: ${CFG.predict && A.predict ? (A.predictV1 ? `on (RedStone, ${CFG.redstoneKeys.length ? CFG.redstoneKeys.length + ' API key' + (CFG.redstoneKeys.length > 1 ? 's' : '') : 'public gateways, no API key'})` : 'on (bot is the DOGE price oracle)') : 'off'} · duels: ${CFG.duels && A.duel ? 'on' : 'off'} · followed wallets: ${(state.watch || []).length}`);
+  log(`guess game: ${CFG.guess && A.guess ? 'on' : 'off'} · predict: ${CFG.predict && A.predict ? (A.predictV2 ? `on (RedStone feed on DogeOS; hourly markets ${CFG.redstoneKeys.length ? 'on, with API key' : 'off until a RedStone API key is set'})` : A.predictV1 ? `on (RedStone, ${CFG.redstoneKeys.length ? CFG.redstoneKeys.length + ' API key' + (CFG.redstoneKeys.length > 1 ? 's' : '') : 'public gateways, no API key'})` : 'on (bot is the DOGE price oracle)') : 'off'} · duels: ${CFG.duels && A.duel ? 'on' : 'off'} · followed wallets: ${(state.watch || []).length}`);
   await writeTgJson();
   await setMiniApp();
   await tg(`🐶 <b>CavFi bot started</b>${me !== ethers.constants.AddressZero ? `\nwallet ${short(me)}` : ''}`);
