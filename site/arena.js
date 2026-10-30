@@ -276,7 +276,7 @@
       return;
     }
 
-    state.readProvider = new ethers.providers.StaticJsonRpcProvider(RPC_URL, { chainId: CHAIN_ID, name: 'dogeos' });
+    state.readProvider = window.CavRpc ? CavRpc.make(ethers, RPC_URL, CHAIN_ID) : new ethers.providers.StaticJsonRpcProvider(RPC_URL, { chainId: CHAIN_ID, name: 'dogeos' });
     state.arena = new ethers.Contract(state.arenaAddr, ARENA_ABI, state.readProvider);
     state.kings = new ethers.Contract(state.kingsAddr, ERC20_ABI, state.readProvider);
 
@@ -624,7 +624,7 @@
       }
       var tx = await arenaW.stake(idx, amount);
       toast('ok', 'Stake submitted…', tx.hash);
-      await tx.wait();
+      await tx.wait(); try{ state.readProvider.clearCache && state.readProvider.clearCache(); }catch(e){}
       toast('ok', 'Stake confirmed.', tx.hash);
       $('arAmt').value = '';
     } catch (e) {
@@ -660,7 +660,7 @@
       var arenaW = new ethers.Contract(state.arenaAddr, ARENA_ABI, state.signer);
       var tx = await arenaW.settle();
       toast('ok', 'Settling round…', tx.hash);
-      await tx.wait();
+      await tx.wait(); try{ state.readProvider.clearCache && state.readProvider.clearCache(); }catch(e){}
       toast('ok', 'Round settled.', tx.hash);
     } catch (e) {
       toast('bad', friendlyError(e));
@@ -787,7 +787,7 @@
       var arenaW = new ethers.Contract(state.arenaAddr, ARENA_ABI, state.signer);
       var tx = await arenaW.claim(idStr);
       toast('ok', 'Claiming round ' + idStr + '…', tx.hash);
-      await tx.wait();
+      await tx.wait(); try{ state.readProvider.clearCache && state.readProvider.clearCache(); }catch(e){}
       toast('ok', 'Claimed.', tx.hash);
     } catch (e) {
       toast('bad', friendlyError(e));
@@ -804,7 +804,7 @@
       var arenaW = new ethers.Contract(state.arenaAddr, ARENA_ABI, state.signer);
       var tx = await arenaW.claimMany(state.claimableIds);
       toast('ok', 'Claiming ' + state.claimableIds.length + ' round(s)…', tx.hash);
-      await tx.wait();
+      await tx.wait(); try{ state.readProvider.clearCache && state.readProvider.clearCache(); }catch(e){}
       toast('ok', 'All claimed.', tx.hash);
     } catch (e) {
       toast('bad', friendlyError(e));

@@ -46,7 +46,7 @@
     var a = {};
     try{ var r = await fetch('addresses.json', {cache: 'no-store'}); if (r.ok) a = await r.json(); }catch(e){}
     if (!a.arena) return ctx = {off: true};
-    var p = new E.providers.StaticJsonRpcProvider(a.rpc || RPC_DEFAULT, a.chainId || 6281971);
+    var p = window.CavRpc ? CavRpc.make(E, a.rpc || RPC_DEFAULT, a.chainId || 6281971) : new E.providers.StaticJsonRpcProvider(a.rpc || RPC_DEFAULT, a.chainId || 6281971);
     return ctx = {E: E, a: a, p: p, c: new E.Contract(a.arena, ARENA_ABI, p), syms: {}, blocks: {}};
   }
   async function sym(addr){

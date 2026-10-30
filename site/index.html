@@ -1342,6 +1342,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <details><summary>How do DOGE price predictions work?</summary><p>On <a href="#predict" data-goview="predict">Predict</a>, each market asks a yes/no question about the real DOGE/USD price, like "Will DOGE be above $0.20 on Sunday, 20:00 UTC?". Back YES or NO with KingS until the market closes. Everyone on the right side shares the whole pot in proportion to their stake, minus a 2% fee, so the pool sizes show the crowd's odds. If only one side was backed, everyone gets their KingS back. Testnet KingS, no real value.</p></details>
         <details><summary>What is "Guess the DOGE price"?</summary><p>A free daily game on <a href="#guess">Predict → Free guess</a>: until 18:00 UTC, each wallet can lock one guess of the DOGE price at 20:00 UTC. The answer is RedStone's DOGE/USD price feed on DogeOS at 20:00 UTC: after 20:00 anyone can settle the day (the CavFi bot usually does), the contract reads the feed itself, and the closest guess wins the day's KingS prize; on a tie the earlier guess wins. Nothing is staked, you only pay gas. Each guess is worth 20 leaderboard points and the day's winner gets 300.</p></details>
         <details><summary>What are Callouts?</summary><p>On any Launchpad token page you can press <b>Call it</b> to put your name on the token at today's price. The callout is saved on-chain (free, you only pay gas), and everyone can see how many times the token has grown since: 2×, 10×… One callout per token, up to 3 a day. Each callout is worth 20 leaderboard points, and one that is 2× or more after at least an hour earns 100 more (Leaderboards → Callers). A callout is a public record of who spotted a token early, not financial advice.</p></details>
+        <details><summary>How do Coin Flip and Dice work?</summary><p>On <a href="#games" data-goview="games">Games</a> you bet test DOGE: Coin Flip pays 1.96× on the right side; Dice lets you pick a number and roll under or over it, and the smaller the chance, the bigger the payout (98 ÷ winning numbers out of 100). Bets are grouped in 30-second rounds. Long before a round opens, the CavFi bot (the house) has locked that round's secret seed on-chain as part of a hash chain, so it cannot change it and nobody can know it. When the round closes it reveals the seed and the contract rolls every bet: keccak256(seed, bet id) mod 100 + 1. Rounds are revealed in order; if the house is more than an hour late, you can claim your bet as a win. House edge 2%. Each bet of 0.5 DOGE or more is worth 5 leaderboard points, 10 more if it wins (Leaderboards → Games).</p></details>
         <details><summary>What are the hourly markets?</summary><p>Every hour the CavFi bot opens a quick "up or down" market: will DOGE be higher at the end of the hour than at its start? The line is DOGE's price at the start of the hour, bets close 10 minutes before the end, and if the price is exactly the same, NO wins. Only bets of 100 KingS or more earn leaderboard points.</p></details>
         <details><summary>Who decides the price?</summary><p><b>RedStone</b>, a decentralized oracle. Daily and weekly markets and the free daily guess are decided by RedStone's DOGE/USD price feed on DogeOS: after the resolve time anyone can resolve a market, the contract reads the feed itself, and if the feed's last update is at or before that moment, that value is RedStone's on-chain price then. The feed updates when DOGE moves 0.5% or at least every 24 hours; if it has already updated past the resolve time when someone resolves, that price is gone and the market refunds after a day. Hourly "up or down" markets, when they run, use RedStone's signed price for the exact second. Nobody, CavFi included, can choose the price, and each market has one fixed source. The CavFi bot opens the markets and usually resolves them within a minute. Markets marked v1 or v2 were opened before an upgrade and finish their own way.</p></details>
         <details><summary>What is an Arena duel?</summary><p>A one-on-one bet on the current Arena round: pick two of the round's tokens and a KingS stake, for example "RPUP beats KingS, 1,000 KingS". Whoever accepts takes the other token with the same stake. When the Arena round is settled, the token that rose more against DOGE (using the Arena's own start and end prices) wins, and its backer gets both stakes, with no fee. Duels can be accepted only while Arena staking is open. A tie, or too few price samples, refunds both. You can invite one person with a .cav name or address, or share the duel link with anyone.</p></details>
@@ -1413,7 +1414,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     <section class="sx-card" aria-labelledby="sxBoardH">
       <div class="sx-head"><h2 id="sxBoardH">Leaderboard</h2><span id="lbNote">points have no value</span></div>
       <div class="chips lb-tabs" id="lbTabs" role="group" aria-label="Which leaderboard">
-        <button class="chip" data-t="pts" aria-pressed="true">Points</button><button class="chip" data-t="swap">Traders</button><button class="chip" data-t="arena">Arena</button><button class="chip" data-t="quest">Quests & gm</button><button class="chip" data-t="pred">Predictors</button><button class="chip" data-t="launch">Launchers</button><button class="chip" data-t="call">Callers</button><button class="chip" data-t="ref">Inviters</button>
+        <button class="chip" data-t="pts" aria-pressed="true">Points</button><button class="chip" data-t="swap">Traders</button><button class="chip" data-t="arena">Arena</button><button class="chip" data-t="quest">Quests & gm</button><button class="chip" data-t="pred">Predictors</button><button class="chip" data-t="launch">Launchers</button><button class="chip" data-t="call">Callers</button><button class="chip" data-t="games">Games</button><button class="chip" data-t="ref">Inviters</button>
       </div>
       <div class="lb-pod" id="lbPod"></div>
       <p class="sx-legend" id="lbLegend"></p>
@@ -1556,7 +1557,8 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-<script src="quests-rules.js?v=6"></script>
+<script src="rpc-batch.js?v=1"></script>
+<script src="quests-rules.js?v=7"></script>
 <script src="redstone-payload.js?v=2"></script>
 <script>
 (() => {
@@ -1576,7 +1578,7 @@ const NET = {
 };
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
-const RP = () => _rp || (_rp = new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
+const RP = () => _rp || (_rp = window.CavRpc ? CavRpc.make(E, A.rpc || NET.add.rpcUrls[0], CHAIN_ID) : new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
 const A = { games:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
@@ -1683,7 +1685,7 @@ async function resolveToken(addr){
   const t = tokenByAddr(addr, true); if (t) return t;
   const k = addr.toLowerCase(); if (tokenCache[k]) return tokenCache[k];
   try{
-    const c = new E.Contract(addr, ERC20_ABI, onRightChain() ? st.provider : RP());
+    const c = new E.Contract(addr, ERC20_ABI, RP());
     const [symbol, name, decimals] = await Promise.all([c.symbol(), c.name(), c.decimals()]);
     return tokenCache[k] = {symbol: cleanSym(symbol), name: cleanName(name), address:E.utils.getAddress(addr), decimals, color:'#8A7F9A'};
   }catch(e){ return tokenCache[k] = {symbol:short(addr), name:'Unknown token', address:addr, decimals:18, color:'#8A7F9A'}; }
@@ -1746,13 +1748,13 @@ function errMsg(e){
 async function balanceOf(t){
   if (!onRightChain() || !st.account || !t) return null;
   try{
-    if (t.address === N) return await st.provider.getBalance(st.account);
-    return await new E.Contract(t.address, ERC20_ABI, st.provider).balanceOf(st.account);
+    if (t.address === N) return await RP().getBalance(st.account);
+    return await new E.Contract(t.address, ERC20_ABI, RP()).balanceOf(st.account);
   }catch(e){ return null; }
 }
 async function allowanceOk(t, amt, spender=A.router){
   if (!t || t.address === N || !amt || !onRightChain() || !st.account) return true;
-  try{ return (await new E.Contract(t.address, ERC20_ABI, st.provider).allowance(st.account, spender)).gte(amt); }
+  try{ return (await new E.Contract(t.address, ERC20_ABI, RP()).allowance(st.account, spender)).gte(amt); }
   catch(e){ return false; }
 }
 async function sendTx(fn, pendingLabel, setBusy){
@@ -1761,6 +1763,7 @@ async function sendTx(fn, pendingLabel, setBusy){
   setBusy(pendingLabel);
   toast(`Submitted. ${txLink(tx.hash)}`);
   await tx.wait();
+  try{ RP().clearCache(); }catch(e){}
   return tx;
 }
 function walletGate(){
@@ -2268,7 +2271,7 @@ async function getQuote(){
   const a = addrOf(st.tin), b = addrOf(st.tout);
   if (same(a,b)){ st.quote = {wrap:true}; renderSwap(); return; }
   st.quoting = true; renderSwap();
-  const router = new E.Contract(A.router, ROUTER_ABI, st.provider);
+  const router = new E.Contract(A.router, ROUTER_ABI, RP());
   const hubs = [A.wdoge, A.kings, A.usdt, A.usdc, ...FAUCET_TOKENS.map(t => t.address)].filter(h => h && !same(h,a) && !same(h,b));
   const forced = st.forcePath && same(st.forcePath[0], a) && same(st.forcePath[1], b);
   if (!forced) st.forcePath = null;
@@ -2311,10 +2314,10 @@ function poolPaths(a, b){
 /* price impact = 1 - (actual out) / (out at mid price, fee-free) */
 async function priceImpact(path, amtIn, out){
   try{
-    const f = new E.Contract(A.factory, FACTORY_ABI, st.provider);
+    const f = new E.Contract(A.factory, FACTORY_ABI, RP());
     let mid = Number(E.utils.formatUnits(amtIn, 0));
     for (let i=0; i<path.length-1; i++){
-      const p = new E.Contract(await f.getPair(path[i], path[i+1]), PAIR_ABI, st.provider);
+      const p = new E.Contract(await f.getPair(path[i], path[i+1]), PAIR_ABI, RP());
       const [t0, r] = await Promise.all([p.token0(), p.getReserves()]);
       const [rIn, rOut] = same(t0, path[i]) ? [r[0], r[1]] : [r[1], r[0]];
       mid = mid * Number(rOut.toString()) / Number(rIn.toString());
@@ -2458,10 +2461,10 @@ async function refreshLiq(){
   if (onRightChain() && ready() && st.la !== st.lb){
     try{
       const a = addrOf(st.la), b = addrOf(st.lb);
-      const pa = await new E.Contract(A.factory, FACTORY_ABI, st.provider).getPair(a, b);
+      const pa = await new E.Contract(A.factory, FACTORY_ABI, RP()).getPair(a, b);
       if (pa === E.constants.AddressZero) st.lPair = {exists:false};
       else {
-        const p = new E.Contract(pa, PAIR_ABI, st.provider);
+        const p = new E.Contract(pa, PAIR_ABI, RP());
         const [t0, r, supply] = await Promise.all([p.token0(), p.getReserves(), p.totalSupply()]);
         const [rA, rB] = same(t0, a) ? [r[0], r[1]] : [r[1], r[0]];
         st.lPair = {exists: !rA.isZero(), address:pa, rA, rB, supply};
@@ -2593,13 +2596,13 @@ async function loadFarms(){
   const seq = ++fSeq;
   if (!A.farm || !onRightChain() || !st.account){ st.farms = []; st.farmMeta = null; renderFarms(); return; }
   try{
-    const fc = new E.Contract(A.farm, FARM_ABI, st.provider);
+    const fc = new E.Contract(A.farm, FARM_ABI, RP());
     const [n, rps, end, tot] = await Promise.all([fc.poolLength(), fc.rewardPerSecond(), fc.endTime(), fc.totalAllocPoint()]);
     const now = Math.floor(Date.now()/1000);
     const live = end.toNumber() > now;
     const farms = await Promise.all([...Array(n.toNumber()).keys()].map(async pid => {
       const [info, user, pending] = await Promise.all([fc.poolInfo(pid), fc.userInfo(pid, st.account), fc.pendingReward(pid, st.account)]);
-      const lpC = new E.Contract(info.lpToken, PAIR_ABI, st.provider);
+      const lpC = new E.Contract(info.lpToken, PAIR_ABI, RP());
       const [wallet, allow] = await Promise.all([lpC.balanceOf(st.account), lpC.allowance(st.account, A.farm)]);
       const perSec = live && !tot.isZero() ? rps.mul(info.allocPoint).div(tot) : ZERO;
       return {pid, lp: info.lpToken, alloc: info.allocPoint.toNumber(), totalStaked: info.totalStaked, userAmt: user.amount, pending, wallet, allow, perSec};
@@ -2765,7 +2768,7 @@ async function loadStakes(){
   const seq = ++skSeq;
   if (!A.stake || !onRightChain() || !st.account){ st.stakes = []; st.stakeMeta = null; renderStakes(); return; }
   try{
-    const sc = new E.Contract(A.stake, FARM_ABI, st.provider);
+    const sc = new E.Contract(A.stake, FARM_ABI, RP());
     const [n, rps, end, tot] = await Promise.all([sc.poolLength(), sc.rewardPerSecond(), sc.endTime(), sc.totalAllocPoint()]);
     const live = end.toNumber() > Math.floor(Date.now()/1000);
     const stakes = await Promise.all([...Array(n.toNumber()).keys()].map(async pid => {
@@ -2773,8 +2776,8 @@ async function loadStakes(){
       const token = info.lpToken, native = same(token, A.wdoge);
       const t = tokenByAddr(token, true) || await resolveToken(token);
       let wallet, allow;
-      if (native){ wallet = await st.provider.getBalance(st.account); allow = E.constants.MaxUint256; }
-      else { const c = new E.Contract(token, ERC20_ABI, st.provider); [wallet, allow] = await Promise.all([c.balanceOf(st.account), c.allowance(st.account, A.stake)]); }
+      if (native){ wallet = await RP().getBalance(st.account); allow = E.constants.MaxUint256; }
+      else { const c = new E.Contract(token, ERC20_ABI, RP()); [wallet, allow] = await Promise.all([c.balanceOf(st.account), c.allowance(st.account, A.stake)]); }
       const perSec = live && !tot.isZero() ? rps.mul(info.allocPoint).div(tot) : ZERO;
       return {pid, token, t, native, alloc: info.allocPoint.toNumber(), totalStaked: info.totalStaked, userAmt: user.amount, pending, wallet, allow, perSec};
     }));
@@ -2918,11 +2921,11 @@ async function checkLegacy(){
   const box = $('legacyNote'); box.hidden = true;
   if (!A.legacyFactory || !st.account || !onRightChain()) return;
   try{
-    const lf = new E.Contract(A.legacyFactory, FACTORY_ABI, st.provider);
+    const lf = new E.Contract(A.legacyFactory, FACTORY_ABI, RP());
     const n = (await lf.allPairsLength()).toNumber();
     const left = [];
     await Promise.all([...Array(n).keys()].map(async i => {
-      const p = new E.Contract(await lf.allPairs(i), PAIR_ABI, st.provider);
+      const p = new E.Contract(await lf.allPairs(i), PAIR_ABI, RP());
       const [lp, a0, a1] = await Promise.all([p.balanceOf(st.account), p.token0(), p.token1()]);
       if (!lp.isZero()){ const [t0, t1] = await Promise.all([resolveToken(a0), resolveToken(a1)]); left.push(t0.symbol+' / '+t1.symbol); }
     }));
@@ -2940,13 +2943,13 @@ async function loadPools(){
   if (!onRightChain() || !ready()){ st.pools = []; renderPools(); return; }
   st.poolsLoading = true; renderPools();
   try{
-    const f = new E.Contract(A.factory, FACTORY_ABI, st.provider);
+    const f = new E.Contract(A.factory, FACTORY_ABI, RP());
     if (st.feeTo === undefined){ try{ st.feeTo = await f.feeTo(); }catch(e){ st.feeTo = null; } renderFees(); }
     const n = (await f.allPairsLength()).toNumber();
     checkLegacy();
     const addrs = await Promise.all([...Array(n).keys()].map(i => f.allPairs(i)));
     const pools = await Promise.all(addrs.map(async addr => {
-      const p = new E.Contract(addr, PAIR_ABI, st.provider);
+      const p = new E.Contract(addr, PAIR_ABI, RP());
       const [a0, a1, r, supply, lp] = await Promise.all([p.token0(), p.token1(), p.getReserves(), p.totalSupply(), p.balanceOf(st.account)]);
       const [t0, t1] = await Promise.all([resolveToken(a0), resolveToken(a1)]);
       return {address:addr, a0, a1, t0, t1, r0:r[0], r1:r[1], supply, lp};
@@ -3023,7 +3026,7 @@ function renderPools(){
 async function checkRemoveAllowance(){
   const p = st.pools.find(x => x.address === st.removing); st.rAllow = true;
   if (!p) return;
-  try{ st.rAllow = (await new E.Contract(p.address, PAIR_ABI, st.provider).allowance(st.account, A.router)).gte(removeAmounts(p).lp); }catch(e){}
+  try{ st.rAllow = (await new E.Contract(p.address, PAIR_ABI, RP()).allowance(st.account, A.router)).gte(removeAmounts(p).lp); }catch(e){}
 }
 const remBusy = s => { st.rBusy = s; renderPools(); };
 $('poolList').addEventListener('click', async e => {
@@ -3075,7 +3078,7 @@ async function claim(t){
     btn.disabled = true;
     const tx = await new E.Contract(t.address, STABLE_ABI, st.signer).faucet();
     toast(`Claiming 1,000 ${t.symbol}… ${txLink(tx.hash)}`);
-    await tx.wait();
+    await tx.wait(); try{ RP().clearCache(); }catch(e){}
     toast(`1,000 test ${t.symbol} added to your wallet.`, 'ok');
   }catch(e){ toast(errMsg(e),'bad'); }
   btn.disabled = false; refreshAll();
@@ -3130,7 +3133,7 @@ async function drawList(){
     if (!onRightChain()){ box.innerHTML = '<div class="empty">Connect a wallet on DogeOS Testnet to import a token by address.</div>'; return; }
     box.innerHTML = '<div class="empty">Looking up token on-chain…</div>';
     try{
-      const c = new E.Contract(q, ERC20_ABI, st.provider);
+      const c = new E.Contract(q, ERC20_ABI, RP());
       const [symbol, name, decimals] = await Promise.all([c.symbol(), c.name(), c.decimals()]);
       const t = {symbol: cleanSym(symbol), name: cleanName(name), address:E.utils.getAddress(q), decimals, color:'#8A7F9A', custom:true};
       box.innerHTML = '';
@@ -3475,12 +3478,18 @@ async function loadBoard(){
         r.calls = (r.calls || 0) + 1;
         if (nowS - Number(items[k][2]) >= 3600){ if (m >= 2) r.callWins = (r.callWins || 0) + 1; if (m > (r.bestCall || 0)) r.bestCall = m; } });
     }catch(e){} }
+    if (A.games){ try{   // Coin Flip and Dice: 5 points per bet of 0.5 DOGE or more, 10 more per win; the Games tab ranks by DOGE won
+      for (const l of await winLogs(A.games, [GX_PLACED, GX_SETTLED])){ const r = row(lk('0x' + l.topics[2].slice(26))), w = i => BigInt('0x' + l.data.slice(2 + 64 * i, 66 + 64 * i));
+        if (l.topics[0] === GX_PLACED){ const st0 = fl(w(3), 18); r.gxBets = (r.gxBets || 0) + 1; r.gxStaked = (r.gxStaked || 0) + st0; if (st0 >= 0.5) r.gxPts = (r.gxPts || 0) + 5; }
+        else if (w(1) !== 0n){ r.gxWins = (r.gxWins || 0) + 1; r.gxPaid = (r.gxPaid || 0) + fl(w(2), 18); r.gxPts = (r.gxPts || 0) + 10; } }
+      for (const r of Object.values(P)) if (r.gxBets) r.gxNet = (r.gxPaid || 0) - (r.gxStaked || 0);
+    }catch(e){} }
     if (A.events){ try{   // event badges: Spooktober 2026 = 500 points
       for (const l of await winLogs(A.events, [EV_AWARDED])){ const r = row(lk('0x' + l.topics[2].slice(26))); r.spook = (r.spook || 0) + 1; }
     }catch(e){} }
     if (A.bot) delete P[lk(A.bot)];   // the CavFi bot's own trades and tips don't count
     const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.quests * 20 + r.launches * 100 + r.grads * 500
-      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100 + (r.spook || 0) * 500;
+      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100 + (r.spook || 0) * 500 + (r.gxPts || 0);
     let refMap = {}; try{ refMap = await loadRefMap(); }catch(e){}
     for (const r of Object.values(P)){ const by = refMap[r.addr]; if (by){ const x = row(by); x.refPts = (x.refPts || 0) + base(r) * 0.25; x.invites = (x.invites || 0) + 1; } }
     board.rows = Object.values(P).map(r => ({...r, refPts: Math.round(r.refPts || 0), pts: Math.round(base(r) + (r.refPts || 0))}))
@@ -3496,13 +3505,14 @@ async function loadBoard(){
   if (st.view === 'profile') renderProfile();
 }
 const LB_TABS = {
-  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · 20 per callout, 100 more when a callout is 2× or more after an hour · 500 for the Spooktober 2026 badge · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
+  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · 20 per callout, 100 more when a callout is 2× or more after an hour · 5 per Coin Flip or Dice bet of 0.5+ DOGE, 10 more per win · 500 for the Spooktober 2026 badge · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
   swap:  {key: r => r.swapUsd, legend: 'Ranked by swap volume, valued at today\'s CavFi pool prices.', val: r => sxUsd(r.swapUsd)},
   arena: {key: r => r.arenaWins * 1e12 + r.arenaK, legend: 'Ranked by Arena rounds won, then by KingS staked.', val: r => r.arenaWins ? `${r.arenaWins} 🏆` : sxNum(r.arenaK) + ' KingS'},
   quest: {key: r => r.quests * 2 + r.gms, legend: 'Ranked by daily quests done (recorded by the bot after each day), then by gm and gn.', val: r => `${r.quests} quests`},
   launch:{key: r => r.grads * 1e9 + r.launches * 1e6 + r.launchUsd, legend: 'Ranked by tokens that graduated, then tokens launched, then launchpad volume.', val: r => `${r.launches} launched`},
   pred:  {key: r => ((r.predWins || 0) + (r.duelWins || 0) + (r.guessWins || 0)) * 1e6 + (r.preds || 0) + (r.duels || 0) + (r.guesses || 0), legend: 'Ranked by right calls on DOGE price markets plus duels won, then by markets backed and duels played.', val: r => `${(r.predWins || 0) + (r.duelWins || 0)} won`},
   call:  {key: r => (r.bestCall || 0) * 1e6 + (r.calls || 0), legend: 'Ranked by the best multiple of a callout at least 1 hour old, then by callouts made. Call a token on its Launchpad page.', val: r => r.bestCall ? `${r.bestCall >= 100 ? Math.round(r.bestCall).toLocaleString('en-US') : r.bestCall.toFixed(2)}× best` : `${r.calls || 0} call${r.calls === 1 ? '' : 's'}`},
+  games: {key: r => r.gxBets ? 1e9 + (r.gxNet || 0) * 1e3 + r.gxBets : 0, legend: 'Ranked by DOGE won minus DOGE staked in Coin Flip and Dice, then by bets played. Test DOGE, no real value.', val: r => `${(r.gxNet || 0) >= 0 ? '+' : ''}${sxNum(r.gxNet || 0)} DOGE`},
   ref:   {key: r => r.invites || 0, legend: 'Ranked by people invited with an invite link (Badges & invite link in your account).', val: r => `${r.invites || 0} invited`},
 };
 $('lbTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; board.tab = b.dataset.t; renderBoard(); });
@@ -3526,6 +3536,7 @@ function renderBoard(){
       quest: ['gm / gn', r => r.gms || '–', 'Quests', r => r.quests || '–'], launch: ['Launched', r => r.launches + (r.grads ? ` · ${r.grads}🎓` : ''), 'Launchpad volume', r => sxUsd(r.launchUsd)],
       pred: ['Markets · right', r => `${r.preds || 0} · ${r.predWins || 0}`, 'Duels · won', r => `${r.duels || 0} · ${r.duelWins || 0}`],
       call: ['Callouts · 2× or more', r => `${r.calls || 0} · ${r.callWins || 0}`, 'Best multiple', r => r.bestCall ? (r.bestCall >= 100 ? Math.round(r.bestCall).toLocaleString('en-US') : r.bestCall.toFixed(2)) + '×' : '–'],
+      games: ['Bets · won', r => `${r.gxBets || 0} · ${r.gxWins || 0}`, 'Net DOGE', r => `${(r.gxNet || 0) >= 0 ? '+' : ''}${sxNum(r.gxNet || 0)}`],
       ref: ['Bonus points', r => r.refPts ? '+' + r.refPts.toLocaleString('en-US') : '–', 'Invited', r => r.invites || 0]}[board.tab];
     const tr2 = (r, i) => `<tr${r.addr === me ? ' class="me"' : ''}><td>${i + 1}</td><td><a href="#u/${esc((board.names || {})[r.addr] || r.addr)}" title="Open profile">${esc(nameOf(r))}</a>${r.addr === me ? ' <b class="you">you</b>' : ''}${badgeDots((board.badges || {})[r.addr])}</td><td>${cols[1](r)}</td><td><b>${cols[3](r)}</b></td></tr>`;
     box.innerHTML = `<table><thead><tr><th scope="col">#</th><th scope="col">Wallet</th><th scope="col">${cols[0]}</th><th scope="col">${cols[2]}</th></tr></thead><tbody>${top.map(tr2).join('')}${myIdx >= 20 ? tr2(rows[myIdx], myIdx) : ''}</tbody></table>`;
@@ -3694,7 +3705,7 @@ const PF_ARENA_ABI = ['function userRoundCount(address) view returns (uint256)',
   'function betInfo(uint256 id, address user) view returns (tuple(uint64 start, uint64 end, uint16 feeBps, uint8 winnerMask, bool settled, uint256 staked, uint256 rollover, uint256 winnerStake, uint256 payout) round, uint256[] stakes, uint256 claimableAmount, bool hasClaimed)',
   'function roundTokens(uint256 id) view returns (address[] tokens, address[] pairs)'];
 async function pfLoadBets(){
-  const c = new E.Contract(A.arena, PF_ARENA_ABI, onRightChain() ? st.provider : RP());
+  const c = new E.Contract(A.arena, PF_ARENA_ABI, RP());
   const n = (await c.userRoundCount(st.account)).toNumber(); if (!n) return [];
   const ids = await c.userRounds(st.account, Math.max(0, n - 10), 10);
   return Promise.all([...ids].reverse().map(async id => {
@@ -3912,7 +3923,7 @@ const SOCIAL_ABI = [
 ];
 const REF_KEY = 'cavfi.ref';
 const rf = { mine:null, busy:false, dismissed:false };
-const soC = signer => new E.Contract(A.social, SOCIAL_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const soC = signer => new E.Contract(A.social, SOCIAL_ABI, signer ? st.signer : (RP()));
 (function captureRef(){
   try{
     const r = (new URLSearchParams(location.search).get('ref') || '').trim();
@@ -4001,7 +4012,7 @@ const BADGE_ABI = [
    (+500 leaderboard points, awarded by the bot after midnight UTC) and double raffle tickets.
    ?spooky=1 previews the event, ?spooky=pre the day-before teaser. */
 const SPOOK_DAY = 20757, EV_ABI = ['function balanceOf(address, uint256) view returns (uint256)'], EV_AWARDED = E.utils.id('Awarded(uint256,address)');
-const evC = () => new E.Contract(A.events, EV_ABI, onRightChain() ? st.provider : RP());
+const evC = () => new E.Contract(A.events, EV_ABI, RP());
 function spookMode(){
   const q = new URLSearchParams(location.search).get('spooky');
   if (q === '1') return 'on'; if (q === 'pre') return 'pre';
@@ -4059,9 +4070,9 @@ function badgeSvg(id, size, dim){
   return `<svg class="bd-art${dim ? ' dim' : ''}" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="${b.c}"/><circle cx="32" cy="32" r="25" fill="none" stroke="#FFF8EE" stroke-opacity=".5" stroke-width="1.5"/><path d="${b.m}" fill="none" stroke="#FFF8EE" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 10l2.5-6 3.5 4 2-5 2 5 3.5-4 2.5 6z" fill="#E7B73C"/></svg>`;
 }
 const bd = { mask:null, busy:0 };
-const bdC = signer => new E.Contract(A.badges, BADGE_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const bdC = signer => new E.Contract(A.badges, BADGE_ABI, signer ? st.signer : (RP()));
 const CHAMP_ABI = ['function balanceOf(address, uint256) view returns (uint256)', 'function wonIn(uint256, address) view returns (bool)', 'function claim(uint256)'];
-const champC = signer => new E.Contract(A.champion, CHAMP_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const champC = signer => new E.Contract(A.champion, CHAMP_ABI, signer ? st.signer : (RP()));
 const CHAMP_SVG = dim => `<svg class="bd-art${dim ? ' dim' : ''}" viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#9C2F55"/><circle cx="32" cy="32" r="25" fill="none" stroke="#FFF8EE" stroke-opacity=".5" stroke-width="1.5"/><path d="M23 20h18v6a9 9 0 0 1-18 0zM23 22h-4a5 5 0 0 0 5 6M41 22h4a5 5 0 0 1-5 6M32 35v6M26 45h12" fill="none" stroke="#FFF8EE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 10l2.5-6 3.5 4 2-5 2 5 3.5-4 2.5 6z" fill="#E7B73C"/></svg>`;
 /* what to pass to claim a badge, if this wallet qualifies */
 function badgeClaim(id){
@@ -4265,8 +4276,8 @@ async function loadVote(){
   const seq = ++vtSeq;
   if (!A.vote || !A.kings){ vt.data = null; return renderVote(); }
   try{
-    const c = new E.Contract(A.vote, VOTE_ABI, onRightChain() ? st.provider : RP());
-    const k = new E.Contract(A.kings, ERC20_ABI, onRightChain() ? st.provider : RP());
+    const c = new E.Contract(A.vote, VOTE_ABI, RP());
+    const k = new E.Contract(A.kings, ERC20_ABI, RP());
     const me = st.account;
     const [tallies, total, totalLocked, next, base, mine, wallet, allow, ch] = await Promise.all([
       c.tallies(), c.totalVotes(), c.totalLocked(), c.nextApply(), c.baseAlloc(),
@@ -4369,7 +4380,7 @@ const LIM_TIP_BPS = 10;
 const LIM_FILL_NOW = 0.997; // the filler keeps 0.1% of the input, so a 'Market' order asks a little under market
 const lim = { price:'', days:7, allow:true, busy:false, orders:[], loading:false, fillable:{} };
 st.mode = 'swap';
-const limC = signer => new E.Contract(A.limit, LIMIT_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const limC = signer => new E.Contract(A.limit, LIMIT_ABI, signer ? st.signer : (RP()));
 const limKey = () => `${addrOf(st.tin)}>${addrOf(st.tout)}>${$('amtIn').value}`;
 function limMarketRate(){
   const q = st.quote, amt = parseAmt($('amtIn').value, st.tin.decimals);
@@ -4473,7 +4484,7 @@ async function doPlaceLimit(){
 async function limBestOut(o){
   const paths = poolPaths(o.tokenIn, o.tokenOut) || [];
   if (!paths.length) return null;
-  const r = new E.Contract(A.router, ROUTER_ABI, onRightChain() ? st.provider : RP());
+  const r = new E.Contract(A.router, ROUTER_ABI, RP());
   const swapIn = o.amountIn.sub(o.amountIn.mul(LIM_TIP_BPS).div(10000));
   let best = null;
   for (const p of paths.slice(0, 6)){
@@ -4565,7 +4576,7 @@ const DCA_ABI = [
   'function cancel(uint256 id)', `function plansOf(address) view returns (uint256[] ids, ${DCA_TUPLE}[] items)`,
 ];
 const dca = { n:24, i:3600, f:25, allow:true, busy:false, plans:[] };
-const dcaC = signer => new E.Contract(A.dca, DCA_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const dcaC = signer => new E.Contract(A.dca, DCA_ABI, signer ? st.signer : (RP()));
 const dcaEvery = s => s >= 86400 ? `${s/86400} day${s > 86400 ? 's' : ''}` : s >= 3600 ? `${s/3600} hour${s > 3600 ? 's' : ''}` : `${s/60} min`;
 function dcaParts(){
   const amt = parseAmt($('amtIn').value, st.tin.decimals); if (!amt) return null;
@@ -4705,7 +4716,8 @@ const CALLOUT_ABI = ['function call(address token) returns (uint256)', 'function
   'function idsOfToken(address) view returns (uint256[])', `function get(uint256) view returns (${CALL_TUPLE})`, 'function priceOf(address) view returns (uint256)',
   'function callsLeftToday(address) view returns (uint256)', 'function called(address, address) view returns (bool)'];
 const CO_CALLED = E.utils.id('Called(uint256,address,address,uint256)');
-const coC = signer => new E.Contract(A.callouts, CALLOUT_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const GX_PLACED = E.utils.id('Placed(uint256,address,uint8,uint8,bool,uint256,uint256,uint256)'), GX_SETTLED = E.utils.id('Settled(uint256,address,uint8,bool,uint256)');
+const coC = signer => new E.Contract(A.callouts, CALLOUT_ABI, signer ? st.signer : (RP()));
 const coMcap = p => { const d = p * LX_SUPPLY, u = lxDogeUsd(); return u ? sxUsd(d * u) : sxNum(d) + ' DOGE'; };   // p: DOGE per token
 const coMult = c => c.p0 > 0 ? c.p1 / c.p0 : 0;
 const coX = m => `<span class="co-x ${m >= 1.005 ? 'up' : m <= 0.995 ? 'dn' : ''}">${m >= 100 ? Math.round(m).toLocaleString('en-US') : m.toFixed(2)}×</span>`;
@@ -4902,8 +4914,8 @@ async function loadLxDetail(){
     loadLxCalls(addr);
     const t = await resolveToken(addr);
     if (onRightChain() && st.account){
-      const tk = new E.Contract(addr, ERC20_ABI, st.provider);
-      const [bt, bd, al] = await Promise.all([tk.balanceOf(st.account), st.provider.getBalance(st.account), tk.allowance(st.account, A.launch)]);
+      const tk = new E.Contract(addr, ERC20_ABI, RP());
+      const [bt, bd, al] = await Promise.all([tk.balanceOf(st.account), RP().getBalance(st.account), tk.allowance(st.account, A.launch)]);
       if (seq !== lxDSeq) return;
       lx.bal = {tok:bt, doge:bd}; lx.allowance = al;
     } else lx.bal = null;
@@ -5240,7 +5252,7 @@ const ob = { bal:null, usdt:null, at:0 };
 async function loadOnboarding(){
   if (!st.account || !onRightChain()){ ob.bal = null; ob.usdt = null; return renderOnboarding(); }
   try{
-    const [d, u] = await Promise.all([st.provider.getBalance(st.account), A.usdt ? new E.Contract(A.usdt, ERC20_ABI, st.provider).balanceOf(st.account) : ZERO]);
+    const [d, u] = await Promise.all([RP().getBalance(st.account), A.usdt ? new E.Contract(A.usdt, ERC20_ABI, RP()).balanceOf(st.account) : ZERO]);
     ob.bal = d; ob.usdt = u;
     if (A.badges && bd.mask == null){ try{ bd.mask = (await bdC().badgesOf(st.account)).toNumber(); }catch(e){} }
   }catch(e){}
@@ -5309,7 +5321,7 @@ async function loadFaucet(){
     const list = TOKENS.filter(t => !t.wrapped);
     const bals = await Promise.all(list.map(t => balanceOf(t).catch(() => null)));
     const next = {};
-    await Promise.all([A.usdt, A.usdc].filter(Boolean).map(a => new E.Contract(a, STABLE_ABI, st.provider).nextClaimAt(st.account).then(v => next[lk(a)] = v.toNumber()).catch(() => {})));
+    await Promise.all([A.usdt, A.usdc].filter(Boolean).map(a => new E.Contract(a, STABLE_ABI, RP()).nextClaimAt(st.account).then(v => next[lk(a)] = v.toNumber()).catch(() => {})));
     let chainNow = Math.floor(Date.now()/1000);
     try{ chainNow = (await st.provider.getBlock('latest')).timestamp; }catch(e){}
     fc.data = {bals: Object.fromEntries(list.map((t, i) => [lk(t.address), bals[i]])), next, skew: chainNow - Math.floor(Date.now()/1000)};
@@ -5361,7 +5373,7 @@ async function fcClaim(addr){
   try{
     const tx = await new E.Contract(t.address, STABLE_ABI, st.signer).faucet();
     toast(`Claiming 1,000 ${t.symbol}… ${txLink(tx.hash)}`);
-    await tx.wait();
+    await tx.wait(); try{ RP().clearCache(); }catch(e){}
     toast(`1,000 test ${t.symbol} added to your wallet.`, 'ok');
   }catch(e){ toast(errMsg(e), 'bad'); }
   fc.busy[lk(addr)] = false; loadFaucet();
@@ -5391,7 +5403,7 @@ const NFT_ABI = [
   'event Minted(address indexed to, uint256 indexed id, uint256 dna)',
 ];
 const nf = { info:null, all:[], loading:false, busy:'', qty:1, tab:'mine', at:0 };
-const nfC = signer => new E.Contract(A.nft, NFT_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const nfC = signer => new E.Contract(A.nft, NFT_ABI, signer ? st.signer : (RP()));
 const NF_COAT = ['Blenheim', 'Tricolour', 'Black & Tan', 'Ruby'], NF_CROWN = ['None', 'Bronze', 'Silver', 'Gold', 'Diamond'];
 const NF_ACC = ['None', 'Bow tie', 'Scarf', 'Monocle', 'Shades'], NF_EYES = ['Bright', 'Wink', 'Sleepy'];
 function nfTraits(dna){
@@ -5479,7 +5491,7 @@ async function loadNft(force){
     }
     let mine = null;
     if (st.account && onRightChain()){
-      const [earned, w, bal] = await Promise.all([c.earned(st.account), c.weightOf(st.account), st.provider.getBalance(st.account)]);
+      const [earned, w, bal] = await Promise.all([c.earned(st.account), c.weightOf(st.account), RP().getBalance(st.account)]);
       mine = {earned, weight: w.toNumber(), bal};
     }
     if (seq !== nfSeq) return;
@@ -5572,7 +5584,7 @@ async function nfSend(kind, fn, okMsg){
   try{
     const tx = await fn(nfC(true));
     toast(`Submitted. ${txLink(tx.hash)}`);
-    await tx.wait();
+    await tx.wait(); try{ RP().clearCache(); }catch(e){}
     toast(okMsg, 'ok');
   }catch(e){ toast(errMsg(e), 'bad'); }
   nf.busy = ''; loadNft(true);
@@ -5604,7 +5616,7 @@ const NAMES_ABI = [
   'function labelsOf(address) view returns (string[] out, uint256[] ids)', 'function recent(uint256 n) view returns (string[] out, address[] owners)',
   'function totalNames() view returns (uint256)', 'function idOf(string label) pure returns (uint256)',
 ];
-const nmC = signer => new E.Contract(A.names, NAMES_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const nmC = signer => new E.Contract(A.names, NAMES_ABI, signer ? st.signer : (RP()));
 const myName = { addr:null, name:'' };
 const nm = { q:'', check:null, busy:'', mine:null, recent:null, seq:0 };
 const nmClean = v => String(v || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32);
@@ -5681,7 +5693,7 @@ document.addEventListener('click', async e => {
 /* ================= GM / GN ================= */
 const GM_ABI = ['function gm()', 'function gn()', 'function balanceOf(address, uint256) view returns (uint256)',
   'function info(address) view returns (bool gmToday, bool gnToday, uint256 streak, uint256 best, uint256 gms, uint256 gns, bool pup, uint256 nextDayAt)'];
-const gmC = signer => new E.Contract(A.gm, GM_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const gmC = signer => new E.Contract(A.gm, GM_ABI, signer ? st.signer : (RP()));
 const gmS = { info:null, busy:'' };
 async function loadGm(){
   const card = $('gmCard'); if (!card) return;
@@ -5722,7 +5734,7 @@ setInterval(() => { if (st.view === 'home' && gmS.info) renderGm(); }, 30000);
    own transactions of today on the DogeOS explorer; the bot records each finished day on-chain. */
 const QUESTS_ABI = ['function info(address) view returns (uint256 streak, uint256 best, uint256 fullDays, uint256 quests, bool badge, uint8 yesterday)',
   'function balanceOf(address, uint256) view returns (uint256)'];
-const questsC = () => new E.Contract(A.quests, QUESTS_ABI, onRightChain() ? st.provider : RP());
+const questsC = () => new E.Contract(A.quests, QUESTS_ABI, RP());
 const qs = { day:0, list:[], ev:null, info:null, loading:false, at:0 };
 async function myTxsToday(addr, dayStart){
   const out = [];
@@ -5782,7 +5794,7 @@ function renderQuests(){
 const RAFFLE_ABI = ['function current() view returns (uint256 id, uint64 start, uint64 end, uint256 totalTickets, uint256 playerCount, uint256 pot, uint64 drawBlock)',
   'function ticketsOf(uint256, address) view returns (uint256)',
   'function getRound(uint256) view returns (tuple(uint64 start, uint64 end, uint64 drawBlock, bool drawn, uint256 totalTickets, uint256 pot, address[3] winners, uint256[3] prizes))'];
-const raffleC = () => new E.Contract(A.raffle, RAFFLE_ABI, onRightChain() ? st.provider : RP());
+const raffleC = () => new E.Contract(A.raffle, RAFFLE_ABI, RP());
 const rl = { cur:null, mine:0, last:null, names:{} };
 async function loadRaffle(){
   if (!A.raffle){ $('rlCard').hidden = true; return; }
@@ -5827,7 +5839,7 @@ const DUEL_ABI = ['function create(uint8 makerIdx, uint8 takerIdx, uint256 stake
 const ARENA_RD_ABI = ['function currentRound() view returns (uint256 id, uint64 start, uint64 end, uint64 stakingEndsAt, uint256 secondsLeft, uint256 pot, uint16 feeBps, bool live)',
   'function roundTokens(uint256) view returns (address[] tokens, address[] pairs)',
   'function getRound(uint256 id) view returns (tuple(uint64 start, uint64 end, uint16 feeBps, uint8 winnerMask, bool settled, uint256 staked, uint256 rollover, uint256 winnerStake, uint256 payout))'];
-const prC = (signer, addr) => new E.Contract(addr || A.predict, PRED_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const prC = (signer, addr) => new E.Contract(addr || A.predict, PRED_ABI, signer ? st.signer : (RP()));
 /* After the RedStone upgrade (DeployV6) "predict"/"guess" are the v2 contracts, decided by RedStone's signed DOGE/USD price,
    and "predictV1"/"guessV1" keep the older ones (the bot reported the price). v2 market ids continue after v1's. */
 /* v3 (DeployV8): "predict"/"guess" read RedStone's DOGE/USD push feed on DogeOS for fixed-line markets and the daily
@@ -5854,8 +5866,8 @@ async function rsTx(to, frag, args, at){
   const i = new E.utils.Interface([frag]);
   return st.signer.sendTransaction({to, data: i.encodeFunctionData(i.fragments[0].name, args) + CavRedstone.buildPayload(pk)});
 }
-const duC = signer => new E.Contract(A.duel, DUEL_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
-const arRdC = () => new E.Contract(A.arena, ARENA_RD_ABI, onRightChain() ? st.provider : RP());
+const duC = signer => new E.Contract(A.duel, DUEL_ABI, signer ? st.signer : (RP()));
+const arRdC = () => new E.Contract(A.arena, ARENA_RD_ABI, RP());
 let tgBot = null;
 fetch('tg.json', {cache: 'no-store'}).then(r => r.ok ? r.json() : null).then(j => { if (j && /^[A-Za-z0-9_]{5,32}$/.test(j.bot || '')) tgBot = j.bot; if (st.view === 'profile') renderProfile(); }).catch(() => {});
 const tgLink = addr => tgBot ? `https://t.me/${tgBot}?start=w${lk(addr).slice(2)}` : '';
@@ -5885,6 +5897,8 @@ async function loadProfile(){
     if (A.quests) jobs.push(questsC().info(addr).then(i => { d.q = i; }).catch(() => {}));
     if (A.champion) jobs.push(champC().balanceOf(addr, 1).then(b => { d.champ = !b.isZero(); }).catch(() => {}));
     if (A.badges) jobs.push(bdC().badgesOf(addr).then(m => { d.badges = m.toNumber(); }).catch(() => {}));
+    if (A.games) jobs.push(gxC().pageOf(addr, 0, 200).then(([, items]) => { const g = {played: 0, won: 0, net: 0};
+      for (const b of items){ const s0 = Number(b.status); if (s0 === 1) continue; g.played++; g.net -= fl(b.stake, 18); if (s0 === 2 || s0 === 4){ g.won++; g.net += fl(b.payout, 18); } } d.games = g; }).catch(() => {}));
     if (A.events) jobs.push(evC().balanceOf(addr, 1).then(b => { d.spook = !b.isZero(); }).catch(() => {}));
     if (A.raffle) jobs.push(raffleC().current().then(c => raffleC().ticketsOf(c.id, addr)).then(t => { d.tickets = t.toNumber(); }).catch(() => {}));
     if (A.duel) jobs.push((async () => { const ids = await duC().idsOf(addr); const ds = await Promise.all(ids.slice(-50).map(i => duC().get(i)));
@@ -5977,6 +5991,7 @@ function renderProfile(){
         <div><span>Arena wins · 7d</span><b>${rk ? rk.arenaWins : '…'}</b><small>${d.champ ? 'Champion badge' : 'no Champion badge yet'}</small></div>
         <div><span>Duels won</span><b>${d.duels.won}</b><small>of ${d.duels.played} settled</small></div>
         <div><span>Predictions right</span><b>${d.preds.won}</b><small>of ${d.preds.played} resolved</small></div>
+        ${d.games && d.games.played ? `<div><span>Games won</span><b>${d.games.won}</b><small>of ${d.games.played} · ${d.games.net >= 0 ? '+' : ''}${sxNum(d.games.net)} DOGE</small></div>` : ''}
         <div><span>Raffle tickets</span><b>${d.tickets}</b><small>this week</small></div>
         <div><span>Badges</span><b>${profileCount(d)}</b><small>soulbound</small></div>
       </div>
@@ -6055,9 +6070,9 @@ async function loadPredict(){
   if (!A.predict && !A.duel){ pr.err = 'Predictions and duels are not deployed on this network yet.'; return renderPredict(); }
   const me = st.account, jobs = [];
   jobs.push(RP().getBlock('latest').then(b => { pr.skew = b.timestamp - Math.floor(Date.now()/1000); }).catch(() => {}));
-  if (me && A.kings) jobs.push(new E.Contract(A.kings, ERC20_ABI, onRightChain() ? st.provider : RP()).balanceOf(me).then(b => { pr.kbal = b; }).catch(() => {}));
+  if (me && A.kings) jobs.push(new E.Contract(A.kings, ERC20_ABI, RP()).balanceOf(me).then(b => { pr.kbal = b; }).catch(() => {}));
   if (me && A.kings && onRightChain()){
-    const k = new E.Contract(A.kings, ERC20_ABI, st.provider);
+    const k = new E.Contract(A.kings, ERC20_ABI, RP());
     if (A.predict) jobs.push(k.allowance(me, A.predict).then(a => { pr.allowP = a; }).catch(() => {}));
     if (A.duel) jobs.push(k.allowance(me, A.duel).then(a => { pr.allowD = a; }).catch(() => {}));
   }
@@ -6292,8 +6307,8 @@ async function loadFeed(){
   FD.loading = true;
   try{
     const rp = RP(), head = await rp.getBlockNumber(), hb = await rp.getBlock(head), bt = sx.bt || 3;
-    const addrs = [A.arena, A.predict, A.predictV2, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV2, A.guessV1, A.callouts].filter(Boolean);
-    const topics = [CO_CALLED, GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
+    const addrs = [A.arena, A.predict, A.predictV2, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV2, A.guessV1, A.callouts, A.games].filter(Boolean);
+    const topics = [GX_SETTLED, CO_CALLED, GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
     const logs = [];
     for (let z = head; z > head - 20000 && z > 0; z -= SX_CHUNK){
       const a = Math.max(0, z - SX_CHUNK + 1);
@@ -6327,6 +6342,8 @@ async function loadFeed(){
         else if (A0 === lk(A.launch) && t0 === FD_T.launched){ const tok = topic1a(l), who = topic2(l);
           const sym = E.utils.defaultAbiCoder.decode(['string', 'string', 'uint256'], l.data)[1];
           items.push({...base, who, ic: '🚀', txt: `launched <b>$${esc(sym)}</b> on the Launchpad`, href: '#t/' + E.utils.getAddress(tok)}); }
+        else if (A.games && A0 === lk(A.games) && t0 === GX_SETTLED){ if (!n(l, 1)) continue; const paid = Number(n(l, 2)) / 1e18; if (paid < 1) continue;
+          items.push({...base, who: topic2(l), ic: '🎲', txt: `won <b>${sxNum(paid)} DOGE</b> in Games (rolled ${Number(n(l, 0))})`, href: '#games'}); }
         else if (A.callouts && A0 === lk(A.callouts) && t0 === CO_CALLED){ const tok = E.utils.getAddress('0x' + l.topics[3].slice(26)), p = Number(n(l, 0)) / 1e18;
           items.push({...base, who: topic2(l), ic: '📣', txt: `called <b>$${esc(await lxSym(tok))}</b> at a ${coMcap(p)} market cap`, href: '#t/' + tok}); }
         else if (A0 === lk(A.launch) && t0 === FD_T.graduated){ const tok = topic1a(l);
@@ -6389,7 +6406,7 @@ const GAMES_ABI = [
   'function pageOf(address who, uint256 start, uint256 n) view returns (uint256[] ids, tuple(address player, uint96 stake, uint32 round, uint8 game, uint8 pick, bool over, uint8 roll, uint8 status, uint96 payout, uint40 placedAt)[] items)',
   'event Placed(uint256 indexed id, address indexed player, uint8 game, uint8 pick, bool over, uint256 stake, uint256 payout, uint256 round)',
 ];
-const gxC = signer => new E.Contract(A.games, GAMES_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const gxC = signer => new E.Contract(A.games, GAMES_ABI, signer ? st.signer : (RP()));
 const gx = {tab: 'coin', side: 0, target: 50, over: true, stake: '1', busy: false, data: null, live: null, names: {}, timer: null};
 const gxWins = () => gx.tab === 'coin' ? 50 : Math.max(0, gx.over ? 100 - gx.target : gx.target - 1);
 const gxOk = () => gx.tab === 'coin' || (gxWins() >= 2 && gxWins() <= 95);
@@ -6527,7 +6544,7 @@ document.addEventListener('click', async e => {
   }catch(err){ gx.busy = false; toast(errMsg(err), 'bad', 8000); renderGames(); }
 });
 
-const guC = signer => new E.Contract(A.guess, GUESS_ABI, signer ? st.signer : (onRightChain() ? st.provider : RP()));
+const guC = signer => new E.Contract(A.guess, GUESS_ABI, signer ? st.signer : (RP()));
 const gs = { data:null, live:null, busy:false, names:{} };
 const usd5 = v => '$' + (v >= 1 ? v.toFixed(4) : v.toPrecision(5));
 async function loadGuessLive(){ try{ const j = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=DOGEUSDT').then(r => r.json()); if (+j.price > 0) gs.live = +j.price; }catch(e){ try{ const j = await fetch('https://api.exchange.coinbase.com/products/DOGE-USD/ticker').then(r => r.json()); if (+j.price > 0) gs.live = +j.price; }catch(_){} } }
@@ -6707,6 +6724,6 @@ paintTheme();
 })();
 })();
 </script>
-<script src="arena-winners.js?v=1" defer></script>
+<script src="arena-winners.js?v=2" defer></script>
 </body>
 </html>

@@ -147,7 +147,7 @@
     css();
     var A = {}; try{ A = await fetch('addresses.json', {cache: 'no-store'}).then(function(r){ return r.json(); }); }catch(e){}
     if (!A.arena) return;
-    var rp = new ethers.providers.StaticJsonRpcProvider(A.rpc || RPC_DEFAULT, CHAIN);
+    var rp = window.CavRpc ? CavRpc.make(ethers, A.rpc || RPC_DEFAULT, CHAIN) : new ethers.providers.StaticJsonRpcProvider(A.rpc || RPC_DEFAULT, CHAIN);
     var arena = new ethers.Contract(A.arena, ARENA_ABI, rp);
     var host = hosts[0];
     host.innerHTML = '<div class="rc-head"><h2>Live race</h2></div><div class="rc-empty">Loading the round…</div>';
