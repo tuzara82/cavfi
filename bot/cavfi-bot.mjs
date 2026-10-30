@@ -63,6 +63,8 @@ const CFG = {
   watchMax: Number(env('WATCH_MAX', '3')),
   gmRemindHour: Number(env('GM_REMIND_HOUR_UTC', '18')),
   digest: env('DIGEST', '1') === '1',
+  guessRemindHour: Number(env('GUESS_REMIND_HOUR_UTC', '16')),   // daily "2 hours left" reminder for the free guess game (-1 = off)
+  spookDay: Number(env('SPOOKTOBER_DAY', '20757')),              // Halloween 2026 (UTC day): badge + double raffle tickets
   digestHour: Number(env('DIGEST_HOUR_UTC', '6')),
   dryRun: env('DRY_RUN', '0') === '1',
   once: process.argv.includes('--once'),
@@ -123,6 +125,7 @@ const ABI = {
   dca: ['function count() view returns (uint256)', 'function due(uint256 start, uint256 n) view returns (uint256[])', 'function execute(uint256 id, address[] path) returns (uint256)',
         'function get(uint256 id) view returns (tuple(address owner, bool active, bool nativeIn, bool nativeOut, uint32 buysTotal, uint32 buysLeft, uint32 interval, uint64 nextAt, address tokenIn, address tokenOut, uint256 perBuy, uint256 minOutPerBuy, uint256 spent, uint256 received))',
         'function keeper(address) view returns (bool)'],
+  events: ['function award(address[] to, uint256 id)', 'function balanceOf(address, uint256) view returns (uint256)'],
   quests: ['function record(uint32 day, address[] users, uint8[] done)', 'function attester(address) view returns (bool)', 'function doneOf(address, uint32) view returns (uint8)',
            'event Questmaster(address indexed who)'],
   raffle: ['function current() view returns (uint256 id, uint64 start, uint64 end, uint256 totalTickets, uint256 playerCount, uint256 pot, uint64 drawBlock)',
@@ -750,9 +753,19 @@ async function questsDaily(){
       const r = new ethers.Contract(A.raffle, ABI.raffle, wallet), cur = await r.current();
       const t = (await provider.getBlock('latest')).timestamp;
       if (await r.attester(me) && t < Number(cur.end.toString()) && cur.drawBlock.isZero()){
-        for (let i = 0; i < users.length; i += 40) await send(`raffle: ${users.slice(i, i + 40).length} wallets get tickets`, () => r.addTickets(users.slice(i, i + 40), done.slice(i, i + 40)));
+        const tix = day === CFG.spookDay ? done.map(x => x * 2) : done;   // Spooktober: double tickets
+        for (let i = 0; i < users.length; i += 40) await send(`raffle: ${users.slice(i, i + 40).length} wallets get tickets`, () => r.addTickets(users.slice(i, i + 40), tix.slice(i, i + 40)));
       } else log('raffle: round not open for tickets right now');
     }catch(e){ log('raffle tickets failed:', (e.reason || e.message || '').slice(0, 100)); }
+  }
+  // Spooktober: every wallet that finished all 3 quests on Halloween gets the soulbound event badge
+  let spooked = [];
+  if (day === CFG.spookDay && A.events){
+    spooked = users.filter((u, i) => done[i] === 3);
+    try{
+      const ev = new ethers.Contract(A.events, ABI.events, wallet);
+      for (let i = 0; i < spooked.length; i += 40) await send(`events: Spooktober badge for ${spooked.slice(i, i + 40).length} wallets`, () => ev.award(spooked.slice(i, i + 40), 1));
+    }catch(e){ log('events: award failed:', (e.reason || e.message || '').slice(0, 100)); }
   }
   state.questsDay = day; saveState();
   for (let i = 0; i < users.length; i++) if (watchersOf(users[i]).length)
@@ -761,7 +774,8 @@ async function questsDaily(){
   if (users.length){
     await tg(`📜 <b>Daily quests, ${new Date(from * 1000).toISOString().slice(0, 10)}</b>\n${users.length} wallet${users.length === 1 ? '' : 's'} did quests, ${done.filter(d => d === 3).length} finished all 3.` +
       (CFG.raffle && A.raffle ? `\n🎟️ ${done.reduce((a, b) => a + b, 0)} Royal Raffle tickets given out.` : '') +
-      (masters.length ? `\n🏅 New Questmaster: ${masters.map(short).join(', ')}` : '') + `\nToday's quests: <a href="https://cavfi.com">cavfi.com</a>`);
+      (masters.length ? `\n🏅 New Questmaster: ${masters.map(short).join(', ')}` : '') +
+      (day === CFG.spookDay ? `\n🎃 Spooktober: ${spooked.length} wallet${spooked.length === 1 ? '' : 's'} earned the soulbound Spooktober 2026 badge, and tickets counted double.` : '') + `\nToday's quests: <a href="https://cavfi.com">cavfi.com</a>`);
   }
 }
 let raffleAt = 0;
@@ -1327,6 +1341,21 @@ async function raffleText(){
   try{ const r = await new ethers.Contract(A.raffle, ABI.raffle, provider).current();
     return `🎟️ <b>Royal Raffle</b> week #${r.id}: ${fmtN(fl(r.pot, 18))} KingS pot, ${r.totalTickets} tickets, draw ${new Date(Number(r.end.toString()) * 1000).toISOString().slice(0, 10)}`; }catch(e){ return ''; }
 }
+// Every day at GUESS_REMIND_HOUR_UTC (default 16:00, two hours before guesses close) the bot reminds the group
+// about the free guessing game, with yesterday's result.
+async function guessReminder(){
+  if (CFG.guessRemindHour < 0 || !A.guess || !CFG.tgToken || !CFG.tgChat) return;
+  const t = (await provider.getBlock('latest')).timestamp, day = Math.floor(t / 86400), h = (t % 86400) / 3600;
+  if (h < CFG.guessRemindHour || h >= 18 || state.guessRemindDay === day) return;
+  state.guessRemindDay = day; saveState();
+  try{
+    const g = new ethers.Contract(A.guess, ABI.guess2, provider);
+    const [n, pz, y] = await Promise.all([g.count(day), g.prize(), g.dayInfo(day - 1)]);
+    let last = '';
+    if (y.settled && y.winner !== ethers.constants.AddressZero) last = `\nYesterday DOGE was ${usdP5(Number(y.price) / 1e8)} at 20:00 UTC and <b>${esc(await labelOf(y.winner))}</b> won with ${usdP5(Number(y.winnerGuess) / 1e8)}.`;
+    await tg(`⏰ <b>2 hours left</b> to guess today's DOGE price (free, one guess per wallet). Closest guess at 20:00 UTC wins <b>${fmtN(fl(pz, 18))} KingS</b>. ${n} guess${n.eq(1) ? '' : 'es'} so far.${last}\n<a href="https://cavfi.com/#guess">Make your guess</a>`);
+  }catch(e){ log('guess reminder:', (e.reason || e.message || '').slice(0, 100)); }
+}
 async function morningDigest(){
   if (!CFG.digest || !CFG.tgToken || !CFG.tgChat) return;
   const t = now(), day = Math.floor(t / 86400);
@@ -1485,6 +1514,7 @@ async function main(){
       await alertsPoll();
       await gmReminders();
       await morningDigest();
+      await guessReminder();
       await weeklyTopTen();
       await heralds();
       await notify();

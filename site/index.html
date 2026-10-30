@@ -337,6 +337,14 @@ a.item{color:var(--ink);text-decoration:none}
 /* ---- launchpad ---- */
 #viewLaunch>*{width:100%;max-width:880px}
 .lx-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.spook-bar{max-width:1116px;margin:10px auto 0;padding:12px 18px;border-radius:16px;background:linear-gradient(110deg,#2A1640,#5B2A12);color:#FFE9C7;font-size:14.5px;line-height:1.5;display:flex;gap:14px;align-items:center;flex-wrap:wrap;box-sizing:border-box;width:calc(100% - 32px)}
+.spook-bar b{color:#FFB25B}.spook-bar .btn{margin-left:auto;background:#F28C28;color:#1B0F09;border-color:#F28C28}
+.spook-sky{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.spook-sky i{position:absolute;font-style:normal;font-size:34px;opacity:.13;animation:spookUp linear infinite}
+@keyframes spookUp{from{transform:translateY(105vh) rotate(-8deg)}to{transform:translateY(-15vh) rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.spook-sky{display:none}}
+html.spooky{--gold:#F28C28}
+.sx-card.hm-guess{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:14px 0}.hm-guess .g-ic{font-size:34px}.hm-guess .g-t{flex:1;min-width:220px;font-size:14.5px;line-height:1.5}.hm-guess .g-t small{color:var(--muted);display:block}
 .lx-sect{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:4px 0 8px}.lx-sect h3{margin:0;font:400 21px var(--display)}.lx-sect small{color:var(--muted);font-size:12.5px}
 .lx-moon{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(168px,1fr);gap:10px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;scroll-snap-type:x proximity}
 .lx-mc{all:unset;box-sizing:border-box;cursor:pointer;scroll-snap-align:start;border-radius:18px;padding:12px 14px;display:grid;gap:4px;color:#fff;background:linear-gradient(145deg,hsl(var(--h) 62% 46%),hsl(calc(var(--h) + 35) 58% 28%));box-shadow:0 10px 24px -14px rgba(0,0,0,.5);transition:transform .2s}
@@ -911,6 +919,8 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     <button class="wallet" id="wallet">Connect wallet</button>
   </div>
 </header>
+<div class="spook-bar" id="spookBar" hidden></div>
+<div class="spook-sky" id="spookSky" aria-hidden="true" hidden></div>
 
 <main class="wrap">
   <!-- ===================== HOME ===================== -->
@@ -943,6 +953,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <span class="hm-pet">tap me</span>
       </button>
     </section>
+    <section class="sx-card hm-guess" id="hmGuess" hidden></section>
     <section class="gm-card" id="gmCard" hidden aria-labelledby="gmH">
       <div class="gm-l"><h2 id="gmH">Say it on-chain</h2><small id="gmSub">One gm and one gn a day. Keep a 7-day gm streak for the Early Pup badge.</small></div>
       <div class="gm-streak" aria-label="gm streak"><b id="gmStreak">0</b><span>day streak</span></div>
@@ -1529,7 +1540,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -2008,7 +2019,7 @@ function setView(v){
   if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
   if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
-  if (v === 'home'){ loadHomeExtra(); loadOnboarding(); nfHomeFig(); loadGm(); loadQuests(); loadRaffle(); loadFeed(); renderInviteCard(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
+  if (v === 'home'){ loadHomeGuess(); loadHomeExtra(); loadOnboarding(); nfHomeFig(); loadGm(); loadQuests(); loadRaffle(); loadFeed(); renderInviteCard(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
   if (v === 'portfolio') loadPortfolio();
   if (v === 'faucet') loadFaucet();
   if (v === 'nft') loadNft();
@@ -3416,9 +3427,12 @@ async function loadBoard(){
         r.calls = (r.calls || 0) + 1;
         if (nowS - Number(items[k][2]) >= 3600){ if (m >= 2) r.callWins = (r.callWins || 0) + 1; if (m > (r.bestCall || 0)) r.bestCall = m; } });
     }catch(e){} }
+    if (A.events){ try{   // event badges: Spooktober 2026 = 500 points
+      for (const l of await winLogs(A.events, [EV_AWARDED])){ const r = row(lk('0x' + l.topics[2].slice(26))); r.spook = (r.spook || 0) + 1; }
+    }catch(e){} }
     if (A.bot) delete P[lk(A.bot)];   // the CavFi bot's own trades and tips don't count
     const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.quests * 20 + r.launches * 100 + r.grads * 500
-      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100;
+      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100 + (r.spook || 0) * 500;
     let refMap = {}; try{ refMap = await loadRefMap(); }catch(e){}
     for (const r of Object.values(P)){ const by = refMap[r.addr]; if (by){ const x = row(by); x.refPts = (x.refPts || 0) + base(r) * 0.25; x.invites = (x.invites || 0) + 1; } }
     board.rows = Object.values(P).map(r => ({...r, refPts: Math.round(r.refPts || 0), pts: Math.round(base(r) + (r.refPts || 0))}))
@@ -3434,7 +3448,7 @@ async function loadBoard(){
   if (st.view === 'profile') renderProfile();
 }
 const LB_TABS = {
-  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · 20 per callout, 100 more when a callout is 2× or more after an hour · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
+  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · 20 per callout, 100 more when a callout is 2× or more after an hour · 500 for the Spooktober 2026 badge · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
   swap:  {key: r => r.swapUsd, legend: 'Ranked by swap volume, valued at today\'s CavFi pool prices.', val: r => sxUsd(r.swapUsd)},
   arena: {key: r => r.arenaWins * 1e12 + r.arenaK, legend: 'Ranked by Arena rounds won, then by KingS staked.', val: r => r.arenaWins ? `${r.arenaWins} 🏆` : sxNum(r.arenaK) + ' KingS'},
   quest: {key: r => r.quests * 2 + r.gms, legend: 'Ranked by daily quests done (recorded by the bot after each day), then by gm and gn.', val: r => `${r.quests} quests`},
@@ -3934,6 +3948,53 @@ const BADGE_ABI = [
   'function claimLauncher(address)', 'function claimCreator(address)', 'function claimPatient(uint256)',
   'function claimKeeper(bool, uint256)', 'function claimLiquidity(address)', 'function claimVoter()',
 ];
+/* ================= SPOOKTOBER (Halloween 2026, UTC day 20757) =================
+   A one-day event: finish all 3 daily quests on Halloween (UTC) for the soulbound Spooktober 2026 badge
+   (+500 leaderboard points, awarded by the bot after midnight UTC) and double raffle tickets.
+   ?spooky=1 previews the event, ?spooky=pre the day-before teaser. */
+const SPOOK_DAY = 20757, EV_ABI = ['function balanceOf(address, uint256) view returns (uint256)'], EV_AWARDED = E.utils.id('Awarded(uint256,address)');
+const evC = () => new E.Contract(A.events, EV_ABI, onRightChain() ? st.provider : RP());
+function spookMode(){
+  const q = new URLSearchParams(location.search).get('spooky');
+  if (q === '1') return 'on'; if (q === 'pre') return 'pre';
+  const d = Math.floor(Date.now() / 86400000);
+  return d === SPOOK_DAY ? 'on' : d === SPOOK_DAY - 1 ? 'pre' : null;
+}
+function renderSpook(){
+  const m = spookMode(), bar = $('spookBar'), sky = $('spookSky');
+  if (!bar) return;
+  document.documentElement.classList.toggle('spooky', m === 'on');
+  if (!m){ bar.hidden = true; sky.hidden = true; return; }
+  const end = (SPOOK_DAY + 1) * 86400, start = SPOOK_DAY * 86400, now = Math.floor(Date.now() / 1000);
+  const left = m === 'on' ? Math.max(0, end - now) : Math.max(0, start - now);
+  const hm = x => `${Math.floor(x / 3600)}h ${Math.floor(x % 3600 / 60)}m`;
+  bar.innerHTML = m === 'on'
+    ? `<span>🎃 <b>Spooktober on CavFi, today only.</b> Finish all 3 daily quests today (UTC) for the soulbound <b>Spooktober 2026</b> badge and +500 leaderboard points, and every quest gives 2 raffle tickets. Ends in ${hm(left)}.</span><button class="btn" data-go="home" data-spook="quests">Today's quests</button>`
+    : `<span>🎃 <b>Tomorrow is Spooktober on CavFi.</b> Finish all 3 daily quests on Halloween (UTC) for a soulbound Spooktober 2026 badge, +500 leaderboard points and double raffle tickets. Starts in ${hm(left)}.</span>`;
+  bar.hidden = false;
+  if (m === 'on' && sky.hidden){
+    sky.innerHTML = ['🎃', '👻', '🦇', '🎃', '👻', '🍬', '🦇', '🎃'].map((e, i) => `<i style="left:${6 + i * 12}%;animation-duration:${26 + (i % 4) * 7}s;animation-delay:-${i * 4}s">${e}</i>`).join('');
+    sky.hidden = false;
+  } else if (m !== 'on') sky.hidden = true;
+}
+setInterval(renderSpook, 60000);
+document.addEventListener('click', e => { const b = e.target.closest('[data-spook=quests]'); if (!b) return; setTimeout(() => { const q = document.getElementById('qsCard'); if (q) q.scrollIntoView({block: 'center', behavior: 'smooth'}); }, 300); });
+
+/* Home: yesterday's closest guess and today's game */
+async function loadHomeGuess(){
+  const box = $('hmGuess'); if (!box || !A.guess) return;
+  try{
+    const c = guC(), d = await c.today();
+    const [y, n, pz, close] = await Promise.all([c.dayInfo(d - 1), c.count(d), c.prize(), c.closeAt(d)]);
+    const now = Math.floor(Date.now() / 1000), open = now < Number(close.toString()), u = v => usd5(Number(v.toString()) / 1e8);
+    let who = '';
+    if (y.settled && y.winner !== E.constants.AddressZero){ who = short(y.winner); if (A.names){ try{ const nm = await nmC().nameOf(y.winner); if (nmValid(nm)) who = nm + '.cav'; }catch(e){} } }
+    box.innerHTML = `<span class="g-ic" aria-hidden="true">🎯</span><div class="g-t">${who ? `<b>${esc(who)}</b> guessed ${u(y.winnerGuess)} yesterday and won <b>${sxNum(fl(y.prize, 18))} KingS</b>. DOGE was ${u(y.price)} at 20:00 UTC.` : `<b>Guess the DOGE price</b>: free, one guess a day, the closest wins <b>${sxNum(fl(pz, 18))} KingS</b>.`}
+      <small>${open ? `Today: ${n.toString()} guess${n.eq(1) ? '' : 'es'} so far · closes at 18:00 UTC` : 'Today\'s guesses are closed: next game at midnight UTC'}</small></div>
+      ${open ? '<a class="btn primary" href="#guess">Guess for free</a>' : '<a class="btn" href="#guess">See today</a>'}`;
+    box.hidden = false;
+  }catch(e){}
+}
 const BADGES = [
   null,
   {t:'Royal Swapper', d:'Make a swap on CavFi. The CavFi bot hands it out.', c:'#A3461E', m:'M22 25h20l-5-5M42 39H22l5 5', bot:true},
@@ -5775,6 +5836,7 @@ async function loadProfile(){
     if (A.quests) jobs.push(questsC().info(addr).then(i => { d.q = i; }).catch(() => {}));
     if (A.champion) jobs.push(champC().balanceOf(addr, 1).then(b => { d.champ = !b.isZero(); }).catch(() => {}));
     if (A.badges) jobs.push(bdC().badgesOf(addr).then(m => { d.badges = m.toNumber(); }).catch(() => {}));
+    if (A.events) jobs.push(evC().balanceOf(addr, 1).then(b => { d.spook = !b.isZero(); }).catch(() => {}));
     if (A.raffle) jobs.push(raffleC().current().then(c => raffleC().ticketsOf(c.id, addr)).then(t => { d.tickets = t.toNumber(); }).catch(() => {}));
     if (A.duel) jobs.push((async () => { const ids = await duC().idsOf(addr); const ds = await Promise.all(ids.slice(-50).map(i => duC().get(i)));
       for (const x of ds) if (x.state === 3){ d.duels.played++; if (same(x.winner, addr)) d.duels.won++; } })().catch(() => {}));
@@ -5837,7 +5899,7 @@ function profileHeat(d){
     <div class="hm-grid" role="img" aria-label="CavFi activity: ${active} active days in the last 16 weeks">${cells.join('')}</div>
     <div class="hm-key"><span>less</span><i class="hm-0"></i><i class="hm-1"></i><i class="hm-2"></i><i class="hm-3"></i><i class="hm-4"></i><span>more</span></div></section>`;
 }
-function profileCount(d){ return (d.badges ? [...Array(8)].reduce((n, _, k) => n + ((d.badges >> k) & 1), 0) : 0) + (d.champ ? 1 : 0) + (d.gm && d.gm.pup ? 1 : 0) + (d.q && d.q.badge ? 1 : 0); }
+function profileCount(d){ return (d.badges ? [...Array(8)].reduce((n, _, k) => n + ((d.badges >> k) & 1), 0) : 0) + (d.spook ? 1 : 0) + (d.champ ? 1 : 0) + (d.gm && d.gm.pup ? 1 : 0) + (d.q && d.q.badge ? 1 : 0); }
 function renderProfile(){
   const box = $('upBody'); if (!box) return;
   const find = `<section class="sx-card"><div class="sx-head"><h2>Find a profile</h2><span>any .cav name or 0x address</span></div>
@@ -5851,7 +5913,7 @@ function renderProfile(){
   const rk = profileRank(d.addr), url = `https://cavfi.com/u/${encodeURIComponent(id)}`;
   const top = d.cavs[0];
   const art = top ? nfSvg(top.dna, d.life) : '<span aria-hidden="true">👑</span>';
-  const tags = [d.gm && d.gm.pup ? '🐶 Early Pup' : '', d.champ ? '🏆 Arena Champion' : '', d.q && d.q.badge ? '⭐ Questmaster' : '', d.cavs.length ? `🐾 ${d.cavs.length} Cavalier${d.cavs.length === 1 ? '' : 's'}` : ''].filter(Boolean);
+  const tags = [d.spook ? '🎃 Spooktober 2026' : '', d.gm && d.gm.pup ? '🐶 Early Pup' : '', d.champ ? '🏆 Arena Champion' : '', d.q && d.q.badge ? '⭐ Questmaster' : '', d.cavs.length ? `🐾 ${d.cavs.length} Cavalier${d.cavs.length === 1 ? '' : 's'}` : ''].filter(Boolean);
   const tg = tgLink(d.addr);
   box.innerHTML = `<section class="sx-card">
       <div class="up-hero"><div class="up-art">${art}</div>
@@ -6425,6 +6487,7 @@ paintTheme();
   try { const r = await fetch('addresses.json', {cache:'no-store'}); if (r.ok) a = await r.json(); } catch(e) {}
   for (const k of Object.keys(A)) A[k] = ADDRESSES[k] || a[k] || '';
   buildTokens();
+  renderSpook();
   const by = s => TOKENS.find(t => t.symbol === s);
   st.tin = TOKENS[0]; st.tout = by('KingS') || TOKENS[1] || TOKENS[0];
   st.la = by('KingS') || TOKENS[0]; st.lb = by('cUSDT') || by('USDT') || TOKENS[0];
