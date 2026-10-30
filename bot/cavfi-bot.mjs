@@ -63,9 +63,19 @@ const CFG = {
   watchMax: Number(env('WATCH_MAX', '3')),
   gmRemindHour: Number(env('GM_REMIND_HOUR_UTC', '18')),
   digest: env('DIGEST', '1') === '1',
+  // DogeOS charges every transaction an L1 data fee on top of gas, and it can spike (2.7 DOGE a tx on 29 Oct 2026).
+  // Above FEE_SOFT_MAX_DOGE the bot skips optional transactions (market noise, pool fixes, prediction seeds),
+  // above FEE_POKE_MAX_DOGE also the Arena price pokes, above FEE_HARD_MAX_DOGE everything.
+  feeSoftMax: Number(env('FEE_SOFT_MAX_DOGE', '0.03')),
+  feePokeMax: Number(env('FEE_POKE_MAX_DOGE', '0.3')),
+  feeHardMax: Number(env('FEE_HARD_MAX_DOGE', '1')),
   guessRemindHour: Number(env('GUESS_REMIND_HOUR_UTC', '16')),   // daily "2 hours left" reminder for the free guess game (-1 = off)
   spookDay: Number(env('SPOOKTOBER_DAY', '20757')),              // Halloween 2026 (UTC day): badge + double raffle tickets
   digestHour: Number(env('DIGEST_HOUR_UTC', '6')),
+  games: env('GAMES', '1') === '1',                              // reveal the Coin Flip / Dice rounds (the bot is the house)
+  gamesPollSec: Number(env('GAMES_POLL_SEC', '5')),
+  gamesChain: Number(env('GAMES_CHAIN_LENGTH', '200000')),       // rounds per hash chain (30 s each: about 69 days)
+  gamesLowDoge: Number(env('GAMES_LOW_DOGE', '10')),
   dryRun: env('DRY_RUN', '0') === '1',
   once: process.argv.includes('--once'),
 };
@@ -131,6 +141,10 @@ const ABI = {
   raffle: ['function current() view returns (uint256 id, uint64 start, uint64 end, uint256 totalTickets, uint256 playerCount, uint256 pot, uint64 drawBlock)',
            'function addTickets(address[] users, uint256[] counts)', 'function close()', 'function draw()', 'function attester(address) view returns (bool)',
            'event Drawn(uint256 indexed id, address[3] winners, uint256[3] prizes, uint256 pot)'],
+  games: ['function reveal(bytes32 seed)', 'function setAnchor(bytes32 anchor, uint256 length)', 'function anchors() view returns (uint256)',
+          'function lastRound() view returns (uint256)', 'function lastSeed() view returns (bytes32)', 'function chainLeft() view returns (uint256)',
+          'function pendingRounds() view returns (uint256[])', 'function house() view returns (address)', 'function free() view returns (uint256)',
+          'event Settled(uint256 indexed id, address indexed player, uint8 roll, bool won, uint256 paid)'],
   launch: ['event Launched(address indexed token, address indexed creator, string name, string symbol, uint256 target)',
            'event Graduated(address indexed token, address indexed pair, uint256 doge, uint256 amount, uint256 liquidity)'],
 };
@@ -176,6 +190,8 @@ async function tg(html){
 // ------------------------------------------------------------------ setup
 const A = JSON.parse(fs.readFileSync(CFG.addresses, 'utf8'));
 const provider = new ethers.providers.StaticJsonRpcProvider(CFG.rpc, CFG.chainId);
+// ethers v5 adds a 1.5 gwei tip by default; DogeOS's base fee is ~0.016 gwei, so tip 0.001 gwei instead
+provider.getFeeData = async () => { const gp = await provider.getGasPrice(); return {gasPrice: gp, maxFeePerGas: gp.mul(2).add(1e6), maxPriorityFeePerGas: ethers.BigNumber.from(1e6), lastBaseFeePerGas: gp}; };
 let wallet = null, me = null;
 const tokens = {};   // lk(address) -> {address, symbol, decimals}
 let pools = [];      // {address, a0, a1, t0, t1, r0, r1}
@@ -299,8 +315,30 @@ async function bestRoute(a, b, amountIn){
   }
   return best;
 }
-async function send(label, fn){
+// L1 data fee of a typical bot transaction right now (DOGE), from DogeOS's fee oracle, cached for a minute
+const L1_ORACLE = '0x5300000000000000000000000000000000000002';
+let feeCache = {at: 0, v: 0}, feeWarnAt = {};
+async function txFeeNow(){
+  if (now() - feeCache.at < 60) return feeCache.v;
+  let v = 0;
+  try{ v = fl(await new ethers.Contract(L1_ORACLE, ['function getL1Fee(bytes) view returns (uint256)'], provider).getL1Fee('0x' + 'ab'.repeat(260)), 18); }catch(e){}
+  feeCache = {at: now(), v}; return v;
+}
+const feeTier = label => /^(arena noise|fix |approve)|seed (YES|NO)/.test(label) ? 'optional' : /^arena poke/.test(label) ? 'poke' : 'essential';
+// one transaction at a time: the games loop and the main loop share the wallet (and its nonce)
+let sendLock = Promise.resolve();
+function send(label, fn){
+  const run = sendLock.then(() => sendNow(label, fn));
+  sendLock = run.catch(() => {});
+  return run;
+}
+async function sendNow(label, fn){
   if (CFG.dryRun){ log('[dry run]', label); return null; }
+  const fee = await txFeeNow(), tier = feeTier(label), max = tier === 'optional' ? CFG.feeSoftMax : tier === 'poke' ? CFG.feePokeMax : CFG.feeHardMax;
+  if (fee > max){
+    if (now() - (feeWarnAt[tier] || 0) > 1800){ feeWarnAt[tier] = now(); log(`fees: DogeOS L1 fee is ${fee.toFixed(4)} DOGE a transaction, above ${max} for ${tier} transactions: skipping them for now (${label})`); }
+    return null;
+  }
   const tx = await fn();
   log(label, '→', tx.hash);
   const rc = await tx.wait();
@@ -569,6 +607,11 @@ async function arena(){
   const id = cur.id.toNumber(), start = Number(cur.start.toString()), end = Number(cur.end.toString());
   const inWindow = id === 0 || !cur.live || t < start + WINDOW || t + WINDOW >= end;
   if (!inWindow || t - arenaLastPoke < CFG.arenaPokeSec) return;
+  // end window of a round nobody staked in: no winner to decide, so save the fees (start-window samples are
+  // always taken, because people can still stake later in the round)
+  if (cur.live && id > 0 && t + WINDOW >= end){
+    try{ if ((await c.getRound(id)).staked.isZero()){ arenaLastPoke = t; return; } }catch(e){}
+  }
   try{ await send('arena poke', () => c.poke()); arenaLastPoke = t; }
   catch(e){ log('arena poke failed:', (e.reason || e.message || '').slice(0, 100)); }
 }
@@ -1343,6 +1386,77 @@ async function raffleText(){
 }
 // Every day at GUESS_REMIND_HOUR_UTC (default 16:00, two hours before guesses close) the bot reminds the group
 // about the free guessing game, with yesterday's result.
+// warn the group (once every 6 hours) when the bot wallet runs low on DOGE for gas
+// ------------------------------------------------------------------ games (Coin Flip, Dice): the bot is the house
+// Each hash chain is h(0) = keccak(bot key, "cavfi-games", n), h(i+1) = keccak(h(i)); its anchor h(L) goes on chain.
+// The contract always holds lastSeed == h(chainLeft), so the seed of round r is h(chainLeft - (r - lastRound)).
+const gamesChain = {n: 0, pts: null, step: 500, len: 0};
+function gamesChainFor(n, len){
+  if (gamesChain.n === n && gamesChain.len === len) return;
+  const t0 = Date.now();
+  let h = ethers.utils.arrayify(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['bytes32', 'string', 'uint256'], [wallet.privateKey, 'cavfi-games', n])));
+  const pts = [h];
+  for (let i = 1; i <= len; i++){ h = ethers.utils.arrayify(ethers.utils.keccak256(h)); if (i % gamesChain.step === 0) pts.push(h); }
+  Object.assign(gamesChain, {n, len, pts, top: h});
+  log(`games: hash chain #${n} ready (${len} rounds, ${Date.now() - t0} ms)`);
+}
+function gamesSeed(i){
+  let k = Math.floor(i / gamesChain.step), h = gamesChain.pts[k];
+  for (let j = k * gamesChain.step; j < i; j++) h = ethers.utils.arrayify(ethers.utils.keccak256(h));
+  return ethers.utils.hexlify(h);
+}
+let gamesBusy = false, gamesWarnAt = 0;
+async function gamesKeeper(){
+  if (!CFG.games || !A.games || me === ethers.constants.AddressZero || gamesBusy) return;
+  gamesBusy = true;
+  try{
+    const g = new ethers.Contract(A.games, ABI.games, wallet);
+    let [n, lastRound, lastSeed, left, pend] = await Promise.all([g.anchors(), g.lastRound(), g.lastSeed(), g.chainLeft(), g.pendingRounds()]);
+    n = n.toNumber(); lastRound = lastRound.toNumber(); left = left.toNumber();
+    const L = CFG.gamesChain;
+    if (n === 0 || (pend.length === 0 && left < 3000)){
+      if (lk(await g.house()) !== lk(me) && now() - gamesWarnAt > 3600){ gamesWarnAt = now(); log('games: this wallet is not the house of the games contract'); return; }
+      gamesChainFor(n + 1, L);
+      await send(`games anchor #${n + 1}`, () => g.setAnchor(ethers.utils.hexlify(gamesChain.top), L));
+      return;
+    }
+    if (!pend.length) return;
+    gamesChainFor(n, L);
+    if (gamesSeed(left) !== lastSeed){
+      if (now() - gamesWarnAt > 3600){ gamesWarnAt = now(); log(`games: the chain on the contract (#${n}) does not come from this bot key, cannot reveal`); }
+      return;
+    }
+    // chain time, or the clock if no block came since (a quiet chain makes blocks only for transactions)
+    const t = Math.max((await provider.getBlock('latest')).timestamp, now() - 3);
+    const r = pend[0].toNumber();
+    if (t < (r + 1) * 30) return;
+    const tx = await send(`games reveal round ${r}`, () => g.reveal(gamesSeed(left - (r - lastRound))));
+    if (tx){
+      const rc = await provider.getTransactionReceipt(tx.hash), iface = new ethers.utils.Interface(ABI.games);
+      let w = 0, l = 0, big = null;
+      for (const lg of rc.logs){ try{ const e = iface.parseLog(lg); if (e.name !== 'Settled') continue; if (e.args.won){ w++; const p = fl(e.args.paid, 18); if (!big || p > big.p) big = {p, who: e.args.player}; } else l++; }catch(e){} }
+      log(`games: round ${r} settled, ${w} won, ${l} lost`);
+      if (big && big.p >= 20) await tg(`🎲 <b>${esc(await labelOf(big.who))}</b> just won <b>${fmtN(big.p)} DOGE</b> in CavFi Games.\n<a href="https://cavfi.com/#games">Flip a coin or roll the dice</a>`);
+    }
+    if (now() - (state.gamesLowAt || 0) > 6 * 3600){
+      const f = fl(await g.free(), 18);
+      if (f < CFG.gamesLowDoge){ state.gamesLowAt = now(); saveState(); await tg(`🎲 CavFi Games bankroll is low: ${f.toFixed(2)} DOGE free. Send DOGE to the games contract to keep bets open.`); }
+    }
+  }catch(e){ log('games:', (e.reason || e.message || '').slice(0, 140)); }
+  finally{ gamesBusy = false; }
+}
+async function gamesLoop(){
+  for (;;){ await gamesKeeper(); if (CFG.once) return; await sleep(CFG.gamesPollSec * 1000); }
+}
+
+async function lowGasCheck(){
+  if (me === ethers.constants.AddressZero || now() - (state.lowGasAt || 0) < 6 * 3600) return;
+  const b = fl(await provider.getBalance(me), 18), fee = await txFeeNow();
+  if (b >= Math.max(3, fee * 30)) return;
+  state.lowGasAt = now(); saveState();
+  log(`gas: only ${b.toFixed(3)} DOGE left (L1 fee now ${fee.toFixed(4)} DOGE a transaction)`);
+  await tg(`⛽ CavFi bot is low on gas: ${b.toFixed(3)} DOGE left, DogeOS L1 fee is ${fee.toFixed(4)} DOGE a transaction. Send test DOGE to the bot wallet.`);
+}
 async function guessReminder(){
   if (CFG.guessRemindHour < 0 || !A.guess || !CFG.tgToken || !CFG.tgChat) return;
   const t = (await provider.getBlock('latest')).timestamp, day = Math.floor(t / 86400), h = (t % 86400) / 3600;
@@ -1495,6 +1609,9 @@ async function main(){
   await writeTgJson();
   await setMiniApp();
   await tg(`🐶 <b>CavFi bot started</b>${me !== ethers.constants.AddressZero ? `\nwallet ${short(me)}` : ''}`);
+  log(`games: ${CFG.games && A.games ? `on (house, checks every ${CFG.gamesPollSec}s)` : 'off'}`);
+  if (!CFG.once) gamesLoop();
+  else await gamesKeeper();
   let errors = 0;
   for (;;){
     try{
@@ -1518,6 +1635,7 @@ async function main(){
       await weeklyTopTen();
       await heralds();
       await notify();
+      await lowGasCheck();
       errors = 0;
     }catch(e){
       errors++; log('round failed:', (e.reason || e.message || String(e)).slice(0, 160));
