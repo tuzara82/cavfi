@@ -735,6 +735,14 @@ html.spooky{--gold:#F28C28}
 .gx-tag{display:inline-block;width:max-content;justify-self:end;padding:2px 8px;border-radius:999px;font:700 11px var(--body);letter-spacing:.04em;text-transform:uppercase}
 .gx-tag.win{background:color-mix(in srgb,var(--ok) 18%,var(--surface));color:var(--ok)}.gx-tag.lose{background:color-mix(in srgb,var(--bad) 14%,var(--surface));color:var(--bad)}.gx-tag.wait{background:var(--well);color:var(--muted)}
 @media (prefers-reduced-motion: reduce){.gx-coin.spin,.gx-die.spin{animation:none}}
+/* treasure hunt */
+.hn-q{margin:0;font:400 18px/1.4 var(--display)}
+.hn-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.hn-form input{min-width:0;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:12px;padding:10px 12px;font:500 15px var(--body)}
+.hn-ok{margin:0;color:var(--ok);font-weight:800}.hn-bad{margin:0;color:var(--bad);font-size:13px}
+.hn-clue.done{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+.pr-sides.hn-pod{grid-template-columns:repeat(3,1fr)}.hn-pod b a{color:var(--ink);text-decoration:none}
+@media (max-width:640px){.pr-sides.hn-pod{grid-template-columns:1fr}}
 /* guess game */
 .gs-q{margin:0;font-size:16px}
 .du-row a{color:var(--ink);text-decoration:none}.du-row a:hover{color:var(--chestnut)}
@@ -982,7 +990,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     <div class="more-grid">
       <button data-tb="home"><span>🏠</span>Home</button><button data-tb="swap"><span>⇄</span>Swap</button><button data-tb="liq"><span>💧</span>Liquidity</button>
       <button data-tb="farm"><span>🌾</span>Farms</button><button data-tb="launch"><span>🚀</span>Launch</button><a href="arena.html"><span>🏟️</span>Arena</a>
-      <button data-tb="predict"><span>🔮</span>Predict</button><button data-tb="games"><span>🎲</span>Games</button><button data-tb="nft"><span>👑</span>NFTs</button>
+      <button data-tb="predict"><span>🔮</span>Predict</button><button data-tb="games"><span>🎲</span>Games</button><button data-tb="hunt"><span>🗝️</span>Treasure hunt</button><button data-tb="nft"><span>👑</span>NFTs</button>
       <button data-tb="names"><span>🏷️</span>Names</button><button data-tb="board"><span>🏆</span>Leaderboards</button><button data-tb="stats"><span>📊</span>Stats</button>
       <button data-tb="faucet"><span>🚰</span>Faucet</button><button data-tb="portfolio"><span>💼</span>Portfolio</button><button data-tb="help"><span>❓</span>How it works</button>
     </div>
@@ -1390,6 +1398,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <details><summary>What is "Guess the DOGE price"?</summary><p>A free daily game on <a href="#guess">Predict → Free guess</a>: until 18:00 UTC, each wallet can lock one guess of the DOGE price at 20:00 UTC. The answer is RedStone's DOGE/USD price feed on DogeOS at 20:00 UTC: after 20:00 anyone can settle the day (the CavFi bot usually does), the contract reads the feed itself, and the closest guess wins the day's KingS prize; on a tie the earlier guess wins. Nothing is staked, you only pay gas. Each guess is worth 20 leaderboard points and the day's winner gets 300.</p></details>
         <details><summary>What are Callouts?</summary><p>On any Launchpad token page you can press <b>Call it</b> to put your name on the token at today's price. The callout is saved on-chain (free, you only pay gas), and everyone can see how many times the token has grown since: 2×, 10×… One callout per token, up to 3 a day. Each callout is worth 20 leaderboard points, and one that is 2× or more after at least an hour earns 100 more (Leaderboards → Callers). A callout is a public record of who spotted a token early, not financial advice.</p></details>
         <details><summary>How do Coin Flip and Dice work?</summary><p>On <a href="#games" data-goview="games">Games</a> you bet test DOGE: Coin Flip pays 1.96× on the right side; Dice lets you pick a number and roll under or over it, and the smaller the chance, the bigger the payout (98 ÷ winning numbers out of 100). Bets are grouped in 30-second rounds. Long before a round opens, the CavFi bot (the house) has locked that round's secret seed on-chain as part of a hash chain, so it cannot change it and nobody can know it. When the round closes it reveals the seed and the contract rolls every bet: keccak256(seed, bet id) mod 100 + 1. Rounds are revealed in order; if the house is more than an hour late, you can claim your bet as a win. House edge 2%. Each bet of 0.5 DOGE or more is worth 5 leaderboard points, 10 more if it wins (Leaderboards → Games).</p></details>
+        <details><summary>What is the Royal Treasure Hunt?</summary><p>On <a href="#hunt">Games → Treasure hunt</a> you get a few riddles whose answers are hidden around CavFi: on the Launchpad, in the FAQ, in the games, in the NFTs. Type an answer and the page tells you at once if it is right (only a hash of each answer is on-chain). Then claim it with two transactions, a hidden commitment and the answer, so nobody can copy you. The first 3 wallets to solve every riddle win 50% / 30% / 20% of the KingS prize, paid at once, and every solve earns leaderboard points.</p></details>
         <details><summary>What are the hourly markets?</summary><p>Every hour the CavFi bot opens a quick "up or down" market: will DOGE be higher at the end of the hour than at its start? The line is DOGE's price at the start of the hour, bets close 10 minutes before the end, and if the price is exactly the same, NO wins. Only bets of 100 KingS or more earn leaderboard points.</p></details>
         <details><summary>Who decides the price?</summary><p><b>RedStone</b>, a decentralized oracle. Daily and weekly markets and the free daily guess are decided by RedStone's DOGE/USD price feed on DogeOS: after the resolve time anyone can resolve a market, the contract reads the feed itself, and if the feed's last update is at or before that moment, that value is RedStone's on-chain price then. The feed updates when DOGE moves 0.5% or at least every 24 hours; if it has already updated past the resolve time when someone resolves, that price is gone and the market refunds after a day. Hourly "up or down" markets, when they run, use RedStone's signed price for the exact second. Nobody, CavFi included, can choose the price, and each market has one fixed source. The CavFi bot opens the markets and usually resolves them within a minute. Markets marked v1 or v2 were opened before an upgrade and finish their own way.</p></details>
         <details><summary>What is an Arena duel?</summary><p>A one-on-one bet on the current Arena round: pick two of the round's tokens and a KingS stake, for example "RPUP beats KingS, 1,000 KingS". Whoever accepts takes the other token with the same stake. When the Arena round is settled, the token that rose more against DOGE (using the Arena's own start and end prices) wins, and its backer gets both stakes, with no fee. Duels can be accepted only while Arena staking is open. A tie, or too few price samples, refunds both. You can invite one person with a .cav name or address, or share the duel link with anyone.</p></details>
@@ -1436,7 +1445,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
   <!-- ===================== GAMES ===================== -->
   <div class="view" id="viewGames" hidden>
     <div class="sx-bar">
-      <div class="chips" id="gxTabs" role="group" aria-label="Game"><button class="chip" data-t="coin" aria-pressed="true">🪙 Coin Flip</button><button class="chip" data-t="dice" aria-pressed="false">🎲 Dice</button></div>
+      <div class="chips" id="gxTabs" role="group" aria-label="Game"><button class="chip" data-t="coin" aria-pressed="true">🪙 Coin Flip</button><button class="chip" data-t="dice" aria-pressed="false">🎲 Dice</button><button class="chip" data-t="hunt" aria-pressed="false">🗝️ Treasure hunt</button></div>
       <span class="sx-status" id="gxStatus" aria-live="polite"></span>
     </div>
     <div class="pr-body" id="gxBody"></div>
@@ -1613,7 +1622,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { games:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { hunt:'', games:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 /* WalletConnect (any mobile wallet by QR code). Free project id from https://cloud.reown.com,
    with cavfi.com in its allowed domains. Empty = the option is hidden. */
@@ -1626,7 +1635,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = window.CavRpc ? CavRpc.make(E, A.rpc || NET.add.rpcUrls[0], CHAIN_ID) : new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { games:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { hunt:'', games:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -2076,6 +2085,9 @@ function setView(v){
   } else if (v === 'predict'){
     $('ledeH').innerHTML = 'Call the <em>DOGE</em> price.';
     $('ledeP').textContent = 'YES or NO markets on the real DOGE price, and one-on-one Arena duels with friends. Played with testnet KingS.';
+  } else if (v === 'games' && gx.tab === 'hunt'){
+    $('ledeH').innerHTML = 'Hunt the royal <em>treasure</em>.';
+    $('ledeP').textContent = 'Five riddles, answers hidden all around CavFi. Be one of the first three to solve them all and win KingS. Testnet, no real value.';
   } else if (v === 'games'){
     $('ledeH').innerHTML = 'Flip the <em>crown</em>.';
     $('ledeP').textContent = 'Coin Flip and Dice with test DOGE. Every result comes from a seed the house locked on-chain before you bet, so nobody can pick it. Testnet DOGE only, no real value.';
@@ -2113,7 +2125,7 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? '#games' : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#predict') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? (gx.tab === 'hunt' ? '#hunt' : '#games') : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#predict') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
   if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
@@ -2131,7 +2143,7 @@ function setView(v){
 document.addEventListener('click', e => { const b = e.target.closest('[data-tb]'); if (!b) return; const t = b.dataset.tb;
   if (t === 'more'){ $('moreSheet').hidden = false; return; }
   if (t === 'close'){ $('moreSheet').hidden = true; return; }
-  $('moreSheet').hidden = true; if (t === 'predict'){ pr.hl = null; pr.hlm = null; } setView(t); window.scrollTo({top: 0}); });
+  $('moreSheet').hidden = true; if (t === 'predict'){ pr.hl = null; pr.hlm = null; } if (t === 'hunt'){ gx.tab = 'hunt'; setView('games'); } else setView(t); window.scrollTo({top: 0}); });
 $('moreSheet').addEventListener('click', e => { if (e.target.id === 'moreSheet') $('moreSheet').hidden = true; });
 document.querySelectorAll('header nav button').forEach(b => b.addEventListener('click', () => { if (b.dataset.view === 'predict'){ pr.hl = null; pr.hlm = null; } setView(b.dataset.view); }));
 document.addEventListener('click', e => { const a = e.target.closest('[data-goview]'); if (!a) return; e.preventDefault(); setView(a.dataset.goview); window.scrollTo({top:0, behavior:'smooth'}); });
@@ -2143,7 +2155,7 @@ window.addEventListener('hashchange', () => { const h = location.hash, m = h.mat
   else if (u){ if (st.view !== 'profile' || u[1].toLowerCase() !== up.id) openProfile(u[1]); }
   else if (h === '#u'){ up.id = ''; setView('profile'); }
   else if (h === '#predict' || h === '#duels' || h === '#guess' || DUEL_HASH.test(h) || MKT_HASH.test(h)) routePredict(h);
-  else if (h === '#games') setView('games');
+  else if (h === '#games' || h === '#hunt'){ gx.tab = h === '#hunt' ? 'hunt' : gx.tab === 'hunt' ? 'coin' : gx.tab; setView('games'); }
   else if (h === '#faq') setView('help'); });
 
 /* ================= price guard =================
@@ -3539,12 +3551,17 @@ async function loadBoard(){
         else if (w(1) !== 0n){ r.gxWins = (r.gxWins || 0) + 1; r.gxPaid = (r.gxPaid || 0) + fl(w(2), 18); r.gxPts = (r.gxPts || 0) + 10; } }
       for (const r of Object.values(P)) if (r.gxBets) r.gxNet = (r.gxPaid || 0) - (r.gxStaked || 0);
     }catch(e){} }
+    if (A.hunt){ try{   // treasure hunt: 200 / 150 / 100 for the first three to crack a riddle, 20 after; 300 for finishing
+      for (const l of await winLogs(A.hunt, [HN_SOLVED, HN_FINISHED])){ const r = row(lk('0x' + l.topics[2].slice(26))), w = i => Number(BigInt('0x' + l.data.slice(2 + 64 * i, 66 + 64 * i)));
+        if (l.topics[0] === HN_SOLVED){ const o = w(1); r.hnPts = (r.hnPts || 0) + (o === 1 ? 200 : o === 2 ? 150 : o === 3 ? 100 : 20); r.hnSolved = (r.hnSolved || 0) + 1; }
+        else r.hnPts = (r.hnPts || 0) + 300; }
+    }catch(e){} }
     if (A.events){ try{   // event badges: Spooktober 2026 = 500 points
       for (const l of await winLogs(A.events, [EV_AWARDED])){ const r = row(lk('0x' + l.topics[2].slice(26))); r.spook = (r.spook || 0) + 1; }
     }catch(e){} }
     if (A.bot) delete P[lk(A.bot)];   // the CavFi bot's own trades and tips don't count
     const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.quests * 20 + r.launches * 100 + r.grads * 500
-      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100 + (r.spook || 0) * 500 + (r.gxPts || 0);
+      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100 + (r.spook || 0) * 500 + (r.gxPts || 0) + (r.hnPts || 0);
     let refMap = {}; try{ refMap = await loadRefMap(); }catch(e){}
     for (const r of Object.values(P)){ const by = refMap[r.addr]; if (by){ const x = row(by); x.refPts = (x.refPts || 0) + base(r) * 0.25; x.invites = (x.invites || 0) + 1; } }
     board.rows = Object.values(P).map(r => ({...r, refPts: Math.round(r.refPts || 0), pts: Math.round(base(r) + (r.refPts || 0))}))
@@ -3560,7 +3577,7 @@ async function loadBoard(){
   if (st.view === 'profile') renderProfile();
 }
 const LB_TABS = {
-  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · 20 per callout, 100 more when a callout is 2× or more after an hour · 5 per Coin Flip or Dice bet of 0.5+ DOGE, 10 more per win · 500 for the Spooktober 2026 badge · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
+  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · 20 per callout, 100 more when a callout is 2× or more after an hour · 5 per Coin Flip or Dice bet of 0.5+ DOGE, 10 more per win · Treasure hunt: 200 / 150 / 100 for the first three to crack a riddle, 20 after, 300 for finishing · 500 for the Spooktober 2026 badge · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
   swap:  {key: r => r.swapUsd, legend: 'Ranked by swap volume, valued at today\'s CavFi pool prices.', val: r => sxUsd(r.swapUsd)},
   arena: {key: r => r.arenaWins * 1e12 + r.arenaK, legend: 'Ranked by Arena rounds won, then by KingS staked.', val: r => r.arenaWins ? `${r.arenaWins} 🏆` : sxNum(r.arenaK) + ' KingS'},
   quest: {key: r => r.quests * 2 + r.gms, legend: 'Ranked by daily quests done (recorded by the bot after each day), then by gm and gn.', val: r => `${r.quests} quests`},
@@ -6362,8 +6379,8 @@ async function loadFeed(){
   FD.loading = true;
   try{
     const rp = RP(), head = await rp.getBlockNumber(), hb = await rp.getBlock(head), bt = sx.bt || 3;
-    const addrs = [A.arena, A.predict, A.predictV2, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV2, A.guessV1, A.callouts, A.games].filter(Boolean);
-    const topics = [GX_SETTLED, CO_CALLED, GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
+    const addrs = [A.arena, A.predict, A.predictV2, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV2, A.guessV1, A.callouts, A.games, A.hunt].filter(Boolean);
+    const topics = [HN_SOLVED, HN_FINISHED, GX_SETTLED, CO_CALLED, GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
     const logs = [];
     for (let z = head; z > head - 20000 && z > 0; z -= SX_CHUNK){
       const a = Math.max(0, z - SX_CHUNK + 1);
@@ -6397,6 +6414,10 @@ async function loadFeed(){
         else if (A0 === lk(A.launch) && t0 === FD_T.launched){ const tok = topic1a(l), who = topic2(l);
           const sym = E.utils.defaultAbiCoder.decode(['string', 'string', 'uint256'], l.data)[1];
           items.push({...base, who, ic: '🚀', txt: `launched <b>$${esc(sym)}</b> on the Launchpad`, href: '#t/' + E.utils.getAddress(tok)}); }
+        else if (A.hunt && A0 === lk(A.hunt) && t0 === HN_SOLVED){ const o = Number(n(l, 1)); if (o > 3) continue;
+          items.push({...base, who: topic2(l), ic: '🗝️', txt: `was the ${ord(o)} to crack riddle ${Number(n(l, 0)) + 1} of the Royal Treasure Hunt`, href: '#hunt'}); }
+        else if (A.hunt && A0 === lk(A.hunt) && t0 === HN_FINISHED){ const pl = Number(n(l, 0)); if (pl > 3) continue;
+          items.push({...base, who: topic2(l), ic: '💰', txt: `finished the Royal Treasure Hunt in ${ord(pl)} place and won <b>${sxNum(Number(n(l, 1)) / 1e18)} KingS</b>`, href: '#hunt'}); }
         else if (A.games && A0 === lk(A.games) && t0 === GX_SETTLED){ if (!n(l, 1)) continue; const paid = Number(n(l, 2)) / 1e18; if (paid < 1) continue;
           items.push({...base, who: topic2(l), ic: '🎲', txt: `won <b>${sxNum(paid)} DOGE</b> in Games (rolled ${Number(n(l, 0))})`, href: '#games'}); }
         else if (A.callouts && A0 === lk(A.callouts) && t0 === CO_CALLED){ const tok = E.utils.getAddress('0x' + l.topics[3].slice(26)), p = Number(n(l, 0)) / 1e18;
@@ -6462,7 +6483,7 @@ const GAMES_ABI = [
   'event Placed(uint256 indexed id, address indexed player, uint8 game, uint8 pick, bool over, uint256 stake, uint256 payout, uint256 round)',
 ];
 const gxC = signer => new E.Contract(A.games, GAMES_ABI, signer ? st.signer : (RP()));
-const gx = {tab: 'coin', side: 0, target: 50, over: true, stake: '1', busy: false, data: null, live: null, names: {}, timer: null};
+const gx = {tab: location.hash === '#hunt' ? 'hunt' : 'coin', side: 0, target: 50, over: true, stake: '1', busy: false, data: null, live: null, names: {}, timer: null};
 const gxWins = () => gx.tab === 'coin' ? 50 : Math.max(0, gx.over ? 100 - gx.target : gx.target - 1);
 const gxOk = () => gx.tab === 'coin' || (gxWins() >= 2 && gxWins() <= 95);
 const gxMult = () => gxWins() ? 98 / gxWins() : 0;
@@ -6471,6 +6492,7 @@ const gxDesc = b => b.game === 0 ? (b.pick === 0 ? '👑 Heads' : '🐾 Tails') 
 const gxRoll = b => b.game === 0 ? `landed ${b.roll <= 50 ? '👑 Heads' : '🐾 Tails'}` : `rolled ${b.roll}`;
 const gxNm = a => gx.names[lk(a)] || short(a);
 async function loadGames(){
+  if (gx.tab === 'hunt') return loadHunt();
   if (!A.games){ gx.data = {none: true}; return renderGames(); }
   try{
     const c = gxC(), s = await c.stats();
@@ -6504,6 +6526,7 @@ const gxGate = () => !st.account ? {label: 'Connect wallet', act: connect} : !on
 function renderGames(){
   const box = $('gxBody'); if (!box) return;
   document.querySelectorAll('#gxTabs .chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.t === gx.tab)));
+  if (gx.tab === 'hunt') return renderHunt();
   const D = gx.data;
   if (!D){ box.innerHTML = '<div class="empty-card">Reading the games…</div>'; return; }
   if (D.none){ box.innerHTML = '<div class="empty-card">CavFi Games are not deployed on this network yet. Coming very soon.</div>'; return; }
@@ -6568,7 +6591,7 @@ async function gxWatch(id){
 }
 document.addEventListener('click', async e => {
   const t = e.target.closest('#gxTabs .chip');
-  if (t){ gx.tab = t.dataset.t; gx.live = null; renderGames(); renderGamesSoft(); return; }
+  if (t){ gx.tab = t.dataset.t; gx.live = null; try{ history.replaceState(null, '', gx.tab === 'hunt' ? '#hunt' : '#games'); }catch(_){} setView('games'); return; }
   const b = e.target.closest('[data-gx]'); if (!b) return;
   const a = b.dataset.gx;
   if (a === 'gate'){ const g = gxGate(); if (g && g.act) g.act(); return; }
@@ -6597,6 +6620,100 @@ document.addEventListener('click', async e => {
     if (res === 2 || res === 4) celebrate($('gxBody'), 30);
     loadGames();
   }catch(err){ gx.busy = false; toast(errMsg(err), 'bad', 8000); renderGames(); }
+});
+
+/* ================= Royal Treasure Hunt =================
+   KingHunt keeps only hashes of the answers: key = keccak256(huntId, clue, normalized answer). The page checks an answer
+   against that hash right away (no transaction). Claiming it is two transactions: commit a hidden commitment, then
+   reveal the key in a later block, so nobody can copy a solution from the chain and get ahead of you. */
+const HUNT_ABI = [
+  'function count() view returns (uint256)',
+  'function get(uint256) view returns (tuple(uint64 start, uint64 end, uint8 clues, uint32 finishers, uint256 prize, uint256 paid, string title) h, string[] clues, bytes32[] answerKeys, uint32[] solvers, address[3] top)',
+  'function solvedMask(uint256, address) view returns (uint256)', 'function commitBlock(bytes32) view returns (uint64)',
+  'function commit(bytes32 c)', 'function reveal(uint256 id, uint8 clue, bytes32 key)',
+  'event Solved(uint256 indexed id, address indexed player, uint8 clue, uint32 order)',
+  'event Finished(uint256 indexed id, address indexed player, uint32 place, uint256 prize)',
+];
+const HN_SOLVED = E.utils.id('Solved(uint256,address,uint8,uint32)'), HN_FINISHED = E.utils.id('Finished(uint256,address,uint32,uint256)');
+const hnC = signer => new E.Contract(A.hunt, HUNT_ABI, signer ? st.signer : RP());
+const hn = {data: null, busy: null, names: {}, msg: {}};
+const hnNorm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const hnKey = (id, i, a) => E.utils.solidityKeccak256(['uint256', 'uint8', 'string'], [id, i, a]);
+const hnStoreKey = id => 'cavfi.hunt.' + lk(A.hunt) + '.' + id;
+const hnFound = id => { try{ return JSON.parse(localStorage.getItem(hnStoreKey(id)) || '{}'); }catch(e){ return {}; } };
+const hnSave = (id, o) => { try{ localStorage.setItem(hnStoreKey(id), JSON.stringify(o)); }catch(e){} };
+const ord = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+async function loadHunt(){
+  if (!A.hunt){ hn.data = {none: true}; return renderGames(); }
+  try{
+    const c = hnC(), n = (await c.count()).toNumber();
+    if (!n){ hn.data = {none: true}; return renderGames(); }
+    const id = n - 1, [h, clues, keys, solvers, top] = await c.get(id);
+    const mask = st.account ? (await c.solvedMask(id, st.account)).toNumber() : 0;
+    const who = top.filter(a => a !== E.constants.AddressZero && hn.names[lk(a)] == null);
+    if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); who.forEach((a, k) => hn.names[lk(a)] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
+    hn.data = {id, h, clues, keys, solvers: solvers.map(Number), top, mask, now: (await RP().getBlock('latest')).timestamp};
+  }catch(e){ hn.data = {err: true}; }
+  renderGames();
+}
+function renderHunt(){
+  const box = $('gxBody'), D = hn.data;
+  $('gxStatus').textContent = '';
+  if (!D){ box.innerHTML = '<div class="empty-card">Reading the treasure map…</div>'; return; }
+  if (D.none){ box.innerHTML = '<div class="empty-card">The Royal Treasure Hunt opens soon. Keep an eye on @cavdefi.</div>'; return; }
+  if (D.err){ box.innerHTML = '<div class="empty-card">Could not read the hunt right now.</div>'; return; }
+  const h = D.h, now = Math.max(D.now, Math.floor(Date.now() / 1000)), open = now >= Number(h.start) && now <= Number(h.end), gate = gxGate();
+  const found = hnFound(D.id), prize = fl(h.prize, 18), done = [...Array(h.clues)].filter((_, i) => D.mask >> i & 1).length;
+  const places = ['🥇', '🥈', '🥉'], shares = [50, 30, 20];
+  const podium = places.map((m, k) => { const a = D.top[k]; return `<div><span>${m} ${shares[k]}%</span><b>${a && a !== E.constants.AddressZero ? `<a href="#u/${esc(hn.names[lk(a)] || a)}">${esc(hn.names[lk(a)] || short(a))}</a>` : 'open'}</b><small>${sxNum(prize * shares[k] / 100)} KingS</small></div>`; }).join('');
+  const clue = (txt, i) => {
+    const solved = D.mask >> i & 1, k = found[i], busy = hn.busy === i, n = D.solvers[i] || 0;
+    let act;
+    if (solved) act = `<p class="hn-ok">✓ Solved${hn.msg[i] ? ' · ' + esc(hn.msg[i]) : ''}</p>`;
+    else if (!open) act = '<p class="pr-note">The hunt is closed.</p>';
+    else if (k) act = gate ? `<button class="btn primary" data-hn="gate">${gate.label}</button>` : `<p class="hn-ok">Correct! Claim it on-chain to count.</p><button class="btn primary" data-hn="claim" data-i="${i}" ${busy ? 'disabled' : ''}>${busy ? esc(hn.msg[i] || 'Claiming…') : 'Claim this riddle'}</button>`;
+    else act = `<form class="hn-form" data-hn-form="${i}"><input name="a" placeholder="Your answer" autocomplete="off" spellcheck="false" aria-label="Answer to riddle ${i + 1}"><button class="btn">Check</button></form>${hn.msg[i] ? `<p class="hn-bad">${esc(hn.msg[i])}</p>` : ''}`;
+    return `<section class="sx-card hn-clue${solved ? ' done' : ''}"><div class="sx-head"><h2>Riddle ${i + 1}</h2><span>${n ? `cracked by ${n}` : 'nobody yet'}</span></div><p class="hn-q">${esc(txt)}</p>${act}</section>`;
+  };
+  box.innerHTML = `<section class="sx-card hn-top"><div class="sx-head"><h2>🗝️ ${esc(h.title)}</h2><span>${open ? `ends in ${inT(Number(h.end) - now)}` : now < Number(h.start) ? 'starts soon' : 'finished'}</span></div>
+      <p class="gs-q">The answers are hidden around CavFi. Solve all ${h.clues} riddles: the first 3 to finish share <b>${sxNum(prize)} KingS</b>.</p>
+      <div class="pr-sides hn-pod">${podium}</div>
+      <div class="pr-sides"><div><span>Your progress</span><b>${st.account ? `${done} / ${h.clues}` : '–'}</b><small>${st.account ? (done === h.clues ? 'all solved 🎉' : 'riddles solved') : 'connect a wallet to play'}</small></div><div><span>Finished</span><b>${h.finishers}</b><small>wallets solved everything</small></div></div></section>
+    ${D.clues.map(clue).join('')}
+    <section class="sx-card"><div class="sx-head"><h2>How it works</h2></div><p class="pr-note">Only a hash of each answer is on-chain, so this page can tell you right away if you are right, without a transaction. Answers are one word or number; case, spaces and symbols don't matter. A correct answer counts once you claim it: two transactions, first a hidden commitment, then the answer in the next block, so nobody can copy it from the chain and get ahead of you. The first 3 wallets to solve every riddle are paid at once (50% / 30% / 20%). Leaderboard points: 200 for the 1st to crack a riddle, 150 for the 2nd, 100 for the 3rd, 20 after that, and 300 for finishing. Testnet KingS, no real value.</p></section>`;
+}
+document.addEventListener('submit', async e => {
+  const f = e.target.closest('[data-hn-form]'); if (!f) return;
+  e.preventDefault();
+  const i = Number(f.dataset.hnForm), D = hn.data, a = hnNorm(f.a.value);
+  if (!a) return;
+  if (hnKey(D.id, i, a) !== D.keys[i]){ hn.msg[i] = `"${f.a.value.trim().slice(0, 40)}" is not it. Keep looking.`; return renderGames(); }
+  const found = hnFound(D.id); found[i] = hnKey(D.id, i, a); hnSave(D.id, found);
+  hn.msg[i] = ''; renderGames(); celebrate(f, 14);
+});
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-hn]'); if (!b) return;
+  if (b.dataset.hn === 'gate'){ const g = gxGate(); if (g && g.act) g.act(); return; }
+  const i = Number(b.dataset.i), D = hn.data, key = hnFound(D.id)[i]; if (!key || hn.busy != null) return;
+  hn.busy = i;
+  const step = m => { hn.msg[i] = m; renderGames(); };
+  try{
+    const c = E.utils.keccak256(E.utils.defaultAbiCoder.encode(['address', 'uint256', 'uint8', 'bytes32'], [st.account, D.id, i, key]));
+    let cb = (await hnC().commitBlock(c)).toNumber();
+    if (!cb){ step('1 of 2: confirm the hidden commitment…'); const tx = await sendTx(() => hnC(true).commit(c), 'Locking your answer…', () => {});
+      cb = (await st.provider.getTransactionReceipt(tx.hash)).blockNumber; }
+    step('Waiting for the next block…');
+    for (let t = 0; t < 20 && (await RP().getBlockNumber()) <= cb; t++) await new Promise(r => setTimeout(r, 1500));
+    step('2 of 2: confirm the answer…');
+    const tx2 = await sendTx(() => hnC(true).reveal(D.id, i, key, {gasLimit: 300000}), 'Claiming…', () => {});
+    const rc = await st.provider.getTransactionReceipt(tx2.hash), iface = new E.utils.Interface(HUNT_ABI);
+    let msg = 'claimed';
+    for (const l of rc.logs){ try{ const ev = iface.parseLog(l);
+      if (ev.name === 'Solved') msg = `you were the ${ord(ev.args.order)} to crack it`;
+      if (ev.name === 'Finished') msg = ev.args.place <= 3 ? `all riddles solved, ${ord(ev.args.place)} place: ${sxNum(fl(ev.args.prize, 18))} KingS are yours!` : `all riddles solved (${ord(ev.args.place)} to finish)`; }catch(_){} }
+    hn.msg[i] = msg; toast(`Riddle ${i + 1}: ${msg}${/[.!]$/.test(msg) ? '' : '.'} ${txLink(tx2.hash)}`, 'ok', 9000); celebrate(b, 26);
+  }catch(err){ hn.msg[i] = ''; toast(errMsg(err), 'bad', 8000); }
+  hn.busy = null; loadHunt();
 });
 
 const guC = signer => new E.Contract(A.guess, GUESS_ABI, signer ? st.signer : (RP()));
@@ -6769,7 +6886,7 @@ paintTheme();
   if (upPath || upHash){ up.id = (upPath || upHash)[1].toLowerCase(); setView('profile'); if (upPath) try{ history.replaceState(null, '', '/#u/' + up.id); }catch(e){} }
   else if (location.hash === '#predict' || location.hash === '#duels' || location.hash === '#guess' || DUEL_HASH.test(location.hash) || MKT_HASH.test(location.hash)) routePredict(location.hash);
   else if (location.hash === '#u') setView('profile');
-  else setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#leaderboard' ? 'board' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#games' ? 'games' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
+  else setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#leaderboard' ? 'board' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#games' || location.hash === '#hunt' ? 'games' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
   if (lxDeep) openLaunch(E.utils.getAddress(lxDeep[1].toLowerCase()));
   if (location.hash === '#send') setTimeout(() => { if (st.account) sdOpen(); }, 1500);
   renderShell(); renderSwap(); renderLiq(); renderPools();
