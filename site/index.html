@@ -79,6 +79,35 @@ nav a.nav-link:hover{color:var(--ink)}
 .wallet,.net{white-space:nowrap}
 @media (min-width:641px) and (max-width:1000px){nav{gap:0}nav button,nav a.nav-link{padding:8px 9px}}
 nav button:disabled{cursor:not-allowed;opacity:.6}
+/* merged sections, faucet pill, mobile tab bar */
+.subnav{justify-content:center;margin:-6px 0 16px}
+.fc-pill{order:2;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:999px;padding:7px 12px;font:700 12.5px var(--body);cursor:pointer;white-space:nowrap}
+.fc-pill[aria-current]{border-color:var(--chestnut);color:var(--chestnut)}
+.tabbar{display:none}
+.more-sheet{position:fixed;inset:0;z-index:60;background:rgba(10,8,16,.55);display:flex;align-items:flex-end}
+.more-sheet[hidden]{display:none}
+.more-panel{width:100%;background:var(--surface);border-radius:22px 22px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.more-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.more-head b{font:400 20px var(--display)}
+.more-x{border:0;background:var(--well);color:var(--ink);width:34px;height:34px;border-radius:50%;font-size:15px;cursor:pointer}
+.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.more-grid>*{display:grid;justify-items:center;gap:4px;padding:12px 4px;border-radius:14px;background:var(--well);border:0;color:var(--ink);font:700 12.5px var(--body);text-decoration:none;cursor:pointer}
+.more-grid span{font-size:22px;line-height:1}
+@media (max-width:640px){
+  header .bar>nav{display:none}
+  header .bar{flex-wrap:nowrap;gap:8px}
+  header .theme-btn{order:2}header .net{order:3}header .wallet{order:4;white-space:nowrap}
+  header .net{font-size:0;padding:0;width:36px;height:36px;justify-content:center;flex:none}header .net small{display:none}
+  header .wallet{padding-inline:12px}
+  .fc-pill{display:none}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:50;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+  .tabbar>*{display:grid;justify-items:center;gap:2px;background:none;border:0;color:var(--muted);font:700 11px var(--body);text-decoration:none;padding:4px 0;cursor:pointer}
+  .tabbar span{font-size:20px;line-height:1.1}
+  .tabbar [aria-current]{color:var(--chestnut)}
+  body{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}
+  .toasts{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+  .hm-dog{width:min(150px,40vw)!important}
+  .hm-copy h1{margin-top:8px}
+}
 nav small{font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-left:4px;color:var(--gold)}
 .spacer{flex:1}
 .theme-btn{width:40px;height:40px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0;transition:border-color .2s,transform .2s}
@@ -923,25 +952,42 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     </a>
     <nav aria-label="Main sections">
       <button id="nav-swap" data-view="swap" aria-current="page">Swap</button>
-      <button id="nav-liq" data-view="liq">Liquidity</button>
-      <button id="nav-farm" data-view="farm">Farms</button>
+      <button id="nav-liq" data-view="liq" data-group="liq farm">Earn</button>
       <button id="nav-launch" data-view="launch">Launch</button>
-      <button id="nav-stats" data-view="stats">Stats</button>
-      <button id="nav-board" data-view="board">Leaderboards</button>
       <a id="nav-arena" class="nav-link" href="arena.html">Arena</a>
       <button id="nav-predict" data-view="predict">Predict</button>
       <button id="nav-games" data-view="games">Games<small>new</small></button>
       <button id="nav-nft" data-view="nft">NFTs</button>
       <button id="nav-names" data-view="names">Names</button>
-      <button id="nav-faucet" data-view="faucet">Faucet</button>
+      <button id="nav-board" data-view="board" data-group="board stats">Leaderboards</button>
       <button id="nav-pf" data-view="portfolio">Portfolio</button>
     </nav>
     <div class="spacer"></div>
+    <button class="fc-pill" id="faucetPill" data-goview="faucet" type="button" title="Free test tokens">🚰 Faucet</button>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch to dark mode" title="Light / dark"></button>
     <span class="net" id="net"><i class="dot" aria-hidden="true"></i>DogeOS<small>testnet</small></span>
     <button class="wallet" id="wallet">Connect wallet</button>
   </div>
 </header>
+<nav class="tabbar" id="tabbar" aria-label="Quick sections">
+  <button data-tb="swap" data-group="swap"><span aria-hidden="true">⇄</span>Swap</button>
+  <a href="arena.html"><span aria-hidden="true">🏟️</span>Arena</a>
+  <button data-tb="games" data-group="games"><span aria-hidden="true">🎲</span>Games</button>
+  <button data-tb="launch" data-group="launch"><span aria-hidden="true">🚀</span>Launch</button>
+  <button data-tb="more" aria-haspopup="dialog" aria-controls="moreSheet"><span aria-hidden="true">☰</span>More</button>
+</nav>
+<div class="more-sheet" id="moreSheet" role="dialog" aria-label="All sections" hidden>
+  <div class="more-panel">
+    <div class="more-head"><b>All of CavFi</b><button class="more-x" data-tb="close" aria-label="Close">✕</button></div>
+    <div class="more-grid">
+      <button data-tb="home"><span>🏠</span>Home</button><button data-tb="swap"><span>⇄</span>Swap</button><button data-tb="liq"><span>💧</span>Liquidity</button>
+      <button data-tb="farm"><span>🌾</span>Farms</button><button data-tb="launch"><span>🚀</span>Launch</button><a href="arena.html"><span>🏟️</span>Arena</a>
+      <button data-tb="predict"><span>🔮</span>Predict</button><button data-tb="games"><span>🎲</span>Games</button><button data-tb="nft"><span>👑</span>NFTs</button>
+      <button data-tb="names"><span>🏷️</span>Names</button><button data-tb="board"><span>🏆</span>Leaderboards</button><button data-tb="stats"><span>📊</span>Stats</button>
+      <button data-tb="faucet"><span>🚰</span>Faucet</button><button data-tb="portfolio"><span>💼</span>Portfolio</button><button data-tb="help"><span>❓</span>How it works</button>
+    </div>
+  </div>
+</div>
 <div class="spook-bar" id="spookBar" hidden></div>
 <div class="spook-sky" id="spookSky" aria-hidden="true" hidden></div>
 
@@ -952,10 +998,10 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
       <div class="hm-copy">
         <span class="hm-kicker"><i class="dot" aria-hidden="true"></i>Live on DogeOS testnet</span>
         <h1>The royal court of <em>DogeOS</em> DeFi.</h1>
-        <p>Swap, pool and farm with a crowned Cavalier at your side. Every trade settles on-chain, straight from your wallet.</p>
+        <p>Swap, launch memes, back tokens in the Arena and flip a coin, with a crowned Cavalier at your side. Everything settles on-chain, straight from your wallet.</p>
         <div class="hm-cta">
           <button class="btn primary hm-go" data-go="swap">Start swapping</button>
-          <button class="btn hm-go" data-go="stats">See the numbers</button>
+          <button class="btn hm-go" data-go="games">🎲 Play games</button>
           <button class="btn hm-install" id="installBtn" hidden>📲 Install app</button>
         </div>
       </div>
@@ -1039,6 +1085,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     <p id="ledeP">Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.</p>
   </div>
 
+  <div class="chips subnav" id="subNav" role="group" aria-label="Section" hidden></div>
   <div class="banner rf-banner" id="refBanner" hidden></div>
   <div class="banner crit" id="guardBanner" hidden><span id="guardBannerText"></span><button class="btn" id="guardBannerBtn">Review pools</button></div>
 
@@ -2017,7 +2064,10 @@ function setView(v){
   st.view = v;
   $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewBoard').hidden = v !== 'board'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft'; $('viewNames').hidden = v !== 'names'; $('viewHelp').hidden = v !== 'help'; $('viewProfile').hidden = v !== 'profile'; $('viewPredict').hidden = v !== 'predict'; $('viewGames').hidden = v !== 'games';
   document.querySelector('.lede').hidden = v === 'home';
-  document.querySelectorAll('nav button').forEach(b => b.toggleAttribute('aria-current', b.dataset.view === v));
+  document.querySelectorAll('nav button').forEach(b => b.toggleAttribute('aria-current', (b.dataset.group || b.dataset.view || '').split(' ').includes(v)));
+  { const G = {liq: [['liq', 'Liquidity'], ['farm', 'Farms & staking']], farm: [['liq', 'Liquidity'], ['farm', 'Farms & staking']], board: [['board', 'Leaderboards'], ['stats', 'Stats']], stats: [['board', 'Leaderboards'], ['stats', 'Stats']]}[v];
+    const sn = $('subNav'); sn.hidden = !G; if (G) sn.innerHTML = G.map(([k, l]) => `<button class="chip" data-goview="${k}" aria-pressed="${k === v}">${l}</button>`).join('');
+    $('faucetPill').toggleAttribute('aria-current', v === 'faucet'); $('moreSheet').hidden = true; }
   document.querySelectorAll('nav button[aria-current]').forEach(b => b.setAttribute('aria-current','page'));
   { const nv = document.querySelector('nav'), cur = nv && nv.querySelector('button[aria-current]'); if (nv && cur && nv.scrollWidth > nv.clientWidth) nv.scrollLeft = Math.max(0, cur.offsetLeft - nv.offsetLeft - 24); }
   if (v === 'profile'){
@@ -2078,7 +2128,12 @@ function setView(v){
   if (v === 'predict'){ renderPredict(); loadPredict(); if (pr.tab === 'guess') loadGuess(); }
   if (v === 'launch'){ loadLaunches(); if (!sx.loaded) loadStats(); renderLaunch(); }
 }
-document.querySelectorAll('nav button').forEach(b => b.addEventListener('click', () => { if (b.dataset.view === 'predict'){ pr.hl = null; pr.hlm = null; } setView(b.dataset.view); }));
+document.addEventListener('click', e => { const b = e.target.closest('[data-tb]'); if (!b) return; const t = b.dataset.tb;
+  if (t === 'more'){ $('moreSheet').hidden = false; return; }
+  if (t === 'close'){ $('moreSheet').hidden = true; return; }
+  $('moreSheet').hidden = true; if (t === 'predict'){ pr.hl = null; pr.hlm = null; } setView(t); window.scrollTo({top: 0}); });
+$('moreSheet').addEventListener('click', e => { if (e.target.id === 'moreSheet') $('moreSheet').hidden = true; });
+document.querySelectorAll('header nav button').forEach(b => b.addEventListener('click', () => { if (b.dataset.view === 'predict'){ pr.hl = null; pr.hlm = null; } setView(b.dataset.view); }));
 document.addEventListener('click', e => { const a = e.target.closest('[data-goview]'); if (!a) return; e.preventDefault(); setView(a.dataset.goview); window.scrollTo({top:0, behavior:'smooth'}); });
 const LX_HASH = /^#t\/(0x[0-9a-fA-F]{40})$/;
 const UP_HASH = /^#u\/([A-Za-z0-9.-]{3,64})$/, DUEL_HASH = /^#duel\/(\d+)$/, MKT_HASH = /^#p\/(\d+)$/;
