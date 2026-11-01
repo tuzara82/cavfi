@@ -146,6 +146,7 @@ const ABI = {
           'function lastRound() view returns (uint256)', 'function lastSeed() view returns (bytes32)', 'function chainLeft() view returns (uint256)',
           'function pendingRounds() view returns (uint256[])', 'function house() view returns (address)', 'function free() view returns (uint256)',
           'event Settled(uint256 indexed id, address indexed player, uint8 roll, bool won, uint256 paid)'],
+  games2ev: ['event Settled(uint256 indexed id, address indexed player, uint8 game, uint32 result, uint256 paid)'],
   hunt: ['function count() view returns (uint256)',
          'function get(uint256) view returns (tuple(uint64 start, uint64 end, uint8 clues, uint32 finishers, uint256 prize, uint256 paid, string title) h, string[] clues, bytes32[] answerKeys, uint32[] solvers, address[3] top)',
          'event Solved(uint256 indexed id, address indexed player, uint8 clue, uint32 order)', 'event Finished(uint256 indexed id, address indexed player, uint32 place, uint256 prize)'],
@@ -1411,60 +1412,83 @@ async function raffleText(){
 // ------------------------------------------------------------------ games (Coin Flip, Dice): the bot is the house
 // Each hash chain is h(0) = keccak(bot key, "cavfi-games", n), h(i+1) = keccak(h(i)); its anchor h(L) goes on chain.
 // The contract always holds lastSeed == h(chainLeft), so the seed of round r is h(chainLeft - (r - lastRound)).
-const gamesChain = {n: 0, pts: null, step: 500, len: 0};
-function gamesChainFor(n, len){
-  if (gamesChain.n === n && gamesChain.len === len) return;
+// Each contract has its own chains. v1: h(0) = keccak(bot key, "cavfi-games", n); v2 and later also hash in the
+// contract address, so two contracts never share a chain (a seed revealed on one must not predict the other).
+const gamesChains = {};
+function gamesChainFor(addr, ver, n, len){
+  const k = lk(addr);
+  let c = gamesChains[k];
+  if (c && c.n === n && c.len === len) return c;
   const t0 = Date.now();
-  let h = ethers.utils.arrayify(ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(['bytes32', 'string', 'uint256'], [wallet.privateKey, 'cavfi-games', n])));
-  const pts = [h];
-  for (let i = 1; i <= len; i++){ h = ethers.utils.arrayify(ethers.utils.keccak256(h)); if (i % gamesChain.step === 0) pts.push(h); }
-  Object.assign(gamesChain, {n, len, pts, top: h});
-  log(`games: hash chain #${n} ready (${len} rounds, ${Date.now() - t0} ms)`);
+  const base = ver >= 2
+    ? ethers.utils.defaultAbiCoder.encode(['bytes32', 'string', 'address', 'uint256'], [wallet.privateKey, 'cavfi-games', addr, n])
+    : ethers.utils.defaultAbiCoder.encode(['bytes32', 'string', 'uint256'], [wallet.privateKey, 'cavfi-games', n]);
+  let h = ethers.utils.arrayify(ethers.utils.keccak256(base));
+  const step = 500, pts = [h];
+  for (let i = 1; i <= len; i++){ h = ethers.utils.arrayify(ethers.utils.keccak256(h)); if (i % step === 0) pts.push(h); }
+  c = gamesChains[k] = {n, len, pts, step, top: h};
+  log(`games${ver >= 2 ? ' v' + ver : ''}: hash chain #${n} ready (${len} rounds, ${Date.now() - t0} ms)`);
+  return c;
 }
-function gamesSeed(i){
-  let k = Math.floor(i / gamesChain.step), h = gamesChain.pts[k];
-  for (let j = k * gamesChain.step; j < i; j++) h = ethers.utils.arrayify(ethers.utils.keccak256(h));
+function gamesSeed(c, i){
+  let k = Math.floor(i / c.step), h = c.pts[k];
+  for (let j = k * c.step; j < i; j++) h = ethers.utils.arrayify(ethers.utils.keccak256(h));
   return ethers.utils.hexlify(h);
 }
-let gamesBusy = false, gamesWarnAt = 0;
+const gamesVer = {};
+async function gamesVersion(addr){
+  if (gamesVer[lk(addr)] == null){ try{ gamesVer[lk(addr)] = (await new ethers.Contract(addr, ['function VERSION() view returns (uint256)'], provider).VERSION()).toNumber(); }catch(e){ gamesVer[lk(addr)] = 1; } }
+  return gamesVer[lk(addr)];
+}
+const GAME_NAMES = ['Coin Flip', 'Dice', 'Limbo', 'Royal Wheel', 'Plinko', 'Higher or Lower'];
+let gamesBusy = false, gamesWarnAt = 0, gamesErr = {m: '', at: 0};
 async function gamesKeeper(){
   if (!CFG.games || !A.games || me === ethers.constants.AddressZero || gamesBusy) return;
   gamesBusy = true;
   try{
-    const g = new ethers.Contract(A.games, ABI.games, wallet);
-    let [n, lastRound, lastSeed, left, pend] = await Promise.all([g.anchors(), g.lastRound(), g.lastSeed(), g.chainLeft(), g.pendingRounds()]);
-    n = n.toNumber(); lastRound = lastRound.toNumber(); left = left.toNumber();
-    const L = CFG.gamesChain;
-    if (n === 0 || (pend.length === 0 && left < 3000)){
-      if (lk(await g.house()) !== lk(me) && now() - gamesWarnAt > 3600){ gamesWarnAt = now(); log('games: this wallet is not the house of the games contract'); return; }
-      gamesChainFor(n + 1, L);
-      await send(`games anchor #${n + 1}`, () => g.setAnchor(ethers.utils.hexlify(gamesChain.top), L));
-      return;
+    // the old contract only finishes its pending rounds; the current one also gets new chains
+    for (const [addr, current] of [[A.gamesV1, false], [A.games, true]]){
+      if (!addr) continue;
+      try{ await gamesHouse(addr, current); }
+      catch(e){ const m = (e.reason || e.message || '').slice(0, 140); if (m !== gamesErr.m || now() - gamesErr.at > 300){ gamesErr = {m, at: now()}; log(`games ${current ? '' : 'v1 '}:`, m); } }
     }
-    if (!pend.length) return;
-    gamesChainFor(n, L);
-    if (gamesSeed(left) !== lastSeed){
-      if (now() - gamesWarnAt > 3600){ gamesWarnAt = now(); log(`games: the chain on the contract (#${n}) does not come from this bot key, cannot reveal`); }
-      return;
-    }
-    // chain time, or the clock if no block came since (a quiet chain makes blocks only for transactions)
-    const t = Math.max((await provider.getBlock('latest')).timestamp, now() - 3);
-    const r = pend[0].toNumber();
-    if (t < (r + 1) * 30) return;
-    const tx = await send(`games reveal round ${r}`, () => g.reveal(gamesSeed(left - (r - lastRound))));
-    if (tx){
-      const rc = await provider.getTransactionReceipt(tx.hash), iface = new ethers.utils.Interface(ABI.games);
-      let w = 0, l = 0, big = null;
-      for (const lg of rc.logs){ try{ const e = iface.parseLog(lg); if (e.name !== 'Settled') continue; if (e.args.won){ w++; const p = fl(e.args.paid, 18); if (!big || p > big.p) big = {p, who: e.args.player}; } else l++; }catch(e){} }
-      log(`games: round ${r} settled, ${w} won, ${l} lost`);
-      if (big && big.p >= 20) await tg(`🎲 <b>${esc(await labelOf(big.who))}</b> just won <b>${fmtN(big.p)} DOGE</b> in CavFi Games.\n<a href="https://cavfi.com/#games">Flip a coin or roll the dice</a>`);
-    }
-    if (now() - (state.gamesLowAt || 0) > 6 * 3600){
-      const f = fl(await g.free(), 18);
-      if (f < CFG.gamesLowDoge){ state.gamesLowAt = now(); saveState(); await tg(`🎲 CavFi Games bankroll is low: ${f.toFixed(2)} DOGE free. Send DOGE to the games contract to keep bets open.`); }
-    }
-  }catch(e){ log('games:', (e.reason || e.message || '').slice(0, 140)); }
+  }catch(e){ log('games:', (e.message || '').slice(0, 140)); }
   finally{ gamesBusy = false; }
+}
+async function gamesHouse(addr, current){
+  const ver = await gamesVersion(addr), tag = ver >= 2 ? `games v${ver}` : 'games';
+  const g = new ethers.Contract(addr, ABI.games, wallet);
+  let [n, lastRound, lastSeed, left, pend] = await Promise.all([g.anchors(), g.lastRound(), g.lastSeed(), g.chainLeft(), g.pendingRounds()]);
+  n = n.toNumber(); lastRound = lastRound.toNumber(); left = left.toNumber();
+  const L = CFG.gamesChain;
+  if (current && (n === 0 || (pend.length === 0 && left < 3000))){
+    if (lk(await g.house()) !== lk(me)){ if (now() - gamesWarnAt > 3600){ gamesWarnAt = now(); log(`${tag}: this wallet is not the house of ${addr}`); } return; }
+    const c = gamesChainFor(addr, ver, n + 1, L);
+    await send(`${tag} anchor #${n + 1}`, () => g.setAnchor(ethers.utils.hexlify(c.top), L));
+    return;
+  }
+  if (!pend.length || n === 0) return;
+  const c = gamesChainFor(addr, ver, n, L);
+  if (gamesSeed(c, left) !== lastSeed){
+    if (now() - gamesWarnAt > 3600){ gamesWarnAt = now(); log(`${tag}: the chain on ${addr} (#${n}) does not come from this bot key, cannot reveal`); }
+    return;
+  }
+  // chain time, or the clock if no block came since (a quiet chain makes blocks only for transactions)
+  const t = Math.max((await provider.getBlock('latest')).timestamp, now() - 3);
+  const r = pend[0].toNumber();
+  if (t < (r + 1) * 30) return;
+  const tx = await send(`${tag} reveal round ${r}`, () => g.reveal(gamesSeed(c, left - (r - lastRound))));
+  if (!tx) return;
+  const rc = await provider.getTransactionReceipt(tx.hash), iface = new ethers.utils.Interface(ver >= 2 ? ABI.games2ev : ABI.games);
+  let w = 0, l = 0, big = null;
+  for (const lg of rc.logs){ try{ const e = iface.parseLog(lg); if (e.name !== 'Settled') continue;
+    const paid = fl(e.args.paid, 18); if (paid > 0){ w++; if (!big || paid > big.p) big = {p: paid, who: e.args.player, game: ver >= 2 ? GAME_NAMES[e.args.game] : 'Games'}; } else l++; }catch(e){} }
+  log(`${tag}: round ${r} settled, ${w} paid, ${l} lost`);
+  if (big && big.p >= 20) await tg(`🎲 <b>${esc(await labelOf(big.who))}</b> just won <b>${fmtN(big.p)} DOGE</b> in ${esc(big.game)}.\n<a href="https://cavfi.com/#games">Play CavFi Games</a>`);
+  if (current && now() - (state.gamesLowAt || 0) > 6 * 3600){
+    const f = fl(await g.free(), 18);
+    if (f < CFG.gamesLowDoge){ state.gamesLowAt = now(); saveState(); await tg(`🎲 CavFi Games bankroll is low: ${f.toFixed(2)} DOGE free. Send DOGE to the games contract to keep bets open.`); }
+  }
 }
 async function gamesLoop(){
   for (;;){ await gamesKeeper(); if (CFG.once) return; await sleep(CFG.gamesPollSec * 1000); }

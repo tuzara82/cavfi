@@ -734,7 +734,31 @@ html.spooky{--gold:#F28C28}
 .gx-track i{position:absolute;top:0;bottom:0;background:var(--ok)}
 .gx-tag{display:inline-block;width:max-content;justify-self:end;padding:2px 8px;border-radius:999px;font:700 11px var(--body);letter-spacing:.04em;text-transform:uppercase}
 .gx-tag.win{background:color-mix(in srgb,var(--ok) 18%,var(--surface));color:var(--ok)}.gx-tag.lose{background:color-mix(in srgb,var(--bad) 14%,var(--surface));color:var(--bad)}.gx-tag.wait{background:var(--well);color:var(--muted)}
-@media (prefers-reduced-motion: reduce){.gx-coin.spin,.gx-die.spin{animation:none}}
+.gx-stage-in{display:grid;justify-items:center;gap:6px;padding:14px 0;width:100%}
+.gx-sub{color:var(--muted);font:600 12px var(--mono)}
+.gx-limbo{font:600 64px/1 var(--mono);color:var(--ink);min-width:220px;text-align:center}.gx-limbo.win{color:var(--ok)}.gx-limbo.lose{color:var(--bad)}
+.gx-limbo.spin{animation:gxPulse .7s ease-in-out infinite}
+@keyframes gxPulse{50%{opacity:.35}}
+.gx-wheel{position:relative;width:min(280px,72vw);aspect-ratio:1}
+.gx-wheel-svg{width:100%;height:100%;display:block}
+.gx-wheel-rot{transform-origin:100px 100px}
+.gx-wheel.spin .gx-wheel-rot{animation:gxRot 1.2s linear infinite}
+@keyframes gxRot{to{transform:rotate(360deg)}}
+.gx-pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:22px solid #E7B73C;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.gx-plinko{width:min(420px,88vw)}.gx-plinko-svg{width:100%;display:block}
+.gx-plinko-svg #gxBall{transition:cx .16s ease-in,cy .16s ease-in}
+.gx-plinko.spin #gxBall{animation:gxBounce .5s ease-in-out infinite}
+@keyframes gxBounce{50%{transform:translateY(8px)}}
+.gx-plinko-svg g.hit rect{stroke:var(--ok);stroke-width:3}
+.gx-cards{display:flex;align-items:center;gap:18px}
+.gx-card{width:92px;height:128px;border-radius:14px;background:var(--surface);border:2px solid var(--line);display:grid;place-items:center;align-content:center;gap:4px;box-shadow:0 10px 22px -12px rgba(0,0,0,.5)}
+.gx-card b{font:400 44px/1 var(--display);color:var(--chestnut)}.gx-card span{font-size:22px}
+.gx-card.back{background:repeating-linear-gradient(45deg,#7A3A1C 0 8px,#A3461E 8px 16px);border-color:#E7B73C}
+.gx-card.spin{animation:gxFlip 1s ease-in-out infinite}
+@keyframes gxFlip{50%{transform:rotateY(180deg)}}
+.gx-vs{font:800 26px var(--body);color:var(--gold)}
+.gx-side:disabled{opacity:.45;cursor:not-allowed}
+@media (prefers-reduced-motion: reduce){.gx-coin.spin,.gx-die.spin,.gx-limbo.spin,.gx-wheel.spin .gx-wheel-rot,.gx-plinko.spin #gxBall,.gx-card.spin{animation:none}}
 /* treasure hunt */
 .hunt-bar{max-width:1120px;margin:12px auto 0;width:calc(100% - 32px);box-sizing:border-box;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-radius:16px;
   background:linear-gradient(120deg,#2A1A14,#3A2219 55%,#4A3010);color:#FFF4E2;border:1px solid #E7B73C;font-size:14px}
@@ -1092,7 +1116,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
       </button>
       <button class="hm-card" data-go="games">
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="15" cy="9" r="1.2"/><circle cx="9" cy="15" r="1.2"/></svg></span>
-        <b>Games</b><small>Coin Flip and Dice with test DOGE. Provably fair, settled on-chain in about a minute.</small>
+        <b>Games</b><small>Coin Flip, Dice, Limbo, Royal Wheel, Plinko and Hi-Lo with test DOGE. Provably fair, settled on-chain in about a minute.</small>
         <span class="hm-fig"><span>Bets played</span><strong id="hmFigGames">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
       </button>
     </section>
@@ -1408,7 +1432,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <details><summary>How do DOGE price predictions work?</summary><p>On <a href="#predict" data-goview="predict">Predict</a>, each market asks a yes/no question about the real DOGE/USD price, like "Will DOGE be above $0.20 on Sunday, 20:00 UTC?". Back YES or NO with KingS until the market closes. Everyone on the right side shares the whole pot in proportion to their stake, minus a 2% fee, so the pool sizes show the crowd's odds. If only one side was backed, everyone gets their KingS back. Testnet KingS, no real value.</p></details>
         <details><summary>What is "Guess the DOGE price"?</summary><p>A free daily game on <a href="#guess">Predict → Free guess</a>: until 18:00 UTC, each wallet can lock one guess of the DOGE price at 20:00 UTC. The answer is RedStone's DOGE/USD price feed on DogeOS at 20:00 UTC: after 20:00 anyone can settle the day (the CavFi bot usually does), the contract reads the feed itself, and the closest guess wins the day's KingS prize; on a tie the earlier guess wins. Nothing is staked, you only pay gas. Each guess is worth 20 leaderboard points and the day's winner gets 300.</p></details>
         <details><summary>What are Callouts?</summary><p>On any Launchpad token page you can press <b>Call it</b> to put your name on the token at today's price. The callout is saved on-chain (free, you only pay gas), and everyone can see how many times the token has grown since: 2×, 10×… One callout per token, up to 3 a day. Each callout is worth 20 leaderboard points, and one that is 2× or more after at least an hour earns 100 more (Leaderboards → Callers). A callout is a public record of who spotted a token early, not financial advice.</p></details>
-        <details><summary>How do Coin Flip and Dice work?</summary><p>On <a href="#games" data-goview="games">Games</a> you bet test DOGE: Coin Flip pays 1.96× on the right side; Dice lets you pick a number and roll under or over it, and the smaller the chance, the bigger the payout (98 ÷ winning numbers out of 100). Bets are grouped in 30-second rounds. Long before a round opens, the CavFi bot (the house) has locked that round's secret seed on-chain as part of a hash chain, so it cannot change it and nobody can know it. When the round closes it reveals the seed and the contract rolls every bet: keccak256(seed, bet id) mod 100 + 1. Rounds are revealed in order; if the house is more than an hour late, you can claim your bet as a win. House edge 2%. Each bet of 0.5 DOGE or more is worth 5 leaderboard points, 10 more if it wins (Leaderboards → Games).</p></details>
+        <details><summary>How do the games work?</summary><p>On <a href="#games" data-goview="games">Games</a> you bet test DOGE in six games: Coin Flip pays 1.96× on the right side; Dice lets you pick a number and roll under or over it (98 ÷ winning numbers out of 100); Limbo pays the multiplier you aim for if the crash multiplier reaches it; the Royal Wheel has 20 segments up to 5×; Plinko drops a ball through 8 rows of pegs into multipliers up to 29×; Higher or Lower draws the next card after yours. Bets are grouped in 30-second rounds. Long before a round opens, the CavFi bot (the house) has locked that round's secret seed on-chain as part of a hash chain, so it cannot change it and nobody can know it. When the round closes it reveals the seed and the contract rolls every bet: keccak256(seed, bet id) mod 100 + 1. Rounds are revealed in order; if the house is more than an hour late, you can claim your bet as a win. House edge 2%. Each bet of 0.5 DOGE or more is worth 5 leaderboard points, 10 more if it wins (Leaderboards → Games).</p></details>
         <details><summary>What is the Royal Treasure Hunt?</summary><p>On <a href="#hunt">Games → Treasure hunt</a> you get a few riddles whose answers are hidden around CavFi: on the Launchpad, in the FAQ, in the games, in the NFTs. Type an answer and the page tells you at once if it is right (only a hash of each answer is on-chain). Then claim it with two transactions, a hidden commitment and the answer, so nobody can copy you. The first 3 wallets to solve every riddle win 50% / 30% / 20% of the KingS prize, paid at once, and every solve earns leaderboard points.</p></details>
         <details><summary>What are the hourly markets?</summary><p>Every hour the CavFi bot opens a quick "up or down" market: will DOGE be higher at the end of the hour than at its start? The line is DOGE's price at the start of the hour, bets close 10 minutes before the end, and if the price is exactly the same, NO wins. Only bets of 100 KingS or more earn leaderboard points.</p></details>
         <details><summary>Who decides the price?</summary><p><b>RedStone</b>, a decentralized oracle. Daily and weekly markets and the free daily guess are decided by RedStone's DOGE/USD price feed on DogeOS: after the resolve time anyone can resolve a market, the contract reads the feed itself, and if the feed's last update is at or before that moment, that value is RedStone's on-chain price then. The feed updates when DOGE moves 0.5% or at least every 24 hours; if it has already updated past the resolve time when someone resolves, that price is gone and the market refunds after a day. Hourly "up or down" markets, when they run, use RedStone's signed price for the exact second. Nobody, CavFi included, can choose the price, and each market has one fixed source. The CavFi bot opens the markets and usually resolves them within a minute. Markets marked v1 or v2 were opened before an upgrade and finish their own way.</p></details>
@@ -1456,7 +1480,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
   <!-- ===================== GAMES ===================== -->
   <div class="view" id="viewGames" hidden>
     <div class="sx-bar">
-      <div class="chips" id="gxTabs" role="group" aria-label="Game"><button class="chip" data-t="coin" aria-pressed="true">🪙 Coin Flip</button><button class="chip" data-t="dice" aria-pressed="false">🎲 Dice</button><button class="chip" data-t="hunt" aria-pressed="false">🗝️ Treasure hunt</button></div>
+      <div class="chips" id="gxTabs" role="group" aria-label="Game"><button class="chip" data-t="coin" aria-pressed="true">🪙 Coin Flip</button><button class="chip" data-t="dice" aria-pressed="false">🎲 Dice</button><button class="chip" data-t="limbo" aria-pressed="false">🚀 Limbo</button><button class="chip" data-t="wheel" aria-pressed="false">🎡 Wheel</button><button class="chip" data-t="plinko" aria-pressed="false">🔻 Plinko</button><button class="chip" data-t="hilo" aria-pressed="false">🃏 Hi-Lo</button><button class="chip" data-t="hunt" aria-pressed="false">🗝️ Treasure hunt</button></div>
       <span class="sx-status" id="gxStatus" aria-live="polite"></span>
     </div>
     <div class="pr-body" id="gxBody"></div>
@@ -1625,7 +1649,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <script src="rpc-batch.js?v=1"></script>
-<script src="quests-rules.js?v=7"></script>
+<script src="quests-rules.js?v=8"></script>
 <script src="redstone-payload.js?v=2"></script>
 <script>
 (() => {
@@ -1633,7 +1657,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { hunt:'', games:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { hunt:'', games:'', gamesV1:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 /* WalletConnect (any mobile wallet by QR code). Free project id from https://cloud.reown.com,
    with cavfi.com in its allowed domains. Empty = the option is hidden. */
@@ -1646,7 +1670,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = window.CavRpc ? CavRpc.make(E, A.rpc || NET.add.rpcUrls[0], CHAIN_ID) : new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { hunt:'', games:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { hunt:'', games:'', gamesV1:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -2101,7 +2125,7 @@ function setView(v){
     $('ledeP').textContent = 'Five riddles, answers hidden all around CavFi. Be one of the first three to solve them all and win KingS. Testnet, no real value.';
   } else if (v === 'games'){
     $('ledeH').innerHTML = 'Flip the <em>crown</em>.';
-    $('ledeP').textContent = 'Coin Flip and Dice with test DOGE. Every result comes from a seed the house locked on-chain before you bet, so nobody can pick it. Testnet DOGE only, no real value.';
+    $('ledeP').textContent = 'Coin Flip, Dice, Limbo, Royal Wheel, Plinko and Higher or Lower with test DOGE. Every result comes from a seed the house locked on-chain before you bet, so nobody can pick it. Testnet DOGE only, no real value.';
   } else if (v === 'help'){
     $('ledeH').innerHTML = 'How the <em>kingdom</em> works.';
     $('ledeP').textContent = 'Short answers about every part of CavFi: swaps, the launchpad, the Arena, names, NFTs, badges and safety.';
@@ -3557,9 +3581,9 @@ async function loadBoard(){
         if (nowS - Number(items[k][2]) >= 3600){ if (m >= 2) r.callWins = (r.callWins || 0) + 1; if (m > (r.bestCall || 0)) r.bestCall = m; } });
     }catch(e){} }
     if (A.games){ try{   // Coin Flip and Dice: 5 points per bet of 0.5 DOGE or more, 10 more per win; the Games tab ranks by DOGE won
-      for (const l of await winLogs(A.games, [GX_PLACED, GX_SETTLED])){ const r = row(lk('0x' + l.topics[2].slice(26))), w = i => BigInt('0x' + l.data.slice(2 + 64 * i, 66 + 64 * i));
-        if (l.topics[0] === GX_PLACED){ const st0 = fl(w(3), 18); r.gxBets = (r.gxBets || 0) + 1; r.gxStaked = (r.gxStaked || 0) + st0; if (st0 >= 0.5) r.gxPts = (r.gxPts || 0) + 5; }
-        else if (w(1) !== 0n){ r.gxWins = (r.gxWins || 0) + 1; r.gxPaid = (r.gxPaid || 0) + fl(w(2), 18); r.gxPts = (r.gxPts || 0) + 10; } }
+      for (const l of await winLogs([A.games, A.gamesV1].filter(Boolean), [GX_PLACED, GX_SETTLED, GX2_PLACED, GX2_SETTLED])){ const r = row(lk('0x' + l.topics[2].slice(26))), w = i => BigInt('0x' + l.data.slice(2 + 64 * i, 66 + 64 * i));
+        if (l.topics[0] === GX_PLACED || l.topics[0] === GX2_PLACED){ const st0 = fl(w(3), 18); r.gxBets = (r.gxBets || 0) + 1; r.gxStaked = (r.gxStaked || 0) + st0; if (st0 >= 0.5) r.gxPts = (r.gxPts || 0) + 5; }
+        else if (w(2) !== 0n){ r.gxPaid = (r.gxPaid || 0) + fl(w(2), 18); if (l.topics[0] === GX_SETTLED || w(2) > 0n){ r.gxWins = (r.gxWins || 0) + 1; r.gxPts = (r.gxPts || 0) + 10; } } }
       for (const r of Object.values(P)) if (r.gxBets) r.gxNet = (r.gxPaid || 0) - (r.gxStaked || 0);
     }catch(e){} }
     if (A.hunt){ try{   // treasure hunt: 200 / 150 / 100 for the first three to crack a riddle, 20 after; 300 for finishing
@@ -4818,6 +4842,8 @@ const CALLOUT_ABI = ['function call(address token) returns (uint256)', 'function
   'function callsLeftToday(address) view returns (uint256)', 'function called(address, address) view returns (bool)'];
 const CO_CALLED = E.utils.id('Called(uint256,address,address,uint256)');
 const GX_PLACED = E.utils.id('Placed(uint256,address,uint8,uint8,bool,uint256,uint256,uint256)'), GX_SETTLED = E.utils.id('Settled(uint256,address,uint8,bool,uint256)');
+const GX2_PLACED = E.utils.id('Placed(uint256,address,uint8,uint16,bool,uint256,uint256,uint256)'), GX2_SETTLED = E.utils.id('Settled(uint256,address,uint8,uint32,uint256)');
+const GX_NAMES = ['Coin Flip', 'Dice', 'Limbo', 'Royal Wheel', 'Plinko', 'Higher or Lower'];
 const coC = signer => new E.Contract(A.callouts, CALLOUT_ABI, signer ? st.signer : (RP()));
 const coMcap = p => { const d = p * LX_SUPPLY, u = lxDogeUsd(); return u ? sxUsd(d * u) : sxNum(d) + ' DOGE'; };   // p: DOGE per token
 const coMult = c => c.p0 > 0 ? c.p1 / c.p0 : 0;
@@ -5999,7 +6025,7 @@ async function loadProfile(){
     if (A.champion) jobs.push(champC().balanceOf(addr, 1).then(b => { d.champ = !b.isZero(); }).catch(() => {}));
     if (A.badges) jobs.push(bdC().badgesOf(addr).then(m => { d.badges = m.toNumber(); }).catch(() => {}));
     if (A.games) jobs.push(gxC().pageOf(addr, 0, 200).then(([, items]) => { const g = {played: 0, won: 0, net: 0};
-      for (const b of items){ const s0 = Number(b.status); if (s0 === 1) continue; g.played++; g.net -= fl(b.stake, 18); if (s0 === 2 || s0 === 4){ g.won++; g.net += fl(b.payout, 18); } } d.games = g; }).catch(() => {}));
+      for (const b of items){ const s0 = Number(b.status); if (s0 === 1) continue; g.played++; g.net -= fl(b.stake, 18); if (s0 === 2 || s0 === 4){ g.net += fl(b.payout, 18); if (b.payout.gte(b.stake)) g.won++; } } d.games = g; }).catch(() => {}));
     if (A.events) jobs.push(evC().balanceOf(addr, 1).then(b => { d.spook = !b.isZero(); }).catch(() => {}));
     if (A.raffle) jobs.push(raffleC().current().then(c => raffleC().ticketsOf(c.id, addr)).then(t => { d.tickets = t.toNumber(); }).catch(() => {}));
     if (A.duel) jobs.push((async () => { const ids = await duC().idsOf(addr); const ds = await Promise.all(ids.slice(-50).map(i => duC().get(i)));
@@ -6428,8 +6454,8 @@ async function loadFeed(){
   FD.loading = true;
   try{
     const rp = RP(), head = await rp.getBlockNumber(), hb = await rp.getBlock(head), bt = sx.bt || 3;
-    const addrs = [A.arena, A.predict, A.predictV2, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV2, A.guessV1, A.callouts, A.games, A.hunt].filter(Boolean);
-    const topics = [HN_SOLVED, HN_FINISHED, GX_SETTLED, CO_CALLED, GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
+    const addrs = [A.arena, A.predict, A.predictV2, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV2, A.guessV1, A.callouts, A.games, A.gamesV1, A.hunt].filter(Boolean);
+    const topics = [HN_SOLVED, HN_FINISHED, GX_SETTLED, GX2_SETTLED, CO_CALLED, GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
     const logs = [];
     for (let z = head; z > head - 20000 && z > 0; z -= SX_CHUNK){
       const a = Math.max(0, z - SX_CHUNK + 1);
@@ -6467,8 +6493,8 @@ async function loadFeed(){
           items.push({...base, who: topic2(l), ic: '🗝️', txt: `was the ${ord(o)} to crack riddle ${Number(n(l, 0)) + 1} of the Royal Treasure Hunt`, href: '#hunt'}); }
         else if (A.hunt && A0 === lk(A.hunt) && t0 === HN_FINISHED){ const pl = Number(n(l, 0)); if (pl > 3) continue;
           items.push({...base, who: topic2(l), ic: '💰', txt: `finished the Royal Treasure Hunt in ${ord(pl)} place and won <b>${sxNum(Number(n(l, 1)) / 1e18)} KingS</b>`, href: '#hunt'}); }
-        else if (A.games && A0 === lk(A.games) && t0 === GX_SETTLED){ if (!n(l, 1)) continue; const paid = Number(n(l, 2)) / 1e18; if (paid < 1) continue;
-          items.push({...base, who: topic2(l), ic: '🎲', txt: `won <b>${sxNum(paid)} DOGE</b> in Games (rolled ${Number(n(l, 0))})`, href: '#games'}); }
+        else if ((t0 === GX_SETTLED || t0 === GX2_SETTLED) && (A0 === lk(A.games) || A0 === lk(A.gamesV1 || ''))){ const paid = Number(n(l, 2)) / 1e18; if (paid < 1) continue;
+          items.push({...base, who: topic2(l), ic: '🎲', txt: `won <b>${sxNum(paid)} DOGE</b> in ${t0 === GX2_SETTLED ? GX_NAMES[Number(n(l, 0))] || 'Games' : 'Games'}`, href: '#games'}); }
         else if (A.callouts && A0 === lk(A.callouts) && t0 === CO_CALLED){ const tok = E.utils.getAddress('0x' + l.topics[3].slice(26)), p = Number(n(l, 0)) / 1e18;
           items.push({...base, who: topic2(l), ic: '📣', txt: `called <b>$${esc(await lxSym(tok))}</b> at a ${coMcap(p)} market cap`, href: '#t/' + tok}); }
         else if (A0 === lk(A.launch) && t0 === FD_T.graduated){ const tok = topic1a(l);
@@ -6517,61 +6543,153 @@ const GUESS_ABI = ['function guess(uint64 price)', 'function today() view return
   'function count(uint32) view returns (uint256)', 'function prize() view returns (uint256)', 'function guessOf(uint32, address) view returns (uint64 price, uint64 at)',
   'function guesses(uint32 day, uint256 start, uint256 n) view returns (tuple(address who, uint64 price, uint64 at)[] out)',
   'function dayInfo(uint32 d) view returns (tuple(bool settled, uint64 price, address winner, uint64 winnerGuess, uint256 prize))', 'function settle(uint32 day)'];
-/* ================= games: Coin Flip and Dice =================
-   KingGames: a bet joins the 30-second round open when it lands; when the round closes the house (CavFi bot)
+/* ================= games: Coin Flip, Dice, Limbo, Royal Wheel, Plinko, Higher or Lower =================
+   KingGames2: a bet joins the 30-second round open when it lands; when the round closes the house (CavFi bot)
    reveals the round's seed, which it committed long before as part of a hash chain, and the contract settles
-   every bet of the round: roll = keccak256(seed, betId) % 100 + 1. Winning pays stake x 98 / winning outcomes. */
+   every bet of the round with r = keccak256(seed, betId). Every game returns about 98% of stakes on average. */
+const GX_BET = 'tuple(address player, uint96 stake, uint32 round, uint8 game, uint16 pick, bool over, uint8 card, uint32 result, uint8 status, uint96 payout, uint40 placedAt)';
 const GAMES_ABI = [
-  'function play(uint8 game, uint8 pick, bool over) payable returns (uint256)',
+  'function play(uint8 game, uint16 pick, bool over) payable returns (uint256)',
   'function claimTimeout(uint256 id)', 'function withdrawOwed()', 'function owed(address) view returns (uint256)',
-  'function minBet() view returns (uint256)', 'function maxStakeFor(uint8 game, uint8 pick, bool over) view returns (uint256)',
+  'function minBet() view returns (uint256)', 'function maxStakeFor(uint8 game, uint16 pick, bool over, address player) view returns (uint256)',
+  'function cardOf(address) view returns (uint8)',
   'function stats() view returns (uint256 bankroll, uint256 freeNow, uint256 betsCount, uint256 staked, uint256 paid, bool online, uint256 roundNow)',
-  'function get(uint256) view returns (tuple(address player, uint96 stake, uint32 round, uint8 game, uint8 pick, bool over, uint8 roll, uint8 status, uint96 payout, uint40 placedAt))',
-  'function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(address player, uint96 stake, uint32 round, uint8 game, uint8 pick, bool over, uint8 roll, uint8 status, uint96 payout, uint40 placedAt)[] items)',
-  'function pageOf(address who, uint256 start, uint256 n) view returns (uint256[] ids, tuple(address player, uint96 stake, uint32 round, uint8 game, uint8 pick, bool over, uint8 roll, uint8 status, uint96 payout, uint40 placedAt)[] items)',
-  'event Placed(uint256 indexed id, address indexed player, uint8 game, uint8 pick, bool over, uint256 stake, uint256 payout, uint256 round)',
+  `function get(uint256) view returns (${GX_BET})`,
+  `function page(uint256 start, uint256 n) view returns (uint256[] ids, ${GX_BET}[] items)`,
+  `function pageOf(address who, uint256 start, uint256 n) view returns (uint256[] ids, ${GX_BET}[] items)`,
+  'event Placed(uint256 indexed id, address indexed player, uint8 game, uint16 pick, bool over, uint256 stake, uint256 maxPayout, uint256 round)',
 ];
-const gxC = signer => new E.Contract(A.games, GAMES_ABI, signer ? st.signer : (RP()));
-const gx = {tab: location.hash === '#hunt' ? 'hunt' : 'coin', side: 0, target: 50, over: true, stake: '1', busy: false, data: null, live: null, names: {}, timer: null};
-const gxWins = () => gx.tab === 'coin' ? 50 : Math.max(0, gx.over ? 100 - gx.target : gx.target - 1);
-const gxOk = () => gx.tab === 'coin' || (gxWins() >= 2 && gxWins() <= 95);
-const gxMult = () => gxWins() ? 98 / gxWins() : 0;
-const gxPick = () => gx.tab === 'coin' ? [0, gx.side, false] : [1, gx.target, gx.over];
-const gxDesc = b => b.game === 0 ? (b.pick === 0 ? '👑 Heads' : '🐾 Tails') : `🎲 ${b.over ? 'over' : 'under'} ${b.pick}`;
-const gxRoll = b => b.game === 0 ? `landed ${b.roll <= 50 ? '👑 Heads' : '🐾 Tails'}` : `rolled ${b.roll}`;
+const gxC = signer => new E.Contract(A.games, GAMES_ABI, signer ? st.signer : RP());
+const GX = ['coin', 'dice', 'limbo', 'wheel', 'plinko', 'hilo'];
+const GX_TITLE = {coin: '🪙 Coin Flip', dice: '🎲 Dice', limbo: '🚀 Limbo', wheel: '🎡 Royal Wheel', plinko: '🔻 Plinko', hilo: '🃏 Higher or Lower'};
+const GX_WHEEL = [120, 0, 150, 0, 120, 0, 200, 0, 120, 0, 500, 0, 120, 0, 150, 0, 200, 0, 120, 150];   // x100, same as the contract
+const GX_PLINKO = [[560, 210, 110, 100, 46, 100, 110, 210, 560], [1300, 300, 126, 70, 40, 70, 126, 300, 1300], [2900, 400, 145, 30, 20, 30, 145, 400, 2900]];
+const GX_RISK = ['Low', 'Medium', 'High'];
+const GX_CARD = c => ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'][c] || '?';
+const gx = {tab: location.hash === '#hunt' ? 'hunt' : 'coin', side: 0, target: 50, over: true, limbo: '2.00', risk: 1, hiDir: 1, card: 0, stake: '1', busy: false, data: null, live: null, names: {}, timer: null};
+const gxLimboT = () => { const v = Math.round(Number(String(gx.limbo).replace(',', '.')) * 100); return isFinite(v) ? v : 0; };
+/* [winning chance %, payout multiplier] of the current choice (Wheel and Plinko: the top multiplier) */
+function gxOdds(){
+  const t = gx.tab;
+  if (t === 'coin') return [50, 1.96];
+  if (t === 'dice'){ const w = gx.over ? 100 - gx.target : gx.target - 1; return w >= 2 && w <= 95 ? [w, 98 / w] : [w, 0]; }
+  if (t === 'limbo'){ const T = gxLimboT(); return T >= 101 && T <= 10000 ? [98 / (T / 100), T / 100] : [0, 0]; }
+  if (t === 'wheel') return [55, 5];
+  if (t === 'plinko') return [100, GX_PLINKO[gx.risk][0] / 100];
+  if (t === 'hilo'){ const c = gx.card || 7, w = gx.hiDir ? 13 - c : c - 1; return w > 0 ? [w / 13 * 100, 12.74 / w] : [0, 0]; }
+  return [0, 0];
+}
+const gxOk = () => gxOdds()[1] > 0;
+const gxPick = () => {
+  const t = gx.tab;
+  if (t === 'coin') return [0, gx.side, false];
+  if (t === 'dice') return [1, gx.target, gx.over];
+  if (t === 'limbo') return [2, gxLimboT(), false];
+  if (t === 'wheel') return [3, 0, false];
+  if (t === 'plinko') return [4, gx.risk, false];
+  return [5, gx.hiDir, false];
+};
+const gxM = v => (v >= 10 ? v.toFixed(1) : v.toFixed(2)).replace(/\.?0+$/, '') + 'x';
+const gxDesc = b => [b.pick === 0 ? '👑 Heads' : '🐾 Tails', `🎲 ${b.over ? 'over' : 'under'} ${b.pick}`, `🚀 Limbo ${gxM(b.pick / 100)}`, '🎡 Royal Wheel', `🔻 Plinko ${GX_RISK[b.pick] || ''}`, `🃏 ${b.pick ? 'higher' : 'lower'} than ${GX_CARD(b.card)}`][b.game] || 'bet';
+const gxRes = b => [`landed ${b.result <= 50 ? '👑 Heads' : '🐾 Tails'}`, `rolled ${b.result}`, `crashed at ${gxM(b.result / 100)}`, `the wheel stopped on ${gxM(GX_WHEEL[b.result] / 100).replace('0x', '0x')}`, `the ball fell into ${gxM(GX_PLINKO[b.pick] ? GX_PLINKO[b.pick][b.result] / 100 : 0)}`, `drew ${GX_CARD(b.result)}`][b.game] || '';
 const gxNm = a => gx.names[lk(a)] || short(a);
+const gxRow = (it, id) => ({id: Number(id), player: it.player, stake: it.stake, round: Number(it.round), game: Number(it.game), pick: Number(it.pick), over: it.over, card: Number(it.card), result: Number(it.result), status: Number(it.status), payout: it.payout, placedAt: Number(it.placedAt)});
 async function loadGames(){
   if (gx.tab === 'hunt') return loadHunt();
   if (!A.games){ gx.data = {none: true}; return renderGames(); }
   try{
     const c = gxC(), s = await c.stats();
-    const [recent, mine, maxS, minB, owed] = await Promise.all([
-      c.page(0, 12), st.account ? c.pageOf(st.account, 0, 10) : null, c.maxStakeFor(...gxPick()), c.minBet(), st.account ? c.owed(st.account) : E.constants.Zero]);
-    const rows = (r) => r ? r.ids.map((id, k) => ({id: id.toNumber(), ...r.items[k], stake: r.items[k].stake, payout: r.items[k].payout, round: Number(r.items[k].round), placedAt: Number(r.items[k].placedAt)})) : [];
-    gx.data = {s, recent: rows(recent), mine: rows(mine), maxS, minB, owed, chainNow: Number(s.roundNow.toString()) * 30};
+    const [recent, mine, minB, owed, card] = await Promise.all([
+      c.page(0, 12), st.account ? c.pageOf(st.account, 0, 10) : null, c.minBet(), st.account ? c.owed(st.account) : E.constants.Zero,
+      st.account ? c.cardOf(st.account) : 0]);
+    gx.card = Number(card) || 0;
+    const maxS = await c.maxStakeFor(...gxPick(), st.account || E.constants.AddressZero);
+    const rows = r => r ? r.ids.map((id, k) => gxRow(r.items[k], id)) : [];
+    gx.data = {s, recent: rows(recent), mine: rows(mine), maxS, minB, owed};
     const who = [...new Set(gx.data.recent.map(b => lk(b.player)))].filter(a => gx.names[a] == null);
     if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); who.forEach((a, k) => gx.names[a] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
   }catch(e){ gx.data = {err: true}; }
   renderGames();
   clearTimeout(gx.timer);
-  if (st.view === 'games') gx.timer = setTimeout(() => { if (st.view === 'games' && !gx.busy) loadGames(); }, gx.live ? 4000 : 15000);
+  if (st.view === 'games') gx.timer = setTimeout(() => { if (st.view === 'games' && !gx.busy && !(gx.live && gx.live.anim)) loadGames(); }, gx.live ? 4000 : 15000);
+}
+/* ---------- stages (the animated part of each game) ---------- */
+function gxWheelSvg(rot){
+  const segs = GX_WHEEL.map((m, i) => {
+    const a0 = (i * 18 - 90) * Math.PI / 180, a1 = ((i + 1) * 18 - 90) * Math.PI / 180, r = 96;
+    const p = `M100 100 L${(100 + r * Math.cos(a0)).toFixed(2)} ${(100 + r * Math.sin(a0)).toFixed(2)} A${r} ${r} 0 0 1 ${(100 + r * Math.cos(a1)).toFixed(2)} ${(100 + r * Math.sin(a1)).toFixed(2)} Z`;
+    const col = m === 0 ? 'var(--well)' : m >= 500 ? '#E7B73C' : m >= 200 ? '#D46A38' : m >= 150 ? '#A3461E' : '#7A3A1C';
+    const am = (i * 18 + 9 - 90) * Math.PI / 180, tx = 100 + 70 * Math.cos(am), ty = 100 + 70 * Math.sin(am);
+    return `<path d="${p}" fill="${col}" stroke="var(--surface)" stroke-width="1.5"/><text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" transform="rotate(${i * 18 + 9} ${tx.toFixed(1)} ${ty.toFixed(1)})" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="800" fill="${m === 0 ? 'var(--muted)' : '#FFF8EE'}">${m ? gxM(m / 100) : '0'}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 200 200" class="gx-wheel-svg" aria-hidden="true"><g class="gx-wheel-rot" id="gxWheelRot"${rot != null ? ` style="transform:rotate(${rot}deg)"` : ''}>${segs}<circle cx="100" cy="100" r="16" fill="var(--surface)" stroke="#E7B73C" stroke-width="3"/><text x="100" y="101" text-anchor="middle" dominant-baseline="middle" font-size="14">👑</text></g></svg>`;
+}
+function gxPlinkoSvg(hit){
+  let pegs = '';
+  for (let row = 0; row < 8; row++) for (let k = 0; k <= row + 1; k++){ const x = 150 + (k - (row + 1) / 2) * 30, y = 22 + row * 22; pegs += `<circle cx="${x}" cy="${y}" r="3" fill="var(--muted)"/>`; }
+  const T = GX_PLINKO[gx.risk];
+  const bins = T.map((m, i) => { const x = 150 + (i - 4) * 30; const col = m >= 500 ? '#E7B73C' : m >= 150 ? '#D46A38' : m >= 100 ? '#A3461E' : 'var(--well)';
+    return `<g id="gxBin${i}"${hit === i ? ' class="hit"' : ''}><rect x="${x - 14}" y="196" width="28" height="20" rx="5" fill="${col}"/><text x="${x}" y="207" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="800" fill="${m >= 100 ? '#FFF8EE' : 'var(--ink)'}">${gxM(m / 100)}</text></g>`; }).join('');
+  return `<svg viewBox="0 0 300 222" class="gx-plinko-svg" aria-hidden="true">${pegs}${bins}<circle id="gxBall" cx="${hit != null ? 150 + (hit - 4) * 30 : 150}" cy="${hit != null ? 190 : 6}" r="6" fill="#E7B73C" stroke="#7A3A1C" stroke-width="1.5"/></svg>`;
 }
 function gxStage(){
-  const L = gx.live;
-  if (gx.tab === 'coin'){
-    const face = L && L.done ? (L.b.roll <= 50 ? '👑' : '🐾') : gx.side === 0 ? '👑' : '🐾';
-    return `<div class="gx-stage"><div><div class="gx-coin${L && !L.done ? ' spin' : ''}" aria-hidden="true">${face}</div>${gxResult()}</div></div>`;
+  const L = gx.live, done = L && L.done, b = done ? L.b : null, spin = L && !L.done;
+  const t = gx.tab;
+  let inner;
+  if (t === 'coin') inner = `<div class="gx-coin${spin ? ' spin' : ''}" aria-hidden="true">${b ? (b.result <= 50 ? '👑' : '🐾') : gx.side === 0 ? '👑' : '🐾'}</div>`;
+  else if (t === 'dice') inner = `<div class="gx-die${spin ? ' spin' : ''}" aria-live="polite">${b ? b.result : L ? '··' : gx.target}</div>`;
+  else if (t === 'limbo') inner = `<div class="gx-limbo${spin ? ' spin' : ''}${b ? (b.status === 2 ? ' win' : ' lose') : ''}" id="gxLimboNum" aria-live="polite">${b ? gxM(b.result / 100) : spin ? '…' : '1.00x'}</div><small class="gx-sub">target ${gxM(gxLimboT() / 100)}</small>`;
+  else if (t === 'wheel') inner = `<div class="gx-wheel${spin ? ' spin' : ''}"><i class="gx-pointer" aria-hidden="true"></i>${gxWheelSvg(b && b.game === 3 && !L.anim ? -(b.result * 18 + 9) : null)}</div>`;
+  else if (t === 'plinko') inner = `<div class="gx-plinko${spin ? ' spin' : ''}">${gxPlinkoSvg(b && b.game === 4 && !L.anim ? b.result : null)}</div>`;
+  else {
+    const c = b ? b.card : gx.card;
+    inner = `<div class="gx-cards"><div class="gx-card"><b>${GX_CARD(c)}</b><span>👑</span></div><span class="gx-vs">${gx.hiDir ? '▲' : '▼'}</span><div class="gx-card${b ? '' : ' back'}${spin ? ' spin' : ''}">${b ? `<b>${GX_CARD(b.result)}</b><span>👑</span>` : '<span>🐾</span>'}</div></div>`;
   }
-  const num = L && L.done ? L.b.roll : L ? '··' : gx.target;
-  return `<div class="gx-stage"><div><div class="gx-die${L && !L.done ? ' spin' : ''}" aria-live="polite">${num}</div>${gxResult()}</div></div>`;
+  return `<div class="gx-stage"><div class="gx-stage-in">${inner}${gxResult()}</div></div>`;
 }
 function gxResult(){
   const L = gx.live; if (!L) return '';
-  if (!L.done) return `<p class="gx-res">${L.msg || 'Rolling… the round closes and the house reveals the seed in about a minute.'}</p>`;
-  const b = L.b, won = b.status === 2 || b.status === 4;
-  return `<p class="gx-res ${won ? 'win' : 'lose'}">${won ? `You won ${sxNum(fl(b.payout, 18))} DOGE!` : `${gxRoll(b)}. Not this time.`}</p>`;
+  if (!L.done) return `<p class="gx-res">${L.msg || 'Playing… the round closes and the house reveals the seed in about a minute.'}</p>`;
+  if (L.anim) return '<p class="gx-res">&nbsp;</p>';
+  const b = L.b, paid = fl(b.payout, 18), stake = fl(b.stake, 18);
+  if (b.status === 2 || b.status === 4) return `<p class="gx-res ${paid >= stake ? 'win' : 'lose'}">${paid >= stake ? `You won ${sxNum(paid)} DOGE!` : `${gxRes(b)}: ${sxNum(paid)} DOGE back.`}</p>`;
+  return `<p class="gx-res lose">${gxRes(b)}. Not this time.</p>`;
+}
+/* plays the reveal animation of a settled bet, then shows the result */
+async function gxAnimate(b){
+  gx.live = {done: true, b, anim: true}; renderGames();
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  try{
+    if (b.game === 3){ const g = $('gxWheelRot'); if (g){ g.style.transition = 'none'; g.style.transform = 'rotate(0deg)'; await wait(30);
+      g.style.transition = 'transform 3.2s cubic-bezier(.12,.75,.15,1)'; g.style.transform = `rotate(${360 * 5 - (b.result * 18 + 9)}deg)`; await wait(3300); } }
+    else if (b.game === 4){ const ball = $('gxBall'); if (ball){ const steps = Array(8).fill(0); let k = b.result;
+      while (k > 0){ const i = Math.floor(Math.random() * 8); if (!steps[i]){ steps[i] = 1; k--; } }
+      let x = 150; for (let row = 0; row < 8; row++){ x += (steps[row] ? 15 : -15); ball.setAttribute('cx', x); ball.setAttribute('cy', 22 + row * 22 + 10); await wait(170); }
+      ball.setAttribute('cy', 190); await wait(200); const bin = $('gxBin' + b.result); if (bin) bin.classList.add('hit'); } }
+    else if (b.game === 2){ const el = $('gxLimboNum'), target = b.result / 100; if (el){ const t0 = Date.now(), dur = Math.min(2200, 600 + Math.log10(Math.max(target, 1)) * 900);
+      while (Date.now() - t0 < dur){ const f = (Date.now() - t0) / dur, v = 1 + (target - 1) * f * f; el.textContent = gxM(v); await wait(40); } } }
+    else await wait(250);
+  }catch(e){}
+  gx.live = {done: true, b}; renderGames();
 }
 const gxGate = () => !st.account ? {label: 'Connect wallet', act: connect} : !onRightChain() ? {label: 'Switch to ' + NET.name, act: () => switchChain()} : null;
+function gxPicker(){
+  const t = gx.tab;
+  if (t === 'coin') return `<div class="gx-sides" role="group" aria-label="Pick a side"><button class="gx-side" data-gx="side" data-v="0" aria-pressed="${gx.side === 0}"><span>👑</span>Heads<small>1.96x</small></button><button class="gx-side" data-gx="side" data-v="1" aria-pressed="${gx.side === 1}"><span>🐾</span>Tails<small>1.96x</small></button></div>`;
+  if (t === 'dice') return `<div class="chips" role="group" aria-label="Roll under or over"><button class="chip" data-gx="dir" data-v="under" aria-pressed="${!gx.over}">Roll under</button><button class="chip" data-gx="dir" data-v="over" aria-pressed="${gx.over}">Roll over</button></div>
+       <label class="pr-note" for="gxRange">Target: <b id="gxT">${gx.target}</b> · win if the roll (1 to 100) is ${gx.over ? 'above' : 'below'} it</label>
+       <input id="gxRange" class="gx-range" type="range" min="2" max="99" value="${gx.target}">
+       <div class="gx-track" aria-hidden="true"><i style="${gx.over ? `left:${gx.target}%;right:0` : `left:0;width:${gx.target - 1}%`}"></i></div>`;
+  if (t === 'limbo') return `<label class="pr-note" for="gxLimbo">Target multiplier (1.01x to 100x): you win it if the crash multiplier reaches it.</label>
+       <div class="gx-stake"><span class="gs-in"><input id="gxLimbo" inputmode="decimal" value="${esc(gx.limbo)}" autocomplete="off" aria-label="Target multiplier"><b>x</b></span>
+       <div class="chips">${['1.5', '2', '5', '10'].map(v => `<button class="chip" data-gx="lt" data-v="${v}">${v}x</button>`).join('')}</div></div>`;
+  if (t === 'wheel') return `<p class="pr-note">20 segments: 9 blanks, 5 × 1.2x, 3 × 1.5x, 2 × 2x and one 5x. Spin and see where the crown stops.</p>`;
+  if (t === 'plinko') return `<div class="chips" role="group" aria-label="Risk">${GX_RISK.map((r, i) => `<button class="chip" data-gx="risk" data-v="${i}" aria-pressed="${gx.risk === i}">${r} risk</button>`).join('')}</div>
+       <p class="pr-note">The ball bounces left or right at 8 rows of pegs. The edges are rare and pay the most: up to ${gxM(GX_PLINKO[gx.risk][0] / 100)} on ${GX_RISK[gx.risk].toLowerCase()} risk.</p>`;
+  const c = gx.card || 0;
+  return `<div class="gx-sides" role="group" aria-label="Higher or lower"><button class="gx-side" data-gx="hilo" data-v="1" aria-pressed="${gx.hiDir === 1}" ${c === 13 ? 'disabled' : ''}><span>▲</span>Higher<small>${c && c < 13 ? gxM(12.74 / (13 - c)) : '–'}</small></button><button class="gx-side" data-gx="hilo" data-v="0" aria-pressed="${gx.hiDir === 0}" ${c === 1 ? 'disabled' : ''}><span>▼</span>Lower<small>${c > 1 ? gxM(12.74 / (c - 1)) : '–'}</small></button></div>
+       <p class="pr-note">${c ? `Your card is <b>${GX_CARD(c)}</b>. Will the next card (A to K) be higher or lower? A tie loses. The card you draw becomes your next card.` : 'Connect your wallet to see your card.'}</p>`;
+}
 function renderGames(){
   const box = $('gxBody'); if (!box) return;
   document.querySelectorAll('#gxTabs .chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.t === gx.tab)));
@@ -6580,46 +6698,44 @@ function renderGames(){
   if (!D){ box.innerHTML = '<div class="empty-card">Reading the games…</div>'; return; }
   if (D.none){ box.innerHTML = '<div class="empty-card">CavFi Games are not deployed on this network yet. Coming very soon.</div>'; return; }
   if (D.err){ box.innerHTML = '<div class="empty-card">Could not read the games contract right now.</div>'; return; }
-  const s = D.s, gate = gxGate(), online = s.online;
-  const st0 = Number(gx.stake) || 0, maxS = fl(D.maxS, 18), minB = fl(D.minB, 18), win = gxOk() ? st0 * gxMult() : 0;
+  const s = D.s, gate = gxGate(), online = s.online, [chance, mult] = gxOdds();
+  const st0 = Number(gx.stake) || 0, maxS = fl(D.maxS, 18), minB = fl(D.minB, 18), win = st0 * mult;
   $('gxStatus').textContent = online ? `house online · bankroll ${sxNum(fl(s.bankroll, 18))} DOGE` : 'house offline: bets paused';
-  const picker = gx.tab === 'coin'
-    ? `<div class="gx-sides" role="group" aria-label="Pick a side"><button class="gx-side" data-gx="side" data-v="0" aria-pressed="${gx.side === 0}"><span>👑</span>Heads<small>1.96x</small></button><button class="gx-side" data-gx="side" data-v="1" aria-pressed="${gx.side === 1}"><span>🐾</span>Tails<small>1.96x</small></button></div>`
-    : `<div class="chips" role="group" aria-label="Roll under or over"><button class="chip" data-gx="dir" data-v="under" aria-pressed="${!gx.over}">Roll under</button><button class="chip" data-gx="dir" data-v="over" aria-pressed="${gx.over}">Roll over</button></div>
-       <label class="pr-note" for="gxRange">Target: <b id="gxT">${gx.target}</b> · win if the roll (1 to 100) is ${gx.over ? 'above' : 'below'} it</label>
-       <input id="gxRange" class="gx-range" type="range" min="2" max="99" value="${gx.target}">
-       <div class="gx-track" aria-hidden="true"><i style="${gx.over ? `left:${gx.target}%;right:0` : `left:0;width:${gx.target - 1}%`}"></i></div>`;
-  const chance = gxWins();
+  const label = {coin: `Flip for ${gx.side === 0 ? 'Heads' : 'Tails'}`, dice: `Roll ${gx.over ? 'over' : 'under'} ${gx.target}`, limbo: `Launch to ${gxM(gxLimboT() / 100)}`, wheel: 'Spin the wheel', plinko: 'Drop the ball', hilo: gx.hiDir ? 'Next card is higher' : 'Next card is lower'}[gx.tab];
   const act = gate ? `<button class="btn primary" data-gx="gate">${gate.label}</button>`
-    : `<button class="btn primary" data-gx="play" ${gx.busy || !online || !gxOk() ? 'disabled' : ''}>${gx.busy ? 'Waiting for the wallet…' : !online ? 'House offline' : !gxOk() ? 'Win chance must be 2% to 95%' : gx.tab === 'coin' ? `Flip for ${gx.side === 0 ? 'Heads' : 'Tails'}` : `Roll ${gx.over ? 'over' : 'under'} ${gx.target}`}</button>`;
+    : `<button class="btn primary" data-gx="play" ${gx.busy || !online || !gxOk() ? 'disabled' : ''}>${gx.busy ? 'Waiting for the wallet…' : !online ? 'House offline' : !gxOk() ? (gx.tab === 'dice' ? 'Win chance must be 2% to 95%' : gx.tab === 'limbo' ? 'Target must be 1.01x to 100x' : 'Pick the other side') : label}</button>`;
   const row = (b, mine) => {
-    const won = b.status === 2 || b.status === 4, pend = b.status === 1;
+    const paid = b.status === 2 || b.status === 4, pend = b.status === 1, back = fl(b.payout, 18), stake = fl(b.stake, 18);
     const late = pend && Math.floor(Date.now() / 1000) > (b.round + 1) * 30 + 3600;
-    return `<div class="du-row${st.account && same(b.player, st.account) ? ' me' : ''}"><div>${mine ? '' : `<a href="#u/${esc(gx.names[lk(b.player)] || b.player)}"><b>${esc(gxNm(b.player))}</b></a> · `}${gxDesc(b)} · ${sxNum(fl(b.stake, 18))} DOGE
-      <small>${pend ? 'waiting for the round to be revealed' : b.status === 4 ? 'paid as a win: the house was late' : gxRoll(b)}${won ? ` · won ${sxNum(fl(b.payout, 18))} DOGE` : ''}</small></div>
-      ${late && mine ? `<button class="btn" data-gx="timeout" data-id="${b.id}">Claim</button>` : `<span class="gx-tag ${pend ? 'wait' : won ? 'win' : 'lose'}">${pend ? 'rolling' : won ? 'won' : 'lost'}</span>`}</div>`;
+    const tag = pend ? ['wait', 'playing'] : paid && back >= stake ? ['win', 'won'] : paid ? ['lose', 'part back'] : ['lose', 'lost'];
+    return `<div class="du-row${st.account && same(b.player, st.account) ? ' me' : ''}"><div>${mine ? '' : `<a href="#u/${esc(gx.names[lk(b.player)] || b.player)}"><b>${esc(gxNm(b.player))}</b></a> · `}${gxDesc(b)} · ${sxNum(stake)} DOGE
+      <small>${pend ? 'waiting for the round to be revealed' : b.status === 4 ? 'paid in full: the house was late' : gxRes(b)}${paid ? ` · paid ${sxNum(back)} DOGE` : ''}</small></div>
+      ${late && mine ? `<button class="btn" data-gx="timeout" data-id="${b.id}">Claim</button>` : `<span class="gx-tag ${tag[0]}">${tag[1]}</span>`}</div>`;
   };
-  box.innerHTML = `<section class="sx-card gx-play"><div class="sx-head"><h2>${gx.tab === 'coin' ? '🪙 Coin Flip' : '🎲 Dice'}</h2><span>${chance}% win chance · ${gxOk() ? gxMult().toFixed(gxMult() >= 10 ? 2 : 4).replace(/\.?0+$/, '') : '–'}x payout</span></div>
+  const head = gx.tab === 'wheel' ? 'pays up to 5x · 97.5% back on average' : gx.tab === 'plinko' ? `${GX_RISK[gx.risk].toLowerCase()} risk · up to ${gxM(mult)} · 98% back on average` : `${chance >= 10 ? chance.toFixed(0) : chance.toFixed(2)}% win chance · ${mult ? gxM(mult) : '–'} payout`;
+  box.innerHTML = `<section class="sx-card gx-play"><div class="sx-head"><h2>${GX_TITLE[gx.tab]}</h2><span>${head}</span></div>
       ${gxStage()}
-      ${picker}
+      ${gxPicker()}
       <div class="gx-stake"><span class="gs-in"><input id="gxStake" inputmode="decimal" value="${esc(gx.stake)}" autocomplete="off" aria-label="Stake in DOGE"><b>DOGE</b></span>
         <div class="chips">${[0.5, 1, 5].map(v => `<button class="chip" data-gx="amt" data-v="${v}">${v}</button>`).join('')}<button class="chip" data-gx="amt" data-v="max">Max</button></div></div>
-      <div class="pr-sides"><div><span>Win</span><b>${win ? sxNum(win) + ' DOGE' : '–'}</b><small>stake ${sxNum(st0)} · profit ${win ? sxNum(win - st0) : '–'}</small></div><div><span>Bet limits now</span><b>${sxNum(minB)} – ${sxNum(maxS)}</b><small>the max follows the bankroll</small></div></div>
+      <div class="pr-sides"><div><span>${gx.tab === 'wheel' || gx.tab === 'plinko' ? 'Top win' : 'Win'}</span><b>${win ? sxNum(win) + ' DOGE' : '–'}</b><small>stake ${sxNum(st0)}${win && gx.tab !== 'wheel' && gx.tab !== 'plinko' ? ' · profit ' + sxNum(win - st0) : ''}</small></div><div><span>Bet limits now</span><b>${sxNum(minB)} – ${sxNum(maxS)}</b><small>the max follows the bankroll</small></div></div>
       ${act}
       ${D.owed && D.owed.gt(0) ? `<button class="btn" data-gx="owed">Withdraw ${sxNum(fl(D.owed, 18))} DOGE owed to you</button>` : ''}
     </section>
     ${D.mine.length ? `<section class="sx-card"><div class="sx-head"><h2>Your bets</h2></div>${D.mine.map(b => row(b, true)).join('')}</section>` : ''}
-    <section class="sx-card"><div class="sx-head"><h2>Latest bets</h2><span>${sxNum(s.betsCount.toNumber())} played · ${sxNum(fl(s.paid, 18))} DOGE paid out</span></div>${D.recent.length ? D.recent.map(b => row(b, false)).join('') : '<div class="empty-card">No bets yet. Be the first to flip.</div>'}</section>
-    <section class="sx-card"><div class="sx-head"><h2>How it is fair</h2></div><p class="pr-note">Bets are grouped in 30-second rounds. Long before a round opens, the house (the CavFi bot) has locked its secret seed on-chain as part of a hash chain: each round's seed is the hash that produces the previous round's seed, so the house cannot change it and nobody else can know it. When a round closes, the house reveals the seed, the contract checks it against the chain and rolls every bet: roll = keccak256(seed, bet id) mod 100 + 1. Coin Flip: 1 to 50 is Heads, 51 to 100 Tails. Rounds are revealed strictly in order, so the house cannot skip a round. If the house is more than an hour late, you can claim the bet as a win; while it is more than 10 minutes behind, new bets are paused. House edge 2%. The house's risk on one bet is capped at 5% of its free bankroll. Testnet DOGE only, no real value.</p></section>`;
+    <section class="sx-card"><div class="sx-head"><h2>Latest bets</h2><span>${sxNum(s.betsCount.toNumber())} played · ${sxNum(fl(s.paid, 18))} DOGE paid out</span></div>${D.recent.length ? D.recent.map(b => row(b, false)).join('') : '<div class="empty-card">No bets yet. Be the first to play.</div>'}</section>
+    <section class="sx-card"><div class="sx-head"><h2>How it is fair</h2></div><p class="pr-note">Bets are grouped in 30-second rounds. Long before a round opens, the house (the CavFi bot) has locked its secret seed on-chain as part of a hash chain: each round's seed is the hash that produces the previous round's seed, so the house cannot change it and nobody else can know it. When a round closes, the house reveals the seed, the contract checks it against the chain and settles every bet with r = keccak256(seed, bet id): Coin Flip and Dice roll r mod 100 + 1; Limbo crashes at 0.98 ÷ a uniform number; the Wheel stops on segment r mod 20; the Plinko ball goes right on each set bit of the last 8 bits of r; Higher or Lower draws r mod 13 + 1. Rounds are revealed strictly in order, so the house cannot skip one. If the house is more than an hour late, you can claim the bet's full top payout; while it is more than 10 minutes behind, new bets are paused. About 98% of stakes come back on average (the Wheel 97.5%). The house's worst case on one bet is capped at 10% of its free bankroll. Testnet DOGE only, no real value.</p></section>`;
   const r = $('gxRange'); if (r) r.oninput = () => { gx.target = Number(r.value); renderGamesSoft(); };
   const i = $('gxStake'); if (i) i.oninput = () => { gx.stake = i.value; renderGamesSoft(); };
+  const li = $('gxLimbo'); if (li) li.oninput = () => { gx.limbo = li.value; renderGamesSoft(); };
 }
 let gxSoftT = null;
 function renderGamesSoft(){   // re-render without losing the slider / input focus mid-drag
   clearTimeout(gxSoftT);
   gxSoftT = setTimeout(async () => {
     const f = document.activeElement && document.activeElement.id;
-    if (gx.data && gx.data.s && A.games){ try{ gx.data.maxS = await gxC().maxStakeFor(...gxPick()); }catch(e){} }
+    if (gx.data && gx.data.s && A.games && gxOk()){ try{ gx.data.maxS = await gxC().maxStakeFor(...gxPick(), st.account || E.constants.AddressZero); }catch(e){} }
+    if (gx.live && gx.live.anim) return;
     renderGames();
     if (f && $(f)){ const el = $(f); el.focus(); if (el.setSelectionRange && el.type !== 'range'){ const n = el.value.length; el.setSelectionRange(n, n); } }
   }, 120);
@@ -6629,14 +6745,16 @@ async function gxWatch(id){
   for (let k = 0; k < 120; k++){
     await new Promise(r => setTimeout(r, 3000));
     try{
-      const b = await c.get(id);
-      if (Number(b.status) !== 1){ gx.live = {done: true, b: {...b, status: Number(b.status), roll: Number(b.roll), game: Number(b.game), pick: Number(b.pick)}}; renderGames(); return Number(b.status); }
-      const left = (Number(b.round) + 1) * 30 - Math.floor(Date.now() / 1000);
+      try{ RP().clearCache(); }catch(_){}
+      const raw = await c.get(id), b = gxRow(raw, id);
+      if (b.status !== 1){ await gxAnimate(b); return b; }
+      const left = (b.round + 1) * 30 - Math.floor(Date.now() / 1000);
       gx.live.msg = left > 0 ? `Round closes in ${left}s, then the house reveals the seed…` : 'Round closed. Waiting for the house to reveal the seed…';
       if (st.view === 'games') renderGames();
     }catch(e){}
   }
   gx.live.msg = 'Still waiting for the reveal. Your bet is safe: check "Your bets" below.'; renderGames();
+  return null;
 }
 document.addEventListener('click', async e => {
   const t = e.target.closest('#gxTabs .chip');
@@ -6644,8 +6762,12 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-gx]'); if (!b) return;
   const a = b.dataset.gx;
   if (a === 'gate'){ const g = gxGate(); if (g && g.act) g.act(); return; }
+  if (gx.live && gx.live.anim) return;
   if (a === 'side'){ gx.side = Number(b.dataset.v); gx.live = null; return renderGames(); }
   if (a === 'dir'){ gx.over = b.dataset.v === 'over'; gx.live = null; renderGames(); return renderGamesSoft(); }
+  if (a === 'lt'){ gx.limbo = b.dataset.v; gx.live = null; renderGames(); return renderGamesSoft(); }
+  if (a === 'risk'){ gx.risk = Number(b.dataset.v); gx.live = null; renderGames(); return renderGamesSoft(); }
+  if (a === 'hilo'){ gx.hiDir = Number(b.dataset.v); gx.live = null; renderGames(); return renderGamesSoft(); }
   if (a === 'amt'){ gx.stake = b.dataset.v === 'max' ? String(Math.floor(fl(gx.data.maxS, 18) * 100) / 100) : b.dataset.v; return renderGames(); }
   if (a === 'owed' || a === 'timeout'){
     try{ const tx = await sendTx(() => a === 'owed' ? gxC(true).withdrawOwed() : gxC(true).claimTimeout(Number(b.dataset.id)), 'Claiming…', () => {}); toast(`Paid. ${txLink(tx.hash)}`, 'ok', 8000); celebrate(b, 18); }
@@ -6664,9 +6786,9 @@ document.addEventListener('click', async e => {
     let id = null; for (const l of rc.logs){ try{ const ev = iface.parseLog(l); if (ev.name === 'Placed') id = ev.args.id.toNumber(); }catch(_){} }
     gx.busy = false;
     if (id == null){ toast(`Bet placed. ${txLink(tx.hash)}`, 'ok'); return loadGames(); }
-    gx.live = {done: false, id}; renderGames(); loadGames();
+    gx.live = {done: false, id}; renderGames();
     const res = await gxWatch(id);
-    if (res === 2 || res === 4) celebrate($('gxBody'), 30);
+    if (res && (res.status === 2 || res.status === 4) && fl(res.payout, 18) >= fl(res.stake, 18)) celebrate($('gxBody'), 30);
     loadGames();
   }catch(err){ gx.busy = false; toast(errMsg(err), 'bad', 8000); renderGames(); }
 });
