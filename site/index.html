@@ -736,6 +736,11 @@ html.spooky{--gold:#F28C28}
 .gx-tag.win{background:color-mix(in srgb,var(--ok) 18%,var(--surface));color:var(--ok)}.gx-tag.lose{background:color-mix(in srgb,var(--bad) 14%,var(--surface));color:var(--bad)}.gx-tag.wait{background:var(--well);color:var(--muted)}
 @media (prefers-reduced-motion: reduce){.gx-coin.spin,.gx-die.spin{animation:none}}
 /* treasure hunt */
+.hunt-bar{max-width:1120px;margin:12px auto 0;width:calc(100% - 32px);box-sizing:border-box;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-radius:16px;
+  background:linear-gradient(120deg,#2A1A14,#3A2219 55%,#4A3010);color:#FFF4E2;border:1px solid #E7B73C;font-size:14px}
+.hunt-bar b{color:#E7B73C}.hunt-bar span{flex:1 1 260px}
+.hunt-bar .btn{background:#E7B73C;border-color:#E7B73C;color:#2A1A14}
+.hunt-bar .hb-x{background:none;border:0;color:#FFF4E2;font-size:15px;cursor:pointer;padding:4px}
 .hn-q{margin:0;font:400 18px/1.4 var(--display)}
 .hn-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
 .hn-form input{min-width:0;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:12px;padding:10px 12px;font:500 15px var(--body)}
@@ -997,6 +1002,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
   </div>
 </div>
 <div class="spook-bar" id="spookBar" hidden></div>
+<div class="hunt-bar" id="huntBar" hidden></div>
 <div class="spook-sky" id="spookSky" aria-hidden="true" hidden></div>
 
 <main class="wrap">
@@ -1078,6 +1084,11 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 9l2.5-5 3 3.5L12 3l1.5 4.5 3-3.5L19 9z"/><rect x="4" y="11" width="16" height="10" rx="3"/></svg></span>
         <b>Cavaliers NFT</b><small>Mint a crowned Cavalier with on-chain art, then stake it to earn KingS.</small>
         <span class="hm-fig"><span>Minted</span><strong id="hmFigNft">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </button>
+      <button class="hm-card" data-tb="hunt">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><path d="M11 11l9 9M16 16l2-2M18.5 18.5l2-2"/></svg></span>
+        <b>Treasure hunt</b><small>Five riddles hidden around CavFi. The first 3 to solve them all share the KingS prize.</small>
+        <span class="hm-fig"><span>Riddles cracked</span><strong id="hmFigHunt">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
       </button>
       <button class="hm-card" data-go="games">
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="15" cy="9" r="1.2"/><circle cx="9" cy="15" r="1.2"/></svg></span>
@@ -4109,11 +4120,29 @@ function renderSpook(){
   } else if (m !== 'on') sky.hidden = true;
 }
 setInterval(renderSpook, 60000);
+/* Royal Treasure Hunt bar: shown while a hunt is open and not all 3 prizes are taken (and Spooktober isn't on) */
+async function renderHuntBar(){
+  const bar = $('huntBar'); if (!bar) return;
+  if (!A.hunt || spookMode()){ bar.hidden = true; return; }
+  try{
+    const c = new E.Contract(A.hunt, HUNT_ABI, RP()), n = (await c.count()).toNumber(); if (!n){ bar.hidden = true; return; }
+    const id = n - 1, [h, , , solvers] = await c.get(id), now = Math.floor(Date.now() / 1000);
+    const cracked = solvers.filter(x => Number(x) > 0).length, f = $('hmFigHunt'); if (f) f.textContent = `${cracked} / ${h.clues}`;
+    let hidden = false; try{ hidden = localStorage.getItem('cavfi.huntbar') === lk(A.hunt) + id; }catch(e){}
+    if (hidden || now < Number(h.start) || now > Number(h.end) || h.finishers >= 3){ bar.hidden = true; return; }
+    const left = Number(h.end) - now;
+    bar.innerHTML = `<span>🗝️ <b>Royal Treasure Hunt:</b> ${sxNum(fl(h.prize, 18))} KingS for the first 3 to solve ${h.clues} riddles hidden around CavFi. ${cracked ? `${cracked} of ${h.clues} riddles cracked so far` : 'Nobody has cracked a riddle yet'} · ends in ${inT(left)}.</span><button class="btn" data-tb="hunt">Start hunting</button><button class="hb-x" data-hb="x" aria-label="Hide">✕</button>`;
+    bar.hidden = false; bar.dataset.k = lk(A.hunt) + id;
+  }catch(e){ bar.hidden = true; }
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-hb=x]'); if (!b) return; try{ localStorage.setItem('cavfi.huntbar', $('huntBar').dataset.k); }catch(_){} $('huntBar').hidden = true; });
+setInterval(renderHuntBar, 120000);
 document.addEventListener('click', e => { const b = e.target.closest('[data-spook=quests]'); if (!b) return; setTimeout(() => { const q = document.getElementById('qsCard'); if (q) q.scrollIntoView({block: 'center', behavior: 'smooth'}); }, 300); });
 
 /* Home: yesterday's closest guess and today's game */
 async function loadHomeGuess(){
   const box = $('hmGuess'); if (!box || !A.guess) return;
+  if ((await fdCheck()).down){ box.hidden = true; return; }
   try{
     const c = guC(), d = await c.today();
     const [y, n, pz, close] = await Promise.all([c.dayInfo(d - 1), c.count(d), c.prize(), c.closeAt(d)]);
@@ -6189,14 +6218,32 @@ async function loadPredict(){
 /* Is RedStone's signed data reachable right now (through our proxy or a public gateway)? Checked every 10 minutes;
    while it isn't, Predict and Guess show a notice so nobody is surprised by a late result. */
 const rsState = { ok: null, at: 0 };
+/* RedStone's DOGE/USD push feed on DogeOS (what v3 markets and the daily game read). If it has not updated for over
+   25 hours, or answers "stale", nothing can be decided: new bets and guesses are paused and a notice explains why. */
+const fdSt = { at: 0, down: false, last: 0 };
+async function fdCheck(){
+  if (prVer() !== 3 || Date.now() - fdSt.at < 300000) return fdSt;
+  fdSt.at = Date.now();
+  try{
+    const fa = await new E.Contract(A.predict, ['function feed() view returns (address)'], RP()).feed();
+    try{ const r = await new E.Contract(fa, ['function latestRoundData() view returns (uint80,int256,uint256,uint256,uint80)'], RP()).latestRoundData();
+      fdSt.last = Number(r[3]); fdSt.down = Date.now() / 1000 - fdSt.last > 25 * 3600; }
+    catch(e){ fdSt.down = true; const d = String(e.data || (e.error && e.error.data) || ''); if (/^0x4f319ffe/.test(d) && d.length >= 202) fdSt.last = parseInt(d.slice(138, 202), 16) || 0; }
+  }catch(e){ fdSt.down = false; }
+  if (st.view === 'predict'){ renderPredict(); if (gs.data) renderGuess(); }
+  if (fdSt.down && $('hmGuess')) $('hmGuess').hidden = true;
+  return fdSt;
+}
 async function rsCheck(){
+  fdCheck();
   if (prVer() !== 2 || !window.CavRedstone || Date.now() - rsState.at < 600000) return;   // v3 reads the on-chain feed: no notice needed
   rsState.at = Date.now();
   const H = Math.floor(Date.now() / 3600000) * 3600 - 3600;
   try{ rsState.ok = (await CavRedstone.fetchPackages(H, 'DOGE')).length > 0; }catch(e){ rsState.ok = false; }
   if (st.view === 'predict'){ renderPredict(); if (gs.data) renderGuess(); }
 }
-const rsNotice = () => rsState.ok === false ? `<div class="pr-warn" role="status">⚠️ <b>Results may come late.</b> RedStone is moving its price data behind API keys and we're waiting for ours. Until then, markets and the daily game may be settled late. Your KingS are safe: a market nobody resolves within 1 day refunds everyone, and an unsettled game day keeps its prize in the fund.</div>` : '';
+const fdNotice = () => fdSt.down ? `<div class="pr-warn" role="status">⏸ <b>DOGE price feed paused.</b> RedStone's DOGE/USD feed on DogeOS has not updated since ${fdSt.last ? new Date(fdSt.last * 1000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC' : 'more than a day'}, so markets and the daily guess can't be decided right now. New bets and guesses are paused until it is back, and we have asked RedStone to look at it. Your KingS are safe: a market that can't be decided refunds everyone after its grace day, and an undecided game day keeps its prize in the fund.</div>` : '';
+const rsNotice = () => fdNotice() + (rsState.ok === false ? `<div class="pr-warn" role="status">⚠️ <b>Results may come late.</b> RedStone is moving its price data behind API keys and we're waiting for ours. Until then, markets and the daily game may be settled late. Your KingS are safe: a market nobody resolves within 1 day refunds everyone, and an unsettled game day keeps its prize in the fund.</div>` : '');
 const prKind = m => m.question.startsWith('Weekly') ? 'weekly' : m.question.startsWith('Hourly') ? '⏱ hourly · up or down' : 'daily';
 const prWho = a => pr.names[lk(a)] || short(a);
 function renderPredict(){
@@ -6230,14 +6277,16 @@ function renderPredict(){
       else if (open) status = `Open · closes in ${inT(close - now)} · decided ${new Date(res * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`;
       else if (now < res) status = `Closed · decided in ${inT(res - now)}`;
       else if (now > res + grace) status = rs ? 'Nobody resolved it within a day: anyone can refund it' : 'The oracle did not report: anyone can refund it';
+      else if (feedM && fdSt.down) status = 'Waiting for the DOGE price feed, which is paused; refunds after a day if it stays down';
       else status = feedM ? 'Ready: anyone can resolve it with RedStone\'s DOGE/USD feed (the bot usually does within a minute)' : rs ? 'Ready: anyone can resolve it with RedStone\'s price (the bot usually does within a minute)' : 'Waiting for the bot to report the price';
       const mineTxt = my && (my.y.gt(0) || my.n.gt(0)) ? `<p class="pr-note">Your stake: ${my.y.gt(0) ? `<b>${sxNum(fl(my.y, 18))}</b> YES` : ''}${my.y.gt(0) && my.n.gt(0) ? ' · ' : ''}${my.n.gt(0) ? `<b>${sxNum(fl(my.n, 18))}</b> NO` : ''}</p>` : '';
       let act = '';
       if (open && old) act = `<p class="pr-note">${ver === 1 ? 'Older market (v1): the CavFi bot reports its price as before.' : 'Older market (v2): it needs RedStone\'s signed price for that second, so without it the market refunds after a day.'} New bets go to the current markets.</p>`;
+      else if (open && fdSt.down && feedM) act = '<p class="pr-note">⏸ Betting is paused while the DOGE price feed is down.</p>';
       else if (open) act = gate ? `<button class="btn primary" data-pr="gate">${gate.label}</button>`
         : `<div class="pr-bet"><input inputmode="decimal" placeholder="KingS amount" id="prAmt${x.id}" aria-label="KingS to stake" autocomplete="off"><button class="btn yes" data-pr="bet" data-id="${x.id}" data-side="1" ${pr.busy ? 'disabled' : ''}>YES</button><button class="btn no" data-pr="bet" data-id="${x.id}" data-side="0" ${pr.busy ? 'disabled' : ''}>NO</button></div>`;
       if (my && my.cl.gt(0)) act += `<button class="btn primary" data-pr="claim" data-id="${x.id}" ${pr.busy ? 'disabled' : ''}>${pr.busy === 'claim' + x.id ? 'Claiming…' : `Claim ${sxNum(fl(my.cl, 18))} KingS`}</button>`;
-      if (rs && m.state === 1 && now >= res && now <= res + grace) act += gate ? `<button class="btn" data-pr="gate">${gate.label}</button>` : `<button class="btn" data-pr="resolve" data-id="${x.id}" ${pr.busy ? 'disabled' : ''}>${pr.busy === 'resolve' + x.id ? 'Resolving…' : feedM ? 'Resolve now' : 'Resolve with RedStone'}</button>`;
+      if (rs && m.state === 1 && now >= res && now <= res + grace && !(feedM && fdSt.down)) act += gate ? `<button class="btn" data-pr="gate">${gate.label}</button>` : `<button class="btn" data-pr="resolve" data-id="${x.id}" ${pr.busy ? 'disabled' : ''}>${pr.busy === 'resolve' + x.id ? 'Resolving…' : feedM ? 'Resolve now' : 'Resolve with RedStone'}</button>`;
       if (m.state === 1 && now > res + grace && !gate) act += `<button class="btn" data-pr="expire" data-id="${x.id}">Refund this market</button>`;
       act += `<div class="up-share"><button class="btn fc-sm" data-pr="mshare" data-id="${x.id}">Copy link</button><a class="btn fc-sm" href="https://x.com/intent/post?text=${encodeURIComponent(`${m.question.replace(/^(Weekly|Hourly): w/, 'W')} YES or NO? 🔮`)}&url=${encodeURIComponent(`https://cavfi.com/p/${x.id}`)}" target="_blank" rel="noopener">Post on X</a></div>`;
       return `<section class="sx-card${pr.hlm === x.id ? ' pr-hl' : ''}" id="mkt-${x.id}"><div class="sx-head"><span class="pr-meta">#${x.id} · ${prKind(m)}${old ? ' · v' + ver : ''}</span><span class="pr-meta">${sxNum(tot)} KingS pot</span></div>
@@ -6754,6 +6803,7 @@ function renderGuess(){
     .filter(([day, n, done]) => !done && n > 0 && now >= day * 86400 + 72000 && now <= day * 86400 + 72000 + 86400).map(([day]) => day);
   const settleBtn = pend.map(day => gate ? '' : `<button class="btn" data-gs="settle" data-day="${day}" ${gs.busy ? 'disabled' : ''}>Settle ${new Date(day * 86400000).toISOString().slice(0, 10)}${gsVer() === 3 ? '' : ' with RedStone'}</button>`).join('');
   if (myP) act = `<p class="gs-mine">Your guess today: <b>${usd5(myP)}</b>${ref ? ` · ${Math.abs(myP - ref) / ref * 100 < 0.05 ? 'right on it' : (myP > ref ? 'above' : 'below') + ' the price now by ' + (Math.abs(myP - ref) / ref * 100).toFixed(2) + '%'}` : ''}. Result after 20:00 UTC.</p>`;
+  else if (fdSt.down) act = '<p class="gs-mine">⏸ Guesses are paused while the DOGE price feed is down: today could not be decided.</p>';
   else if (!open) act = '<p class="gs-mine">Guesses are closed for today. The result comes after 20:00 UTC; the next game opens at midnight UTC.</p>';
   else if (gate) act = `<button class="btn primary" data-gs="gate">${gate.label}</button>`;
   else act = `<div class="gs-form"><span class="gs-in"><b>$</b><input id="gsIn" inputmode="decimal" placeholder="${ref ? ref.toPrecision(5) : '0.07700'}" autocomplete="off" aria-label="Your DOGE price guess in USD"></span><button class="btn primary" data-gs="go" ${gs.busy ? 'disabled' : ''}>${gs.busy ? 'Saving…' : 'Lock my guess'}</button></div>
@@ -6878,6 +6928,7 @@ paintTheme();
   for (const k of Object.keys(A)) A[k] = ADDRESSES[k] || a[k] || '';
   buildTokens();
   renderSpook();
+  renderHuntBar();
   const by = s => TOKENS.find(t => t.symbol === s);
   st.tin = TOKENS[0]; st.tout = by('KingS') || TOKENS[1] || TOKENS[0];
   st.la = by('KingS') || TOKENS[0]; st.lb = by('cUSDT') || by('USDT') || TOKENS[0];

@@ -72,6 +72,7 @@ const CFG = {
   guessRemindHour: Number(env('GUESS_REMIND_HOUR_UTC', '16')),   // daily "2 hours left" reminder for the free guess game (-1 = off)
   spookDay: Number(env('SPOOKTOBER_DAY', '20757')),              // Halloween 2026 (UTC day): badge + double raffle tickets
   digestHour: Number(env('DIGEST_HOUR_UTC', '6')),
+  huntHintHour: Number(env('HUNT_HINT_HOUR_UTC', '12')),
   games: env('GAMES', '1') === '1',                              // reveal the Coin Flip / Dice rounds (the bot is the house)
   gamesPollSec: Number(env('GAMES_POLL_SEC', '5')),
   gamesChain: Number(env('GAMES_CHAIN_LENGTH', '200000')),       // rounds per hash chain (30 s each: about 69 days)
@@ -145,6 +146,9 @@ const ABI = {
           'function lastRound() view returns (uint256)', 'function lastSeed() view returns (bytes32)', 'function chainLeft() view returns (uint256)',
           'function pendingRounds() view returns (uint256[])', 'function house() view returns (address)', 'function free() view returns (uint256)',
           'event Settled(uint256 indexed id, address indexed player, uint8 roll, bool won, uint256 paid)'],
+  hunt: ['function count() view returns (uint256)',
+         'function get(uint256) view returns (tuple(uint64 start, uint64 end, uint8 clues, uint32 finishers, uint256 prize, uint256 paid, string title) h, string[] clues, bytes32[] answerKeys, uint32[] solvers, address[3] top)',
+         'event Solved(uint256 indexed id, address indexed player, uint8 clue, uint32 order)', 'event Finished(uint256 indexed id, address indexed player, uint32 place, uint256 prize)'],
   launch: ['event Launched(address indexed token, address indexed creator, string name, string symbol, uint256 target)',
            'event Graduated(address indexed token, address indexed pair, uint256 doge, uint256 amount, uint256 liquidity)'],
 };
@@ -1042,6 +1046,22 @@ async function redstoneAt(at){
 const withRs = (c, fn, args, hex) => async () => { const tx = await c.populateTransaction[fn](...args); tx.data += hex; return wallet.sendTransaction(tx); };
 ABI.predict3 = ABI.predict2.concat(['function byPull(uint256) view returns (bool)',
   'function get(uint256 id) view returns (tuple(string question, uint64 closeAt, uint64 resolveAt, uint8 state, bool yesWon, uint256 strike, uint256 price, uint256 yesPool, uint256 noPool))']);
+// Is RedStone's DOGE/USD push feed on DogeOS alive? It stopped on 30 Oct 2026; while it is down (no update for
+// over 25 hours, or latestRoundData reverts as stale) the bot opens and seeds no new feed markets and stops
+// retrying settlements every minute. Checked every 5 minutes; everything resumes by itself once it updates.
+let feedSt = {at: 0, down: false, last: 0, warnAt: 0};
+async function feedDown(){
+  if (now() - feedSt.at < 300) return feedSt;
+  feedSt.at = now();
+  try{
+    const addr = await new ethers.Contract(A.predict, ['function feed() view returns (address)'], provider).feed();
+    const f = new ethers.Contract(addr, ['function latestRoundData() view returns (uint80,int256,uint256,uint256,uint80)'], provider);
+    try{ const r = await f.latestRoundData(); feedSt.last = Number(r[3]); feedSt.down = now() - feedSt.last > 25 * 3600; }
+    catch(e){ feedSt.down = true; const d = String((e.error && e.error.data) || e.data || ''); if (/^0x4f319ffe/.test(d) && d.length >= 266) feedSt.last = parseInt(d.slice(138, 202), 16) || feedSt.last; }
+  }catch(e){ feedSt.down = false; }   // no v3 contract or no feed(): nothing to pause
+  if (feedSt.down && now() - feedSt.warnAt > 3600){ feedSt.warnAt = now(); log(`predict: RedStone's DOGE/USD feed is paused${feedSt.last ? ' since ' + isoT(feedSt.last) : ''}: no new markets, seeds or settlement retries until it updates`); }
+  return feedSt;
+}
 const V2 = () => !!A.predictV1;   // after DeployV6: "predict" is v2 (RedStone) and "predictV1" holds the older markets
 async function predictKeeper(){
   if (!CFG.predict || !A.predict || !wallet || me === ethers.constants.AddressZero || now() - predictAt < 60) return;
@@ -1102,7 +1122,7 @@ async function predictRun(addr, mode){
       price = rs.price; how = 'Decided by RedStone\'s signed DOGE/USD price for that second, checked on chain.';
       tx = await send(`predict #${id}: resolve with RedStone DOGE ${usdP5(price)} at ${isoT(at)}`, withRs(c, 'resolve', [id], rs.hex)).catch(e => { log(`predict #${id}: resolve failed: ${e.message}`); return null; });
     } else if (v2){   // v3 fixed-line market: RedStone's push feed on DogeOS, read by the contract itself
-      const fm = (state.feedMiss ||= {}); if (fm[id]) continue;
+      const fm = (state.feedMiss ||= {}); if (fm[id] || (await feedDown()).down) continue;
       try{ await c.callStatic.resolve(id); }catch(e){
         const r = String(e.reason || (e.error && e.error.message) || e.message || '');
         if (/feed updated after/.test(r)){ fm[id] = 1; saveState(); log(`predict #${id}: the RedStone feed updated after ${isoT(at)}, so that moment's price is gone; it refunds after a day`); }
@@ -1122,7 +1142,7 @@ async function predictRun(addr, mode){
     await predictNotify(c, id, price, yes);
   }
   const made = (state.predictMade ||= {});
-  if ((mode === 'v1' || mode === 'v2' || mode === 'v3') && canCreate){
+  if ((mode === 'v1' || mode === 'v2' || mode === 'v3') && canCreate && !(mode === 'v3' && (await feedDown()).down)){
     // 2. open new markets: a daily one (20:00 UTC, at least 20 h away, closes 4 h before)
     //    and a weekly one (Sunday 20:00 UTC, line +5%, closes a day before)
     const want = [];
@@ -1186,6 +1206,7 @@ async function predictRun(addr, mode){
         const [y, n] = await Promise.all([c.yesOf(id, me), c.noOf(id, me)]);
         if (!y.isZero() || !n.isZero()){ seeded[id] = 1; continue; }
         await ensureAllowance(A.kings, addr, amt.mul(2));
+        if (mode === 'v3' && (await feedDown()).down) break;
         const a1 = await send(`predict #${id}: seed YES ${fmtN(fl(amt, 18))} KingS`, () => c.bet(id, true, amt));
         const a2 = a1 && await send(`predict #${id}: seed NO ${fmtN(fl(amt, 18))} KingS`, () => c.bet(id, false, amt));
         if (a1 && a2){ seeded[id] = 1; bal = bal.sub(amt.mul(2)); saveState(); }
@@ -1237,7 +1258,7 @@ async function guessRun(addr, mode){
     if (info.settled || (await g.count(day)).isZero()) continue;   // nobody played: nothing to pay, save the gas
     let price, tx;
     if (mode === 'v3'){
-      const fm = (state.feedMissG ||= {}); if (fm[day]) continue;
+      const fm = (state.feedMissG ||= {}); if (fm[day] || (await feedDown()).down) continue;
       try{ await g.callStatic.settle(day); }catch(e){
         const r = String(e.reason || (e.error && e.error.message) || e.message || '');
         if (/feed updated after/.test(r)){ fm[day] = 1; saveState(); log(`guess: the RedStone feed updated after 20:00 UTC on day ${day}; that day cannot be settled`); }
@@ -1449,6 +1470,26 @@ async function gamesLoop(){
   for (;;){ await gamesKeeper(); if (CFG.once) return; await sleep(CFG.gamesPollSec * 1000); }
 }
 
+// One Treasure Hunt hint a day (12:00 UTC, Telegram) for the first riddle nobody has cracked yet.
+// Hints live in hunt-hints.json next to this file: {"<hunt contract>:<hunt id>": ["hint for riddle 1", ...]}.
+async function huntHint(){
+  if (!A.hunt || !CFG.tgToken || !CFG.tgChat) return;
+  const t = now(), day = Math.floor(t / 86400);
+  if ((t % 86400) / 3600 < CFG.huntHintHour || state.huntHintDay === day) return;
+  state.huntHintDay = day; saveState();
+  try{
+    const c = new ethers.Contract(A.hunt, ABI.hunt, provider), n = (await c.count()).toNumber(); if (!n) return;
+    const id = n - 1, [h, clues, , solvers] = await c.get(id);
+    if (t < Number(h.start) + 6 * 3600 || t > Number(h.end) || h.finishers >= 3) return;
+    let hints = []; try{ hints = (JSON.parse(fs.readFileSync(path.join(HERE, 'hunt-hints.json'), 'utf8'))[lk(A.hunt) + ':' + id]) || []; }catch(e){}
+    const i = solvers.findIndex(x => Number(x) === 0); if (i < 0 || !hints[i]) return;
+    await tg(`🗝️ <b>Treasure Hunt hint</b>
+Riddle ${i + 1}: <i>${esc(clues[i])}</i>
+💡 ${esc(hints[i])}
+${fmtN(fl(h.prize, 18))} KingS for the first 3 to solve all ${h.clues} riddles. Ends in ${Math.max(1, Math.round((Number(h.end) - t) / 86400))} day(s).
+<a href="https://cavfi.com/#hunt">Start hunting</a>`);
+  }catch(e){ log('hunt hint:', (e.reason || e.message || '').slice(0, 100)); }
+}
 async function lowGasCheck(){
   if (me === ethers.constants.AddressZero || now() - (state.lowGasAt || 0) < 6 * 3600) return;
   const b = fl(await provider.getBalance(me), 18), fee = await txFeeNow();
@@ -1554,6 +1595,17 @@ async function notify(){
       else { const t = await token(e.args.token); await tg(`🎓 <b>$${esc(t.symbol)} graduated!</b>\n${fmtN(fl(e.args.doge, 18))} DOGE + ${fmtN(fl(e.args.amount, 18))} ${esc(t.symbol)} are now a CavFi pool with burned LP.\n<a href="${txUrl(l.transactionHash)}">transaction</a>`); }
     }
   }
+  if (A.hunt){   // Royal Treasure Hunt: the first three to crack each riddle, and the prize winners
+    const hi = new ethers.utils.Interface(ABI.hunt);
+    const logs = await provider.getLogs({address: A.hunt, fromBlock: from, toBlock: to, topics: [[hi.getEventTopic('Solved'), hi.getEventTopic('Finished')]]});
+    for (const l of logs){
+      const e = hi.parseLog(l), who = esc(await labelOf(e.args.player)), nth = n => n + (['th', 'st', 'nd', 'rd'][n] || 'th');
+      if (e.name === 'Solved' && e.args.order <= 3) await tg(`🗝️ <b>${who}</b> was the ${nth(e.args.order)} to crack riddle ${e.args.clue + 1} of the Royal Treasure Hunt.
+<a href="https://cavfi.com/#hunt">Join the hunt</a>`);
+      if (e.name === 'Finished' && e.args.place <= 3) await tg(`💰 <b>${who}</b> solved every riddle and finished the Royal Treasure Hunt in ${nth(e.args.place)} place: <b>${fmtN(fl(e.args.prize, 18))} KingS</b>!
+${e.args.place < 3 ? '<a href="https://cavfi.com/#hunt">Places are still open</a>' : 'All three prizes are taken. Thanks for hunting!'}`);
+    }
+  }
   if ((CFG.notifySwapUsd > 0 || A.badges) && pools.length){
     const logs = await provider.getLogs({fromBlock: from, toBlock: to, topics: [SWAP_TOPIC]});
     const seen = new Set(), swappers = [];
@@ -1632,6 +1684,7 @@ async function main(){
       await gmReminders();
       await morningDigest();
       await guessReminder();
+      await huntHint();
       await weeklyTopTen();
       await heralds();
       await notify();
