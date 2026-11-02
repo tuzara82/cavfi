@@ -464,7 +464,8 @@ async function award(addrs, id, label){
   if (!A.badges || !addrs.length || me === ethers.constants.AddressZero) return [];
   const b = new ethers.Contract(A.badges, ABI.badges, wallet);
   const fresh = [];
-  for (const a of [...new Set(addrs)]){ if (a === lk(me)) continue; try{ if ((await b.balanceOf(a, id)).isZero()) fresh.push(ethers.utils.getAddress(a)); }catch(e){} }
+  // contracts (e.g. the DCA vault that swaps for its users) can't hold the badge: minting to them reverts
+  for (const a of [...new Set(addrs)]){ if (a === lk(me)) continue; try{ if ((await provider.getCode(a)) !== '0x') continue; if ((await b.balanceOf(a, id)).isZero()) fresh.push(ethers.utils.getAddress(a)); }catch(e){} }
   if (!fresh.length) return [];
   try{ await send(`award ${label} to ${fresh.length}`, () => b.award(fresh.slice(0, 25), id)); return fresh.slice(0, 25); }
   catch(e){ log('award failed', (e.reason || e.message || '').slice(0, 100)); return []; }
