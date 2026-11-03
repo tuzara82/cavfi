@@ -6608,10 +6608,11 @@ async function loadGames(){
     gx.data = {s, recent: rows(recent), mine: rows(mine), maxS, minB, owed};
     const who = [...new Set(gx.data.recent.map(b => lk(b.player)))].filter(a => gx.names[a] == null);
     if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); who.forEach((a, k) => gx.names[a] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
-  }catch(e){ gx.data = {err: true}; }
+  }catch(e){ gx.fails = (gx.fails || 0) + 1; if (!gx.data || gx.data.err || gx.data.none) gx.data = {err: true}; }
+  if (gx.data && !gx.data.err) gx.fails = 0;
   renderGames();
   clearTimeout(gx.timer);
-  if (st.view === 'games') gx.timer = setTimeout(() => { if (st.view === 'games' && !gx.busy && !(gx.live && gx.live.anim)) loadGames(); }, gx.live ? 4000 : 15000);
+  if (st.view === 'games') gx.timer = setTimeout(() => { if (st.view === 'games' && !gx.busy && !(gx.live && gx.live.anim)) loadGames(); }, gx.live ? 4000 : gx.data && gx.data.err ? Math.min(30000, 3000 * (gx.fails || 1)) : 15000);
 }
 /* ---------- stages (the animated part of each game) ---------- */
 function gxWheelSvg(rot){
@@ -6697,7 +6698,7 @@ function renderGames(){
   const D = gx.data;
   if (!D){ box.innerHTML = '<div class="empty-card">Reading the games…</div>'; return; }
   if (D.none){ box.innerHTML = '<div class="empty-card">CavFi Games are not deployed on this network yet. Coming very soon.</div>'; return; }
-  if (D.err){ box.innerHTML = '<div class="empty-card">Could not read the games contract right now.</div>'; return; }
+  if (D.err){ box.innerHTML = `<div class="empty-card">The DogeOS network is slow to answer right now. Trying again${gx.fails > 3 ? ' (attempt ' + gx.fails + ')' : ''}…</div>`; return; }
   const s = D.s, gate = gxGate(), online = s.online, [chance, mult] = gxOdds();
   const st0 = Number(gx.stake) || 0, maxS = fl(D.maxS, 18), minB = fl(D.minB, 18), win = st0 * mult;
   $('gxStatus').textContent = online ? `house online · bankroll ${sxNum(fl(s.bankroll, 18))} DOGE` : 'house offline: bets paused';
