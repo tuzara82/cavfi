@@ -1019,7 +1019,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     <div class="more-grid">
       <button data-tb="home"><span>🏠</span>Home</button><button data-tb="swap"><span>⇄</span>Swap</button><button data-tb="liq"><span>💧</span>Liquidity</button>
       <button data-tb="farm"><span>🌾</span>Farms</button><button data-tb="launch"><span>🚀</span>Launch</button><a href="arena.html"><span>🏟️</span>Arena</a>
-      <button data-tb="predict"><span>🔮</span>Predict</button><button data-tb="games"><span>🎲</span>Games</button><button data-tb="hunt"><span>🗝️</span>Treasure hunt</button><button data-tb="nft"><span>👑</span>NFTs</button>
+      <button data-tb="predict"><span>🔮</span>Predict</button><button data-tb="games"><span>🎲</span>Games</button><button data-tb="hunt"><span>🗝️</span>Treasure hunt</button><button data-tb="spin"><span>🎁</span>Free spin</button><button data-tb="nft"><span>👑</span>NFTs</button>
       <button data-tb="names"><span>🏷️</span>Names</button><button data-tb="board"><span>🏆</span>Leaderboards</button><button data-tb="stats"><span>📊</span>Stats</button>
       <button data-tb="faucet"><span>🚰</span>Faucet</button><button data-tb="portfolio"><span>💼</span>Portfolio</button><button data-tb="help"><span>❓</span>How it works</button>
     </div>
@@ -1108,6 +1108,11 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 9l2.5-5 3 3.5L12 3l1.5 4.5 3-3.5L19 9z"/><rect x="4" y="11" width="16" height="10" rx="3"/></svg></span>
         <b>Cavaliers NFT</b><small>Mint a crowned Cavalier with on-chain art, then stake it to earn KingS.</small>
         <span class="hm-fig"><span>Minted</span><strong id="hmFigNft">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </button>
+      <button class="hm-card" data-tb="spin">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg></span>
+        <b>Free daily spin</b><small>One free spin of the Royal Wheel a day. Every spin wins KingS, up to 50,000.</small>
+        <span class="hm-fig"><span>Spins so far</span><strong id="hmFigSpin">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
       </button>
       <button class="hm-card" data-tb="hunt">
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><path d="M11 11l9 9M16 16l2-2M18.5 18.5l2-2"/></svg></span>
@@ -1433,6 +1438,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <details><summary>What is "Guess the DOGE price"?</summary><p>A free daily game on <a href="#guess">Predict → Free guess</a>: until 18:00 UTC, each wallet can lock one guess of the DOGE price at 20:00 UTC. The answer is RedStone's DOGE/USD price feed on DogeOS at 20:00 UTC: after 20:00 anyone can settle the day (the CavFi bot usually does), the contract reads the feed itself, and the closest guess wins the day's KingS prize; on a tie the earlier guess wins. Nothing is staked, you only pay gas. Each guess is worth 20 leaderboard points and the day's winner gets 300.</p></details>
         <details><summary>What are Callouts?</summary><p>On any Launchpad token page you can press <b>Call it</b> to put your name on the token at today's price. The callout is saved on-chain (free, you only pay gas), and everyone can see how many times the token has grown since: 2×, 10×… One callout per token, up to 3 a day. Each callout is worth 20 leaderboard points, and one that is 2× or more after at least an hour earns 100 more (Leaderboards → Callers). A callout is a public record of who spotted a token early, not financial advice.</p></details>
         <details><summary>How do the games work?</summary><p>On <a href="#games" data-goview="games">Games</a> you bet test DOGE in six games: Coin Flip pays 1.96× on the right side; Dice lets you pick a number and roll under or over it (98 ÷ winning numbers out of 100); Limbo pays the multiplier you aim for if the crash multiplier reaches it; the Royal Wheel has 20 segments up to 5×; Plinko drops a ball through 8 rows of pegs into multipliers up to 29×; Higher or Lower draws the next card after yours. Bets are grouped in 30-second rounds. Long before a round opens, the CavFi bot (the house) has locked that round's secret seed on-chain as part of a hash chain, so it cannot change it and nobody can know it. When the round closes it reveals the seed and the contract rolls every bet: keccak256(seed, bet id) mod 100 + 1. Rounds are revealed in order; if the house is more than an hour late, you can claim your bet as a win. House edge 2%. Each bet of 0.5 DOGE or more is worth 5 leaderboard points, 10 more if it wins (Leaderboards → Games).</p></details>
+        <details><summary>What is the free Royal Spin?</summary><p>On <a href="#spin">Games → Free spin</a> every wallet gets one free spin of the Royal Wheel per UTC day. Every spin wins KingS, from 500 up to the 👑 50,000 KingS crown; you only pay gas. The result uses the same commit-reveal as the games, and each spin is worth 10 leaderboard points.</p></details>
         <details><summary>What is the Royal Treasure Hunt?</summary><p>On <a href="#hunt">Games → Treasure hunt</a> you get a few riddles whose answers are hidden around CavFi: on the Launchpad, in the FAQ, in the games, in the NFTs. Type an answer and the page tells you at once if it is right (only a hash of each answer is on-chain). Then claim it with two transactions, a hidden commitment and the answer, so nobody can copy you. The first 3 wallets to solve every riddle win 50% / 30% / 20% of the KingS prize, paid at once, and every solve earns leaderboard points.</p></details>
         <details><summary>What are the hourly markets?</summary><p>Every hour the CavFi bot opens a quick "up or down" market: will DOGE be higher at the end of the hour than at its start? The line is DOGE's price at the start of the hour, bets close 10 minutes before the end, and if the price is exactly the same, NO wins. Only bets of 100 KingS or more earn leaderboard points.</p></details>
         <details><summary>Who decides the price?</summary><p><b>RedStone</b>, a decentralized oracle. Daily and weekly markets and the free daily guess are decided by RedStone's DOGE/USD price feed on DogeOS: after the resolve time anyone can resolve a market, the contract reads the feed itself, and if the feed's last update is at or before that moment, that value is RedStone's on-chain price then. The feed updates when DOGE moves 0.5% or at least every 24 hours; if it has already updated past the resolve time when someone resolves, that price is gone and the market refunds after a day. Hourly "up or down" markets, when they run, use RedStone's signed price for the exact second. Nobody, CavFi included, can choose the price, and each market has one fixed source. The CavFi bot opens the markets and usually resolves them within a minute. Markets marked v1 or v2 were opened before an upgrade and finish their own way.</p></details>
@@ -1480,7 +1486,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
   <!-- ===================== GAMES ===================== -->
   <div class="view" id="viewGames" hidden>
     <div class="sx-bar">
-      <div class="chips" id="gxTabs" role="group" aria-label="Game"><button class="chip" data-t="coin" aria-pressed="true">🪙 Coin Flip</button><button class="chip" data-t="dice" aria-pressed="false">🎲 Dice</button><button class="chip" data-t="limbo" aria-pressed="false">🚀 Limbo</button><button class="chip" data-t="wheel" aria-pressed="false">🎡 Wheel</button><button class="chip" data-t="plinko" aria-pressed="false">🔻 Plinko</button><button class="chip" data-t="hilo" aria-pressed="false">🃏 Hi-Lo</button><button class="chip" data-t="hunt" aria-pressed="false">🗝️ Treasure hunt</button></div>
+      <div class="chips" id="gxTabs" role="group" aria-label="Game"><button class="chip" data-t="spin" aria-pressed="false">🎁 Free spin</button><button class="chip" data-t="coin" aria-pressed="true">🪙 Coin Flip</button><button class="chip" data-t="dice" aria-pressed="false">🎲 Dice</button><button class="chip" data-t="limbo" aria-pressed="false">🚀 Limbo</button><button class="chip" data-t="wheel" aria-pressed="false">🎡 Wheel</button><button class="chip" data-t="plinko" aria-pressed="false">🔻 Plinko</button><button class="chip" data-t="hilo" aria-pressed="false">🃏 Hi-Lo</button><button class="chip" data-t="hunt" aria-pressed="false">🗝️ Treasure hunt</button></div>
       <span class="sx-status" id="gxStatus" aria-live="polite"></span>
     </div>
     <div class="pr-body" id="gxBody"></div>
@@ -1649,7 +1655,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <script src="rpc-batch.js?v=1"></script>
-<script src="quests-rules.js?v=8"></script>
+<script src="quests-rules.js?v=9"></script>
 <script src="redstone-payload.js?v=2"></script>
 <script>
 (() => {
@@ -1657,7 +1663,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { hunt:'', games:'', gamesV1:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 /* WalletConnect (any mobile wallet by QR code). Free project id from https://cloud.reown.com,
    with cavfi.com in its allowed domains. Empty = the option is hidden. */
@@ -1670,7 +1676,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = window.CavRpc ? CavRpc.make(E, A.rpc || NET.add.rpcUrls[0], CHAIN_ID) : new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { hunt:'', games:'', gamesV1:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -1826,6 +1832,9 @@ function errMsg(e){
   if (/user rejected|denied|4001/i.test(m)) return 'You rejected the request in your wallet.';
   if (/wait 1 hour/.test(m)) return 'You already claimed in the last hour. Try again later.';
   if (/INSUFFICIENT_OUTPUT_AMOUNT|INSUFFICIENT_[AB]_AMOUNT/.test(m)) return 'Price moved beyond your slippage tolerance. Raise slippage or try again.';
+  if (/Spin: one spin a day/.test(m)) return 'You already spun today. Come back after midnight UTC.';
+  if (/Spin: prize fund empty/.test(m)) return 'The wheel\'s prize fund is being refilled. Try again later.';
+  if (/Spin: house offline|Spin: round\b/.test(m)) return 'The wheel is catching up on rounds. Try again in a minute.';
   if (/Games: house offline/.test(m)) return 'The house is catching up on rounds. Bets reopen in a minute.';
   if (/Games: bankroll/.test(m)) return 'The bankroll cannot cover that bet right now. Lower the stake.';
   if (/Games: round full/.test(m)) return 'This round is full (40 bets). Try again in a few seconds.';
@@ -2120,6 +2129,9 @@ function setView(v){
   } else if (v === 'predict'){
     $('ledeH').innerHTML = 'Call the <em>DOGE</em> price.';
     $('ledeP').textContent = 'YES or NO markets on the real DOGE price, and one-on-one Arena duels with friends. Played with testnet KingS.';
+  } else if (v === 'games' && gx.tab === 'spin'){
+    $('ledeH').innerHTML = 'Spin the royal <em>wheel</em>.';
+    $('ledeP').textContent = 'One free spin a day for every wallet. Every spin wins KingS, up to the 50,000 KingS crown. No stake, you only pay gas. Testnet, no real value.';
   } else if (v === 'games' && gx.tab === 'hunt'){
     $('ledeH').innerHTML = 'Hunt the royal <em>treasure</em>.';
     $('ledeP').textContent = 'Five riddles, answers hidden all around CavFi. Be one of the first three to solve them all and win KingS. Testnet, no real value.';
@@ -2160,12 +2172,12 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? (gx.tab === 'hunt' ? '#hunt' : '#games') : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#predict') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? (gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : '#games') : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#predict') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
   if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
-  if (v === 'home'){ loadHomeGuess(); loadHomeExtra(); loadOnboarding(); nfHomeFig(); gxHomeFig(); loadGm(); loadQuests(); loadRaffle(); loadFeed(); renderInviteCard(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
+  if (v === 'home'){ loadHomeGuess(); loadHomeExtra(); loadOnboarding(); nfHomeFig(); gxHomeFig(); spHomeFig(); loadGm(); loadQuests(); loadRaffle(); loadFeed(); renderInviteCard(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
   if (v === 'portfolio') loadPortfolio();
   if (v === 'faucet') loadFaucet();
   if (v === 'nft') loadNft();
@@ -2178,7 +2190,7 @@ function setView(v){
 document.addEventListener('click', e => { const b = e.target.closest('[data-tb]'); if (!b) return; const t = b.dataset.tb;
   if (t === 'more'){ $('moreSheet').hidden = false; return; }
   if (t === 'close'){ $('moreSheet').hidden = true; return; }
-  $('moreSheet').hidden = true; if (t === 'predict'){ pr.hl = null; pr.hlm = null; } if (t === 'hunt'){ gx.tab = 'hunt'; setView('games'); } else setView(t); window.scrollTo({top: 0}); });
+  $('moreSheet').hidden = true; if (t === 'predict'){ pr.hl = null; pr.hlm = null; } if (t === 'hunt' || t === 'spin'){ gx.tab = t; setView('games'); } else setView(t); window.scrollTo({top: 0}); });
 $('moreSheet').addEventListener('click', e => { if (e.target.id === 'moreSheet') $('moreSheet').hidden = true; });
 document.querySelectorAll('header nav button').forEach(b => b.addEventListener('click', () => { if (b.dataset.view === 'predict'){ pr.hl = null; pr.hlm = null; } setView(b.dataset.view); }));
 document.addEventListener('click', e => { const a = e.target.closest('[data-goview]'); if (!a) return; e.preventDefault(); setView(a.dataset.goview); window.scrollTo({top:0, behavior:'smooth'}); });
@@ -2190,7 +2202,7 @@ window.addEventListener('hashchange', () => { const h = location.hash, m = h.mat
   else if (u){ if (st.view !== 'profile' || u[1].toLowerCase() !== up.id) openProfile(u[1]); }
   else if (h === '#u'){ up.id = ''; setView('profile'); }
   else if (h === '#predict' || h === '#duels' || h === '#guess' || DUEL_HASH.test(h) || MKT_HASH.test(h)) routePredict(h);
-  else if (h === '#games' || h === '#hunt'){ gx.tab = h === '#hunt' ? 'hunt' : gx.tab === 'hunt' ? 'coin' : gx.tab; setView('games'); }
+  else if (h === '#games' || h === '#hunt' || h === '#spin'){ gx.tab = h === '#hunt' ? 'hunt' : h === '#spin' ? 'spin' : (gx.tab === 'hunt' || gx.tab === 'spin') ? 'coin' : gx.tab; setView('games'); }
   else if (h === '#faq') setView('help'); });
 
 /* ================= price guard =================
@@ -3586,6 +3598,9 @@ async function loadBoard(){
         else if (w(2) !== 0n){ r.gxPaid = (r.gxPaid || 0) + fl(w(2), 18); if (l.topics[0] === GX_SETTLED || w(2) > 0n){ r.gxWins = (r.gxWins || 0) + 1; r.gxPts = (r.gxPts || 0) + 10; } } }
       for (const r of Object.values(P)) if (r.gxBets) r.gxNet = (r.gxPaid || 0) - (r.gxStaked || 0);
     }catch(e){} }
+    if (A.spin){ try{   // free daily spin: 10 points a spin
+      for (const l of await winLogs(A.spin, [SP_SPUN])){ const r = row(lk('0x' + l.topics[2].slice(26))); r.spins = (r.spins || 0) + 1; }
+    }catch(e){} }
     if (A.hunt){ try{   // treasure hunt: 200 / 150 / 100 for the first three to crack a riddle, 20 after; 300 for finishing
       for (const l of await winLogs(A.hunt, [HN_SOLVED, HN_FINISHED])){ const r = row(lk('0x' + l.topics[2].slice(26))), w = i => Number(BigInt('0x' + l.data.slice(2 + 64 * i, 66 + 64 * i)));
         if (l.topics[0] === HN_SOLVED){ const o = w(1); r.hnPts = (r.hnPts || 0) + (o === 1 ? 200 : o === 2 ? 150 : o === 3 ? 100 : 20); r.hnSolved = (r.hnSolved || 0) + 1; }
@@ -3596,7 +3611,7 @@ async function loadBoard(){
     }catch(e){} }
     if (A.bot) delete P[lk(A.bot)];   // the CavFi bot's own trades and tips don't count
     const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.quests * 20 + r.launches * 100 + r.grads * 500
-      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100 + (r.spook || 0) * 500 + (r.gxPts || 0) + (r.hnPts || 0);
+      + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100 + (r.spook || 0) * 500 + (r.gxPts || 0) + (r.hnPts || 0) + (r.spins || 0) * 10;
     let refMap = {}; try{ refMap = await loadRefMap(); }catch(e){}
     for (const r of Object.values(P)){ const by = refMap[r.addr]; if (by){ const x = row(by); x.refPts = (x.refPts || 0) + base(r) * 0.25; x.invites = (x.invites || 0) + 1; } }
     board.rows = Object.values(P).map(r => ({...r, refPts: Math.round(r.refPts || 0), pts: Math.round(base(r) + (r.refPts || 0))}))
@@ -3612,7 +3627,7 @@ async function loadBoard(){
   if (st.view === 'profile') renderProfile();
 }
 const LB_TABS = {
-  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · 20 per callout, 100 more when a callout is 2× or more after an hour · 5 per Coin Flip or Dice bet of 0.5+ DOGE, 10 more per win · Treasure hunt: 200 / 150 / 100 for the first three to crack a riddle, 20 after, 300 for finishing · 500 for the Spooktober 2026 badge · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
+  pts:   {key: r => r.pts, legend: '1 point per $1 swapped · 1 per $1 traded on the launchpad · 1 per 1,000 KingS staked in the Arena · 100 per Arena round won · 10 per gm or gn · 20 per daily quest · 100 per token launched · 500 more when it graduates · 30 per DOGE market backed with 100+ KingS, 50 more per right call · 50 per duel played, 50 more per duel won · 20 per free DOGE guess, 300 for the closest guess of the day · 20 per callout, 100 more when a callout is 2× or more after an hour · 5 per Coin Flip or Dice bet of 0.5+ DOGE, 10 more per win · 10 per free daily spin · Treasure hunt: 200 / 150 / 100 for the first three to crack a riddle, 20 after, 300 for finishing · 500 for the Spooktober 2026 badge · +25% of the points of everyone you invited', val: r => r.pts.toLocaleString('en-US') + ' pts'},
   swap:  {key: r => r.swapUsd, legend: 'Ranked by swap volume, valued at today\'s CavFi pool prices.', val: r => sxUsd(r.swapUsd)},
   arena: {key: r => r.arenaWins * 1e12 + r.arenaK, legend: 'Ranked by Arena rounds won, then by KingS staked.', val: r => r.arenaWins ? `${r.arenaWins} 🏆` : sxNum(r.arenaK) + ' KingS'},
   quest: {key: r => r.quests * 2 + r.gms, legend: 'Ranked by daily quests done (recorded by the bot after each day), then by gm and gn.', val: r => `${r.quests} quests`},
@@ -6454,8 +6469,8 @@ async function loadFeed(){
   FD.loading = true;
   try{
     const rp = RP(), head = await rp.getBlockNumber(), hb = await rp.getBlock(head), bt = sx.bt || 3;
-    const addrs = [A.arena, A.predict, A.predictV2, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV2, A.guessV1, A.callouts, A.games, A.gamesV1, A.hunt].filter(Boolean);
-    const topics = [HN_SOLVED, HN_FINISHED, GX_SETTLED, GX2_SETTLED, CO_CALLED, GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
+    const addrs = [A.arena, A.predict, A.predictV2, A.predictV1, A.duel, A.launch, A.names, A.nft, A.guess, A.guessV2, A.guessV1, A.callouts, A.games, A.gamesV1, A.hunt, A.spin].filter(Boolean);
+    const topics = [SP_LANDED, HN_SOLVED, HN_FINISHED, GX_SETTLED, GX2_SETTLED, CO_CALLED, GS_GUESSED, FD_T.arStaked, FD_T.arClaimed, PR_BET, PR_CLAIMED, DU_CREATED, DU_ACCEPTED, DU_SETTLED, FD_T.launched, FD_T.graduated, FD_T.registered, FD_T.minted];
     const logs = [];
     for (let z = head; z > head - 20000 && z > 0; z -= SX_CHUNK){
       const a = Math.max(0, z - SX_CHUNK + 1);
@@ -6489,6 +6504,8 @@ async function loadFeed(){
         else if (A0 === lk(A.launch) && t0 === FD_T.launched){ const tok = topic1a(l), who = topic2(l);
           const sym = E.utils.defaultAbiCoder.decode(['string', 'string', 'uint256'], l.data)[1];
           items.push({...base, who, ic: '🚀', txt: `launched <b>$${esc(sym)}</b> on the Launchpad`, href: '#t/' + E.utils.getAddress(tok)}); }
+        else if (A.spin && A0 === lk(A.spin) && t0 === SP_LANDED){ const seg = Number(n(l, 0)); if (seg > 19 || SPIN_SEG[seg] < 50) continue;
+          items.push({...base, who: topic2(l), ic: SPIN_SEG[seg] >= 500 ? '👑' : '🎁', txt: `${SPIN_SEG[seg] >= 500 ? 'hit the jackpot on' : 'won big on'} the free Royal Spin: <b>${sxNum(Number(n(l, 1)) / 1e18)} KingS</b>`, href: '#spin'}); }
         else if (A.hunt && A0 === lk(A.hunt) && t0 === HN_SOLVED){ const o = Number(n(l, 1)); if (o > 3) continue;
           items.push({...base, who: topic2(l), ic: '🗝️', txt: `was the ${ord(o)} to crack riddle ${Number(n(l, 0)) + 1} of the Royal Treasure Hunt`, href: '#hunt'}); }
         else if (A.hunt && A0 === lk(A.hunt) && t0 === HN_FINISHED){ const pl = Number(n(l, 0)); if (pl > 3) continue;
@@ -6566,7 +6583,7 @@ const GX_WHEEL = [120, 0, 150, 0, 120, 0, 200, 0, 120, 0, 500, 0, 120, 0, 150, 0
 const GX_PLINKO = [[560, 210, 110, 100, 46, 100, 110, 210, 560], [1300, 300, 126, 70, 40, 70, 126, 300, 1300], [2900, 400, 145, 30, 20, 30, 145, 400, 2900]];
 const GX_RISK = ['Low', 'Medium', 'High'];
 const GX_CARD = c => ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'][c] || '?';
-const gx = {tab: location.hash === '#hunt' ? 'hunt' : 'coin', side: 0, target: 50, over: true, limbo: '2.00', risk: 1, hiDir: 1, card: 0, stake: '1', busy: false, data: null, live: null, names: {}, timer: null};
+const gx = {tab: location.hash === '#hunt' ? 'hunt' : location.hash === '#spin' ? 'spin' : 'coin', side: 0, target: 50, over: true, limbo: '2.00', risk: 1, hiDir: 1, card: 0, stake: '1', busy: false, data: null, live: null, names: {}, timer: null};
 const gxLimboT = () => { const v = Math.round(Number(String(gx.limbo).replace(',', '.')) * 100); return isFinite(v) ? v : 0; };
 /* [winning chance %, payout multiplier] of the current choice (Wheel and Plinko: the top multiplier) */
 function gxOdds(){
@@ -6596,6 +6613,7 @@ const gxNm = a => gx.names[lk(a)] || short(a);
 const gxRow = (it, id) => ({id: Number(id), player: it.player, stake: it.stake, round: Number(it.round), game: Number(it.game), pick: Number(it.pick), over: it.over, card: Number(it.card), result: Number(it.result), status: Number(it.status), payout: it.payout, placedAt: Number(it.placedAt)});
 async function loadGames(){
   if (gx.tab === 'hunt') return loadHunt();
+  if (gx.tab === 'spin') return loadSpin();
   if (!A.games){ gx.data = {none: true}; return renderGames(); }
   try{
     const c = gxC(), s = await c.stats();
@@ -6695,6 +6713,7 @@ function renderGames(){
   const box = $('gxBody'); if (!box) return;
   document.querySelectorAll('#gxTabs .chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.t === gx.tab)));
   if (gx.tab === 'hunt') return renderHunt();
+  if (gx.tab === 'spin') return renderSpin();
   const D = gx.data;
   if (!D){ box.innerHTML = '<div class="empty-card">Reading the games…</div>'; return; }
   if (D.none){ box.innerHTML = '<div class="empty-card">CavFi Games are not deployed on this network yet. Coming very soon.</div>'; return; }
@@ -6759,7 +6778,7 @@ async function gxWatch(id){
 }
 document.addEventListener('click', async e => {
   const t = e.target.closest('#gxTabs .chip');
-  if (t){ gx.tab = t.dataset.t; gx.live = null; try{ history.replaceState(null, '', gx.tab === 'hunt' ? '#hunt' : '#games'); }catch(_){} setView('games'); return; }
+  if (t){ gx.tab = t.dataset.t; gx.live = null; try{ history.replaceState(null, '', gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : '#games'); }catch(_){} setView('games'); return; }
   const b = e.target.closest('[data-gx]'); if (!b) return;
   const a = b.dataset.gx;
   if (a === 'gate'){ const g = gxGate(); if (g && g.act) g.act(); return; }
@@ -6793,6 +6812,101 @@ document.addEventListener('click', async e => {
     loadGames();
   }catch(err){ gx.busy = false; toast(errMsg(err), 'bad', 8000); renderGames(); }
 });
+
+/* ================= Royal Spin: one free spin a day =================
+   KingSpin: same hash-chain commit-reveal as the games. Every spin wins KingS: 20 segments in prize units. */
+const SPIN_SEG = [5, 10, 25, 5, 50, 10, 5, 100, 10, 25, 5, 500, 10, 25, 5, 50, 10, 5, 25, 10];
+const SPIN_T = 'tuple(address player, uint32 round, uint32 day, uint8 segment, uint8 status, uint96 prize, uint40 at)';
+const SPIN_ABI = ['function spin() returns (uint256)', 'function canSpin(address) view returns (bool)', 'function houseOnline() view returns (bool)', 'function unit() view returns (uint256)',
+  'function free() view returns (uint256)', 'function count() view returns (uint256)', 'function totalPaid() view returns (uint256)', 'function claimTimeout(uint256 id)',
+  `function get(uint256) view returns (${SPIN_T})`, `function page(uint256 start, uint256 n) view returns (uint256[] ids, ${SPIN_T}[] items)`,
+  `function pageOf(address who, uint256 start, uint256 n) view returns (uint256[] ids, ${SPIN_T}[] items)`,
+  'event Spun(uint256 indexed id, address indexed player, uint256 round)', 'event Landed(uint256 indexed id, address indexed player, uint8 segment, uint256 prize)'];
+const SP_LANDED = E.utils.id('Landed(uint256,address,uint8,uint256)'), SP_SPUN = E.utils.id('Spun(uint256,address,uint256)');
+const spC = signer => new E.Contract(A.spin, SPIN_ABI, signer ? st.signer : RP());
+const sp = {data: null, live: null, busy: false};
+const spK = (units, unit) => { const v = units * unit; return v >= 1000 ? (v / 1000).toLocaleString('en-US', {maximumFractionDigits: 1}) + 'k' : String(v); };
+const spRow = (it, id) => ({id: Number(id), player: it.player, round: Number(it.round), segment: Number(it.segment), status: Number(it.status), prize: it.prize, at: Number(it.at)});
+async function loadSpin(){
+  if (!A.spin){ sp.data = {none: true}; return renderGames(); }
+  try{
+    const c = spC();
+    const [n, paid, unit, online, freeK, recent, mine, can] = await Promise.all([c.count(), c.totalPaid(), c.unit(), c.houseOnline(), c.free(), c.page(0, 10),
+      st.account ? c.pageOf(st.account, 0, 5) : null, st.account ? c.canSpin(st.account) : true]);
+    sp.data = {n: n.toNumber(), paid, unit: fl(unit, 18), online, empty: freeK.lt(unit.mul(500)), recent: recent.ids.map((id, k) => spRow(recent.items[k], id)), mine: mine ? mine.ids.map((id, k) => spRow(mine.items[k], id)) : [], can};
+    const who = [...new Set(sp.data.recent.map(b => lk(b.player)))].filter(a => gx.names[a] == null);
+    if (A.names && who.length){ try{ const ns = await nmC().namesOf(who); who.forEach((a, k) => gx.names[a] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
+  }catch(e){ if (!sp.data || sp.data.err) sp.data = {err: true}; }
+  renderGames();
+  clearTimeout(gx.timer);
+  if (st.view === 'games' && gx.tab === 'spin') gx.timer = setTimeout(() => { if (st.view === 'games' && gx.tab === 'spin' && !sp.busy && !(sp.live && sp.live.anim)) loadSpin(); }, sp.data && sp.data.err ? 4000 : 20000);
+}
+function spWheel(unit, rot){
+  const segs = SPIN_SEG.map((m, i) => {
+    const a0 = (i * 18 - 90) * Math.PI / 180, a1 = ((i + 1) * 18 - 90) * Math.PI / 180, r = 96;
+    const p = `M100 100 L${(100 + r * Math.cos(a0)).toFixed(2)} ${(100 + r * Math.sin(a0)).toFixed(2)} A${r} ${r} 0 0 1 ${(100 + r * Math.cos(a1)).toFixed(2)} ${(100 + r * Math.sin(a1)).toFixed(2)} Z`;
+    const col = m >= 500 ? '#E7B73C' : m >= 100 ? '#D46A38' : m >= 50 ? '#A3461E' : m >= 25 ? '#7A3A1C' : m >= 10 ? 'var(--chestnut-soft)' : 'var(--well)';
+    const am = (i * 18 + 9 - 90) * Math.PI / 180, tx = 100 + 68 * Math.cos(am), ty = 100 + 68 * Math.sin(am);
+    return `<path d="${p}" fill="${col}" stroke="var(--surface)" stroke-width="1.5"/><text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" transform="rotate(${i * 18 + 9} ${tx.toFixed(1)} ${ty.toFixed(1)})" text-anchor="middle" dominant-baseline="middle" font-size="${m >= 500 ? 11 : 9.5}" font-weight="800" fill="${m >= 25 ? '#FFF8EE' : 'var(--ink)'}">${m >= 500 ? '👑' : ''}${spK(m, unit)}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 200 200" class="gx-wheel-svg" aria-hidden="true"><g class="gx-wheel-rot" id="spWheelRot"${rot != null ? ` style="transform:rotate(${rot}deg)"` : ''}>${segs}<circle cx="100" cy="100" r="16" fill="var(--surface)" stroke="#E7B73C" stroke-width="3"/><text x="100" y="101" text-anchor="middle" dominant-baseline="middle" font-size="14">🎁</text></g></svg>`;
+}
+function renderSpin(){
+  const box = $('gxBody'), D = sp.data;
+  $('gxStatus').textContent = '';
+  if (!D){ box.innerHTML = '<div class="empty-card">Reading the wheel…</div>'; return; }
+  if (D.none){ box.innerHTML = '<div class="empty-card">The free Royal Spin opens very soon.</div>'; return; }
+  if (D.err){ box.innerHTML = '<div class="empty-card">The DogeOS network is slow to answer right now. Trying again…</div>'; return; }
+  const L = sp.live, done = L && L.done && !L.anim, spin = L && !L.done, gate = gxGate();
+  $('gxStatus').textContent = D.online ? `house online · ${D.n} spins · ${sxNum(fl(D.paid, 18))} KingS won` : 'house offline: spins paused';
+  const nextDay = (Math.floor(Date.now() / 86400000) + 1) * 86400 - Math.floor(Date.now() / 1000);
+  const btn = gate ? `<button class="btn primary" data-sp="gate">${gate.label}</button>`
+    : !D.online ? '<button class="btn primary" disabled>House offline</button>'
+    : D.empty ? '<button class="btn primary" disabled>The prize fund is being refilled</button>'
+    : L && !L.done ? '<button class="btn primary" disabled>Spinning…</button>'
+    : !D.can || (L && L.done) ? `<button class="btn primary" disabled>Next free spin in ${inT(nextDay)}</button>`
+    : `<button class="btn primary" data-sp="spin" ${sp.busy ? 'disabled' : ''}>${sp.busy ? 'Waiting for the wallet…' : '🎁 Spin for free'}</button>`;
+  const res = done ? `<p class="gx-res win">${L.s.status === 3 ? 'The house was late, so you get the crown: ' : SPIN_SEG[L.s.segment] >= 500 ? '👑 JACKPOT! ' : 'You won '}${sxNum(fl(L.s.prize, 18))} KingS!</p>` : spin ? `<p class="gx-res">${L.msg || 'Spinning… the round closes and the house reveals the seed in about a minute.'}</p>` : L && L.anim ? '<p class="gx-res">&nbsp;</p>' : '';
+  const row = b => `<div class="du-row${st.account && same(b.player, st.account) ? ' me' : ''}"><div><a href="#u/${esc(gx.names[lk(b.player)] || b.player)}"><b>${esc(gxNm(b.player))}</b></a>
+      <small>${b.status === 1 ? 'spinning…' : `won ${sxNum(fl(b.prize, 18))} KingS`}</small></div><span class="gx-tag ${b.status === 1 ? 'wait' : 'win'}">${b.status === 1 ? 'spinning' : SPIN_SEG[b.segment] >= 500 ? '👑 jackpot' : 'won'}</span></div>`;
+  box.innerHTML = `<section class="sx-card gx-play"><div class="sx-head"><h2>🎁 Royal Spin</h2><span>free once a day · every spin wins</span></div>
+      <div class="gx-stage"><div class="gx-stage-in"><div class="gx-wheel${spin ? ' spin' : ''}"><i class="gx-pointer" aria-hidden="true"></i>${spWheel(D.unit, done ? -(L.s.segment * 18 + 9) : null)}</div>${res}</div></div>
+      <p class="pr-note">20 segments: ${spK(5, D.unit)} to ${spK(100, D.unit)} KingS, and one 👑 ${spK(500, D.unit)} KingS crown. One spin per wallet per UTC day, no stake: you only pay gas.</p>
+      ${btn}</section>
+    <section class="sx-card"><div class="sx-head"><h2>Latest spins</h2></div>${D.recent.length ? D.recent.map(row).join('') : '<div class="empty-card">No spins yet. Be the first today.</div>'}</section>
+    <section class="sx-card"><div class="sx-head"><h2>How it is fair</h2></div><p class="pr-note">The same commit-reveal as CavFi Games: long before a 30-second round opens, the house (the CavFi bot) has locked its secret seed on-chain as part of a hash chain. When the round closes it reveals the seed and the contract stops every spin of the round on segment keccak256(seed, spin id) mod 20, then pays the KingS straight to your wallet. Rounds are revealed in order; if the house is more than an hour late, the spin can be claimed at the 👑 top prize. Prizes come from the wheel's KingS fund. Testnet KingS, no real value.</p></section>`;
+}
+async function spAnimate(s){
+  sp.live = {done: true, s, anim: true}; renderGames();
+  const g = $('spWheelRot');
+  if (g){ g.style.transition = 'none'; g.style.transform = 'rotate(0deg)'; await new Promise(r => setTimeout(r, 30));
+    g.style.transition = 'transform 3.4s cubic-bezier(.12,.75,.15,1)'; g.style.transform = `rotate(${360 * 6 - (s.segment * 18 + 9)}deg)`; await new Promise(r => setTimeout(r, 3500)); }
+  sp.live = {done: true, s}; renderGames();
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-sp]'); if (!b) return;
+  if (b.dataset.sp === 'gate'){ const g = gxGate(); if (g && g.act) g.act(); return; }
+  if (b.dataset.sp !== 'spin' || sp.busy) return;
+  sp.busy = true; sp.live = null; renderGames();
+  try{
+    const tx = await sendTx(() => spC(true).spin(), 'Spinning…', () => {});
+    const rc = await st.provider.getTransactionReceipt(tx.hash), iface = new E.utils.Interface(SPIN_ABI);
+    let id = null; for (const l of rc.logs){ try{ const ev = iface.parseLog(l); if (ev.name === 'Spun') id = ev.args.id.toNumber(); }catch(_){} }
+    sp.busy = false;
+    if (id == null){ toast(`Spun. ${txLink(tx.hash)}`, 'ok'); return loadSpin(); }
+    sp.live = {done: false, id}; renderGames();
+    for (let k = 0; k < 120; k++){
+      await new Promise(r => setTimeout(r, 3000));
+      try{ try{ RP().clearCache(); }catch(_){} const s = spRow(await spC().get(id), id);
+        if (s.status !== 1){ await spAnimate(s); if (SPIN_SEG[s.segment] >= 100) celebrate($('gxBody'), 40); else celebrate($('gxBody'), 16); break; }
+        const left = (s.round + 1) * 30 - Math.floor(Date.now() / 1000);
+        sp.live.msg = left > 0 ? `Round closes in ${left}s, then the house reveals the seed…` : 'Round closed. Waiting for the house to reveal the seed…'; renderGames();
+      }catch(_){}
+    }
+    loadSpin();
+  }catch(err){ sp.busy = false; toast(errMsg(err), 'bad', 8000); renderGames(); }
+});
+async function spHomeFig(){ const f = $('hmFigSpin'); if (!f) return; if (!A.spin){ f.textContent = 'soon'; return; } try{ f.textContent = sxNum((await spC().count()).toNumber()); }catch(e){} }
 
 /* ================= Royal Treasure Hunt =================
    KingHunt keeps only hashes of the answers: key = keccak256(huntId, clue, normalized answer). The page checks an answer
@@ -7060,7 +7174,7 @@ paintTheme();
   if (upPath || upHash){ up.id = (upPath || upHash)[1].toLowerCase(); setView('profile'); if (upPath) try{ history.replaceState(null, '', '/#u/' + up.id); }catch(e){} }
   else if (location.hash === '#predict' || location.hash === '#duels' || location.hash === '#guess' || DUEL_HASH.test(location.hash) || MKT_HASH.test(location.hash)) routePredict(location.hash);
   else if (location.hash === '#u') setView('profile');
-  else setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#leaderboard' ? 'board' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#games' || location.hash === '#hunt' ? 'games' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
+  else setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#leaderboard' ? 'board' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#games' || location.hash === '#hunt' || location.hash === '#spin' ? 'games' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
   if (lxDeep) openLaunch(E.utils.getAddress(lxDeep[1].toLowerCase()));
   if (location.hash === '#send') setTimeout(() => { if (st.account) sdOpen(); }, 1500);
   renderShell(); renderSwap(); renderLiq(); renderPools();

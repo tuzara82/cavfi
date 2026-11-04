@@ -146,6 +146,7 @@ const ABI = {
           'function lastRound() view returns (uint256)', 'function lastSeed() view returns (bytes32)', 'function chainLeft() view returns (uint256)',
           'function pendingRounds() view returns (uint256[])', 'function house() view returns (address)', 'function free() view returns (uint256)',
           'event Settled(uint256 indexed id, address indexed player, uint8 roll, bool won, uint256 paid)'],
+  spinev: ['event Landed(uint256 indexed id, address indexed player, uint8 segment, uint256 prize)'],
   games2ev: ['event Settled(uint256 indexed id, address indexed player, uint8 game, uint32 result, uint256 paid)'],
   hunt: ['function count() view returns (uint256)',
          'function get(uint256) view returns (tuple(uint64 start, uint64 end, uint8 clues, uint32 finishers, uint256 prize, uint256 paid, string title) h, string[] clues, bytes32[] answerKeys, uint32[] solvers, address[3] top)',
@@ -1444,11 +1445,11 @@ async function gamesVersion(addr){
 const GAME_NAMES = ['Coin Flip', 'Dice', 'Limbo', 'Royal Wheel', 'Plinko', 'Higher or Lower'];
 let gamesBusy = false, gamesWarnAt = 0, gamesErr = {m: '', at: 0};
 async function gamesKeeper(){
-  if (!CFG.games || !A.games || me === ethers.constants.AddressZero || gamesBusy) return;
+  if (!CFG.games || !(A.games || A.spin) || me === ethers.constants.AddressZero || gamesBusy) return;
   gamesBusy = true;
   try{
     // the old contract only finishes its pending rounds; the current one also gets new chains
-    for (const [addr, current] of [[A.gamesV1, false], [A.games, true]]){
+    for (const [addr, current] of [[A.gamesV1, false], [A.games, true], [A.spin, true]]){
       if (!addr) continue;
       try{ await gamesHouse(addr, current); }
       catch(e){ const m = (e.reason || e.message || '').slice(0, 140); if (m !== gamesErr.m || now() - gamesErr.at > 300){ gamesErr = {m, at: now()}; log(`games ${current ? '' : 'v1 '}:`, m); } }
@@ -1457,7 +1458,7 @@ async function gamesKeeper(){
   finally{ gamesBusy = false; }
 }
 async function gamesHouse(addr, current){
-  const ver = await gamesVersion(addr), tag = ver >= 2 ? `games v${ver}` : 'games';
+  const ver = await gamesVersion(addr), tag = ver >= 3 ? 'spin' : ver >= 2 ? `games v${ver}` : 'games';
   const g = new ethers.Contract(addr, ABI.games, wallet);
   let [n, lastRound, lastSeed, left, pend] = await Promise.all([g.anchors(), g.lastRound(), g.lastSeed(), g.chainLeft(), g.pendingRounds()]);
   n = n.toNumber(); lastRound = lastRound.toNumber(); left = left.toNumber();
@@ -1480,6 +1481,18 @@ async function gamesHouse(addr, current){
   if (t < (r + 1) * 30) return;
   const tx = await send(`${tag} reveal round ${r}`, () => g.reveal(gamesSeed(c, left - (r - lastRound))));
   if (!tx) return;
+  if (ver >= 3){   // Royal Spin: KingS prizes; announce the jackpot (segment 11, 500 units)
+    const rc = await provider.getTransactionReceipt(tx.hash), si = new ethers.utils.Interface(ABI.spinev);
+    let n = 0;
+    for (const lg of rc.logs){ try{ const e = si.parseLog(lg); if (e.name !== 'Landed') continue; n++;
+      if (e.args.segment === 11) await tg(`🎡👑 <b>${esc(await labelOf(e.args.player))}</b> hit the <b>jackpot</b> on the free Royal Spin: <b>${fmtN(fl(e.args.prize, 18))} KingS</b>!\n<a href="https://cavfi.com/#spin">Spin for free once a day</a>`); }catch(e){} }
+    log(`${tag}: round ${r} settled, ${n} spins`);
+    if (now() - (state.spinLowAt || 0) > 6 * 3600){
+      const f = fl(await g.free(), 18);
+      if (f < 200000){ state.spinLowAt = now(); saveState(); await tg(`🎡 Royal Spin prize fund is low: ${fmtN(f)} KingS free. Fund it with more KingS to keep the free spins going.`); }
+    }
+    return;
+  }
   const rc = await provider.getTransactionReceipt(tx.hash), iface = new ethers.utils.Interface(ver >= 2 ? ABI.games2ev : ABI.games);
   let w = 0, l = 0, big = null;
   for (const lg of rc.logs){ try{ const e = iface.parseLog(lg); if (e.name !== 'Settled') continue;
@@ -1686,7 +1699,7 @@ async function main(){
   await writeTgJson();
   await setMiniApp();
   await tg(`🐶 <b>CavFi bot started</b>${me !== ethers.constants.AddressZero ? `\nwallet ${short(me)}` : ''}`);
-  log(`games: ${CFG.games && A.games ? `on (house, checks every ${CFG.gamesPollSec}s)` : 'off'}`);
+  log(`games: ${CFG.games && (A.games || A.spin) ? `on (house${A.spin ? " for Games and the Royal Spin" : ""}, checks every ${CFG.gamesPollSec}s)` : 'off'}`);
   if (!CFG.once) gamesLoop();
   else await gamesKeeper();
   let errors = 0;
