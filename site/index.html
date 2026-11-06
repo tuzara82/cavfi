@@ -1830,6 +1830,7 @@ function tokBtn(el, t, label){ el.innerHTML = coin(t)+`<span>${t.symbol}</span>`
 function errMsg(e){
   const m = (e && (e.reason || e.data?.message || e.error?.message || e.message)) || String(e);
   if (/user rejected|denied|4001/i.test(m)) return 'You rejected the request in your wallet.';
+  if (/must provide an Ethereum address|unknown account/i.test(m)) return 'Your wallet lost track of the connected account. Reload the page and connect your wallet again.';
   if (/wait 1 hour/.test(m)) return 'You already claimed in the last hour. Try again later.';
   if (/INSUFFICIENT_OUTPUT_AMOUNT|INSUFFICIENT_[AB]_AMOUNT/.test(m)) return 'Price moved beyond your slippage tolerance. Raise slippage or try again.';
   if (/Spin: one spin a day/.test(m)) return 'You already spun today. Come back after midnight UTC.';
@@ -1993,12 +1994,12 @@ async function connect(){
     st.provider = new E.providers.Web3Provider(window.ethereum, 'any');
     const accs = await st.provider.send('eth_requestAccounts', []);
     st.account = E.utils.getAddress(accs[0]);
-    st.signer = st.provider.getSigner();
+    st.signer = st.provider.getSigner(st.account);
     st.walletChain = (await st.provider.getNetwork()).chainId;
     if (!listenersSet && window.ethereum.on){
       listenersSet = true;
-      window.ethereum.on('accountsChanged', a => { st.account = a[0] ? E.utils.getAddress(a[0]) : null; if (st.account) st.signer = st.provider.getSigner(); renderFees(); refreshAll(); });
-      window.ethereum.on('chainChanged', h => { st.walletChain = parseInt(h,16); st.provider = new E.providers.Web3Provider(window.ethereum,'any'); st.signer = st.provider.getSigner(); refreshAll(); });
+      window.ethereum.on('accountsChanged', a => { st.account = a[0] ? E.utils.getAddress(a[0]) : null; if (st.account) st.signer = st.provider.getSigner(st.account); renderFees(); refreshAll(); });
+      window.ethereum.on('chainChanged', h => { st.walletChain = parseInt(h,16); st.provider = new E.providers.Web3Provider(window.ethereum,'any'); st.signer = st.account ? st.provider.getSigner(st.account) : null; refreshAll(); });
     }
     if (st.walletChain !== CHAIN_ID) await switchChain();
     refreshAll();
