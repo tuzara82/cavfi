@@ -1635,7 +1635,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
       <div class="acct-bals"><div><span>DOGE</span><b id="aDoge">–</b></div><div><span>KingS</span><b id="aKings">–</b></div></div>
       <div class="acct-acts"><a class="btn" id="aProfile" href="#u">My profile</a><a class="btn" id="aExplorer" target="_blank" rel="noopener">View on explorer</a><button class="btn" id="aWatch">Add KingS to wallet</button></div>
       <p class="pool-note" style="padding:0" id="aDiscNote">To disconnect, remove cavfi.com from Connected sites in your wallet.</p>
-      <button class="btn" id="aWcOff" hidden>Disconnect WalletConnect</button>
+      <button class="btn" id="aWcOff" hidden>Disconnect</button>
     </div>
     <div id="aInviteSec" hidden>
       <h4 class="act-h">Invite friends</h4>
@@ -1889,6 +1889,44 @@ if (TG) document.addEventListener('click', e => {
   else if (/^(metamask|trust|rainbow|okx):/i.test(href)){ e.preventDefault(); const k = href.match(/^[a-z]+:\/\//i); tgOpen((k && WALLET_HTTPS[k[0].toLowerCase()]) || href); }
 }, true);
 const wcItem = () => WC_PROJECT_ID ? `<button class="item" id="wWc"><span class="wicon" style="background:#3B99FC">WC</span><span class="nm"><b>WalletConnect</b><small>${isMobile ? 'Pick your wallet app, it opens and asks to connect' : 'Scan a QR code with any mobile wallet'}</small></span></button>` : '';
+/* DogeOS sign-in (email, Google, X, MyDoge): the DogeOS SDK bundle (dogeos.js, ~2 MB) is only downloaded when
+   someone picks it, or when they signed in that way on an earlier visit. It hands back an EIP-1193 provider. */
+const DOGEOS_CLIENT_ID = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+  ? 'cRnKnzyCwD8NDUAqcLHulpolnrA09RFhssYsxy2mOMhwjQ5fm2XwUIddUPDSx4w5dEMCPrPRY4jEiBQzSoOHDKXf'   // Sandbox
+  : '0mnsM88sG4ru22OviHGmHxVPasNX72Ih78X13vAoCUjdpYHIN9ZrQlMNnWU6lqWJR5iPmMUB7152M0ohjGyBC4Xw';  // Live
+const dogeItem = () => DOGEOS_CLIENT_ID ? `<button class="item" id="wDoge"><span class="wicon" style="background:#E5B53A;color:#111">Ð</span><span class="nm"><b>Email, Google or X</b><small>No wallet app needed: DogeOS makes one for you in seconds. MyDoge works here too.</small></span></button>` : '';
+let dogeLoad = null;
+function dogeBundle(){
+  if (window.CavDoge) return Promise.resolve();
+  return dogeLoad ||= new Promise((ok, bad) => {
+    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'dogeos.css?v=1'; document.head.appendChild(css);
+    const sc = document.createElement('script'); sc.src = 'dogeos.js?v=1'; sc.onload = ok; sc.onerror = () => { dogeLoad = null; bad(new Error('Could not load the DogeOS sign-in.')); }; document.head.appendChild(sc);
+  });
+}
+const dogeCfg = () => ({clientId: DOGEOS_CLIENT_ID, walletConnectProjectId: WC_PROJECT_ID});
+function dogeUse(p){
+  if (injected === null) injected = (window.ethereum && !window.ethereum.isCavDoge) ? window.ethereum : undefined;
+  window.ethereum = p; listenersSet = false;
+  if (!p._cavOff){ p._cavOff = true; p.on('disconnect', () => { try{ localStorage.removeItem('cavfi.doge'); }catch(e){} window.ethereum = injected; st.account = null; st.signer = null; st.provider = null; listenersSet = false; renderShell(); refreshAll(); }); }
+}
+async function connectDoge(){
+  $('walletModal').hidden = true;
+  try{
+    if (!window.CavDoge) toast('Opening DogeOS sign-in…', '', 4000);
+    await dogeBundle();
+    const p = await window.CavDoge.connect(dogeCfg());
+    dogeUse(p);
+    try{ localStorage.setItem('cavfi.doge', '1'); localStorage.removeItem('cavfi.wc'); }catch(e){}
+    await window.CavDoge.ensureChain().catch(() => {});
+    await connect();
+    if (st.account) toast(`Signed in with DogeOS: ${short(st.account)} ✓`, 'ok', 8000);
+  }catch(e){ if (!/closed|reject|User|4001/i.test((e && e.message) || '') && e.code !== 4001) toast(errMsg(e), 'bad'); }
+}
+async function dogeRestore(){
+  try{ if (localStorage.getItem('cavfi.doge') !== '1') return false; }catch(e){ return false; }
+  try{ await dogeBundle(); const p = await window.CavDoge.restore(dogeCfg(), 8000); if (!p) return false; dogeUse(p); await connect(); return !!st.account; }
+  catch(e){ return false; }
+}
 /* WalletConnect: the provider bundle (wc.js) is only downloaded when someone picks it.
    We draw our own QR code / wallet buttons from the pairing link (no third-party modal). */
 async function wcShowUri(uri){
@@ -1960,23 +1998,29 @@ function walletModal(){
   const here = location.href.split('#')[0], bare = here.replace(/^https?:\/\//, '');
   const enc = encodeURIComponent(here);
   const item = (href, color, label, name, sub) => `<a class="item" href="${href}" target="_blank" rel="noopener"><span class="wicon" style="background:${color}">${label}</span><span class="nm"><b>${name}</b><small>${sub}</small></span></a>`;
-  if (isMobile){
+  const browserItem = window.ethereum && !window.ethereum.isCavDoge && !(wcProv && window.ethereum === wcProv) ? `<button class="item" id="wInj"><span class="wicon" style="background:#E2761B">🦊</span><span class="nm"><b>Browser wallet</b><small>MetaMask, Rabby or the wallet in this browser</small></span></button>` : '';
+  if (browserItem){
+    $('wText').textContent = 'Pick how you want to connect. Everything is on the DogeOS testnet and free.';
+    $('wList').innerHTML = browserItem + dogeItem() + wcItem();
+  } else if (isMobile){
     $('wText').textContent = TG ? 'Inside Telegram, connect with WalletConnect: it opens your wallet app to approve, then come back to Telegram.' : 'Your phone browser has no crypto wallet. Open CavFi inside your wallet app, where Connect wallet works.';
     $('wList').innerHTML =
-      wcItem() +
+      dogeItem() + wcItem() +
       item(`https://metamask.app.link/dapp/${bare}`, '#E2761B', 'MM', 'Open in MetaMask', 'Recommended') +
       item(`https://link.trustwallet.com/open_url?coin_id=60&url=${enc}`, '#0500FF', 'TW', 'Open in Trust Wallet', 'Opens the in-app browser') +
       item(`https://go.cb-w.com/dapp?cb_url=${enc}`, '#0052FF', 'CB', 'Open in Coinbase Wallet', 'Opens the in-app browser') +
       `<button class="item" id="wCopy"><span class="wicon" style="background:var(--chestnut)">⧉</span><span class="nm"><b>Copy link</b><small>Paste it into any wallet's browser</small></span></button>`;
   } else {
-    $('wText').textContent = 'No wallet extension found in this browser. Install one, then reload this page.';
+    $('wText').textContent = 'No wallet extension in this browser? Sign in with email, Google or X, or install one and reload this page.';
     $('wList').innerHTML =
-      wcItem() +
+      dogeItem() + wcItem() +
       item('https://metamask.io/download/', '#E2761B', 'MM', 'Install MetaMask', 'Browser extension for Chrome, Firefox, Edge, Brave') +
       item('https://rabby.io/', '#7084FF', 'RB', 'Install Rabby', 'Browser extension, multi-chain');
   }
   $('walletModal').hidden = false;
   const w = $('wWc'); if (w) w.onclick = () => connectWC();
+  const dg = $('wDoge'); if (dg) dg.onclick = () => connectDoge();
+  const ij = $('wInj'); if (ij) ij.onclick = () => { $('walletModal').hidden = true; connect(); };
   const c = $('wCopy');
   if (c) c.onclick = async () => {
     try{ await navigator.clipboard.writeText(here); toast('Link copied. Paste it into your wallet app\'s browser.', 'ok'); }
@@ -2014,7 +2058,7 @@ async function switchChain(){
     } else toast(errMsg(e),'bad');
   }
 }
-$('wallet').addEventListener('click', () => st.account ? openAccount() : connect());
+$('wallet').addEventListener('click', () => st.account ? openAccount() : walletModal());
 
 /* ================= account sheet + activity ================= */
 const actKey = () => 'cavfi.activity.' + (st.account || '').toLowerCase();
@@ -2047,9 +2091,9 @@ function renderActivity(){
     box.appendChild(el);
   }
 }
-$('aWcOff').addEventListener('click', async () => { try{ await wcProv.disconnect(); }catch(e){} $('acctModal').hidden = true; });
+$('aWcOff').addEventListener('click', async () => { try{ if (window.ethereum && window.ethereum.isCavDoge) await window.CavDoge.disconnect(); else await wcProv.disconnect(); }catch(e){} $('acctModal').hidden = true; });
 async function openAccount(){
-  const wc = !!(wcProv && window.ethereum === wcProv); $('aWcOff').hidden = !wc; $('aDiscNote').hidden = wc;
+  const wc = !!((wcProv && window.ethereum === wcProv) || (window.ethereum && window.ethereum.isCavDoge)); $('aWcOff').hidden = !wc; $('aDiscNote').hidden = wc;
   $('aAddr').textContent = st.account;
   $('aExplorer').href = `${NET.explorer}/address/${st.account}`;
   $('aProfile').href = '#u/' + (myName.name ? myName.name + '.cav' : st.account);
@@ -5425,8 +5469,7 @@ function obSteps(){
   const swapped = acts.some(a => /^Swapped/i.test(a.text)) || (bd.mask != null && (bd.mask & 1));
   const anyBadge = (bd.mask != null && bd.mask > 0) || bd.herald;
   return [
-    {done: !!window.ethereum, t: 'Get a wallet', d: 'Install MetaMask (or Rabby, Trust, Coinbase Wallet) in your browser or phone.', btn: !window.ethereum ? ['Get MetaMask', 'https://metamask.io/download/'] : null},
-    {done: !!st.account, t: 'Connect it', d: 'CavFi never holds your funds. You sign every action in your wallet.', act: !st.account ? ['Connect wallet', () => connect()] : null},
+    {done: !!st.account, t: 'Sign in or connect a wallet', d: 'Sign in with email, Google or X and DogeOS makes a wallet for you, or use MetaMask. CavFi never holds your funds.', act: !st.account ? ['Sign in', () => walletModal()] : null},
     {done: onRightChain(), t: 'Switch to DogeOS testnet', d: 'One click adds the network (chain 6281971) to your wallet.', act: st.account && !onRightChain() ? ['Switch network', () => switchChain()] : null},
     {done: !!ob.bal && ob.bal.gt(0), t: 'Get free test DOGE', d: 'The DogeOS faucet sends DOGE for gas and swaps. It has no real value.', btn: ['Open faucet', 'https://faucet.testnet.dogeos.com']},
     {done: !!ob.usdt && ob.usdt.gt(0), t: 'Claim 1,000 cUSDT', d: 'CavFi\'s own test dollar, free once an hour.', act: onRightChain() && A.usdt ? ['Claim cUSDT', () => $('claimUsdt').click()] : null},
@@ -7204,7 +7247,7 @@ paintTheme();
   if (location.hash === '#send') setTimeout(() => { if (st.account) sdOpen(); }, 1500);
   if (location.hash === '#start') obShow();
   renderShell(); renderSwap(); renderLiq(); renderPools();
-  if (!(await wcRestore()) && window.ethereum){
+  if (!(await wcRestore()) && !(await dogeRestore()) && window.ethereum){
     window.ethereum.request({method:'eth_accounts'}).then(x => { if (x && x[0]) connect(); }).catch(()=>{});
   }
 })();
