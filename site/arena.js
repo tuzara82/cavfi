@@ -115,6 +115,17 @@
 
   // ------------------------------------------------------------------ toasts
 
+  // After a win: a toast with a ready post for X and the player's invite link, so a win can bring a friend.
+  function shareToast() {
+    var host = $('toasts'); if (!host) return;
+    var url = 'https://cavfi.com/' + (state.account ? '?ref=' + state.account : '');
+    var text = 'I just won an Arena round on CavFi: I backed the token that beat DOGE 🏁 Hourly rounds on the DogeOS testnet 👑';
+    var el = document.createElement('div'); el.className = 'toast ok';
+    el.innerHTML = '<div>You won! Tell your friends.</div><div><a href="https://x.com/intent/post?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url) + '" target="_blank" rel="noopener">Share your win on 𝕏</a></div>';
+    host.appendChild(el);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 15000);
+  }
+
   function toast(kind, message, hash) {
     var host = $('toasts');
     if (!host) return;
@@ -806,6 +817,7 @@
       toast('ok', 'Claiming ' + state.claimableIds.length + ' round(s)…', tx.hash);
       await tx.wait(); try{ state.readProvider.clearCache && state.readProvider.clearCache(); }catch(e){}
       toast('ok', 'All claimed.', tx.hash);
+      shareToast();
     } catch (e) {
       toast('bad', friendlyError(e));
     } finally {

@@ -728,7 +728,7 @@ html.spooky{--gold:#F28C28}
 .gx-die{min-width:120px;padding:10px 18px;border-radius:22px;display:grid;place-items:center;font:600 54px var(--mono);background:var(--surface);border:2px solid var(--line);box-shadow:0 10px 24px -12px rgba(0,0,0,.45)}
 .gx-die.spin{animation:gxShake .25s ease-in-out infinite}
 @keyframes gxShake{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
-.gx-res{font:800 18px var(--body);text-align:center;margin:8px 0 0}.gx-res.win{color:var(--ok)}.gx-res.lose{color:var(--bad)}
+.gx-res{font:800 18px var(--body);text-align:center;margin:8px 0 0}.sw-row{text-align:center;margin:10px 0 0}.sw-btn{display:inline-flex}.gx-res.win{color:var(--ok)}.gx-res.lose{color:var(--bad)}
 .gx-range{width:100%;accent-color:var(--chestnut)}
 .gx-track{position:relative;height:12px;border-radius:999px;overflow:hidden;background:var(--bad);opacity:.85}
 .gx-track i{position:absolute;top:0;bottom:0;background:var(--ok)}
@@ -994,8 +994,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
       <a id="nav-arena" class="nav-link" href="arena.html">Arena</a>
       <button id="nav-predict" data-view="predict">Predict</button>
       <button id="nav-games" data-view="games">Games<small>new</small></button>
-      <button id="nav-nft" data-view="nft">NFTs</button>
-      <button id="nav-names" data-view="names">Names</button>
+      <button id="nav-nft" data-view="nft" data-group="nft names">NFTs &amp; names</button>
       <button id="nav-board" data-view="board" data-group="board stats">Leaderboards</button>
       <button id="nav-pf" data-view="portfolio">Portfolio</button>
     </nav>
@@ -1087,7 +1086,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
       <button class="hm-card" data-go="liq">
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></span>
         <b>Liquidity</b><small>Pair two tokens and earn a slice of every swap.</small>
-        <span class="hm-fig"><span>Total locked</span><strong id="hmFigLiq">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+        <span class="hm-fig"><span>Test liquidity</span><strong id="hmFigLiq">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
       </button>
       <button class="hm-card" data-go="farm">
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 16l2-9 5 5 5-5 2 9z"/><path d="M5 19h14"/></svg></span>
@@ -1494,7 +1493,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 
   <div class="view" id="viewPredict" hidden>
     <div class="sx-bar">
-      <div class="chips" id="prTabs" role="group" aria-label="Markets or duels"><button class="chip" data-t="markets" aria-pressed="true">DOGE price</button><button class="chip" data-t="guess" aria-pressed="false">🎯 Free guess</button><button class="chip" data-t="duels" aria-pressed="false">Arena duels</button></div>
+      <div class="chips" id="prTabs" role="group" aria-label="Markets or duels"><button class="chip" data-t="guess" aria-pressed="true">🎯 Free guess</button><button class="chip" data-t="markets" aria-pressed="false">DOGE markets</button><button class="chip" data-t="duels" aria-pressed="false">Arena duels</button></div>
       <span class="sx-status" id="prStatus" aria-live="polite"></span>
     </div>
     <div class="pr-body" id="prMarkets"></div>
@@ -1530,7 +1529,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
       <span class="sx-status" id="sxStatus" aria-live="polite">Loading…</span>
     </div>
     <section class="sx-tiles" aria-label="Protocol totals">
-      <div class="sx-tile"><span>Total value locked</span><b id="sxTvl">–</b><small id="sxTvlSub">&nbsp;</small></div>
+      <div class="sx-tile"><span title="Testnet tokens valued at CavFi pool prices. Most of this liquidity was seeded by the CavFi team so the pools work; it has no real value.">Test liquidity</span><b id="sxTvl">–</b><small id="sxTvlSub">&nbsp;</small></div>
       <div class="sx-tile"><span id="sxVolL">Volume · 24h</span><b id="sxVol">–</b><small id="sxVolSub">&nbsp;</small></div>
       <div class="sx-tile"><span id="sxFeeL">Fees · 24h</span><b id="sxFee">–</b><small id="sxFeeSub">&nbsp;</small></div>
       <div class="sx-tile"><span id="sxSwL">Swaps · 24h</span><b id="sxSw">–</b><small id="sxSwSub">&nbsp;</small></div>
@@ -2119,7 +2118,7 @@ function setView(v){
   $('viewSwap').hidden = v !== 'swap'; $('viewLiq').hidden = v !== 'liq'; $('viewFarm').hidden = v !== 'farm'; $('viewStats').hidden = v !== 'stats'; $('viewBoard').hidden = v !== 'board'; $('viewHome').hidden = v !== 'home'; $('viewLaunch').hidden = v !== 'launch'; $('viewPortfolio').hidden = v !== 'portfolio'; $('viewFaucet').hidden = v !== 'faucet'; $('viewNft').hidden = v !== 'nft'; $('viewNames').hidden = v !== 'names'; $('viewHelp').hidden = v !== 'help'; $('viewProfile').hidden = v !== 'profile'; $('viewPredict').hidden = v !== 'predict'; $('viewGames').hidden = v !== 'games';
   document.querySelector('.lede').hidden = v === 'home';
   document.querySelectorAll('nav button').forEach(b => b.toggleAttribute('aria-current', (b.dataset.group || b.dataset.view || '').split(' ').includes(v)));
-  { const G = {liq: [['liq', 'Liquidity'], ['farm', 'Farms & staking']], farm: [['liq', 'Liquidity'], ['farm', 'Farms & staking']], board: [['board', 'Leaderboards'], ['stats', 'Stats']], stats: [['board', 'Leaderboards'], ['stats', 'Stats']]}[v];
+  { const G = {liq: [['liq', 'Liquidity'], ['farm', 'Farms & staking']], farm: [['liq', 'Liquidity'], ['farm', 'Farms & staking']], board: [['board', 'Leaderboards'], ['stats', 'Stats']], stats: [['board', 'Leaderboards'], ['stats', 'Stats']], nft: [['nft', 'Cavalier NFTs'], ['names', '.cav names']], names: [['nft', 'Cavalier NFTs'], ['names', '.cav names']]}[v];
     const sn = $('subNav'); sn.hidden = !G; if (G) sn.innerHTML = G.map(([k, l]) => `<button class="chip" data-goview="${k}" aria-pressed="${k === v}">${l}</button>`).join('');
     $('faucetPill').toggleAttribute('aria-current', v === 'faucet'); $('moreSheet').hidden = true; }
   document.querySelectorAll('nav button[aria-current]').forEach(b => b.setAttribute('aria-current','page'));
@@ -2129,7 +2128,7 @@ function setView(v){
     $('ledeP').textContent = 'Living Cavaliers, badges, rank, streaks and wins of any CavFi wallet, read from the chain. Share yours.';
   } else if (v === 'predict'){
     $('ledeH').innerHTML = 'Call the <em>DOGE</em> price.';
-    $('ledeP').textContent = 'YES or NO markets on the real DOGE price, and one-on-one Arena duels with friends. Played with testnet KingS.';
+    $('ledeP').textContent = 'Guess the DOGE price for free every day, back YES or NO on DOGE markets, or duel a friend in the Arena. Played with testnet KingS.';
   } else if (v === 'games' && gx.tab === 'spin'){
     $('ledeH').innerHTML = 'Spin the royal <em>wheel</em>.';
     $('ledeP').textContent = 'One free spin a day for every wallet. Every spin wins KingS, up to the 50,000 KingS crown. No stake, you only pay gas. Testnet, no real value.';
@@ -2173,7 +2172,7 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? (gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : '#games') : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#predict') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? (gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : '#games') : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#markets') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
   if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
@@ -2197,14 +2196,16 @@ document.querySelectorAll('header nav button').forEach(b => b.addEventListener('
 document.addEventListener('click', e => { const a = e.target.closest('[data-goview]'); if (!a) return; e.preventDefault(); setView(a.dataset.goview); window.scrollTo({top:0, behavior:'smooth'}); });
 const LX_HASH = /^#t\/(0x[0-9a-fA-F]{40})$/;
 const UP_HASH = /^#u\/([A-Za-z0-9.-]{3,64})$/, DUEL_HASH = /^#duel\/(\d+)$/, MKT_HASH = /^#p\/(\d+)$/;
-function routePredict(h){ const m = h.match(DUEL_HASH), k = h.match(MKT_HASH); pr.hl = m ? Number(m[1]) : null; pr.hlm = k ? Number(k[1]) : null; pr.scrolled = false; pr.tab = m || h === '#duels' ? 'duels' : h === '#guess' ? 'guess' : 'markets'; setView('predict'); }
+function routePredict(h){ const m = h.match(DUEL_HASH), k = h.match(MKT_HASH); pr.hl = m ? Number(m[1]) : null; pr.hlm = k ? Number(k[1]) : null; pr.scrolled = false; pr.tab = m || h === '#duels' ? 'duels' : k || h === '#markets' ? 'markets' : 'guess'; setView('predict'); }
 window.addEventListener('hashchange', () => { const h = location.hash, m = h.match(LX_HASH), u = decodeURIComponent(h).match(UP_HASH);
   if (m){ setView('launch'); openLaunch(E.utils.getAddress(m[1].toLowerCase())); }
   else if (u){ if (st.view !== 'profile' || u[1].toLowerCase() !== up.id) openProfile(u[1]); }
   else if (h === '#u'){ up.id = ''; setView('profile'); }
-  else if (h === '#predict' || h === '#duels' || h === '#guess' || DUEL_HASH.test(h) || MKT_HASH.test(h)) routePredict(h);
+  else if (h === '#predict' || h === '#markets' || h === '#duels' || h === '#guess' || DUEL_HASH.test(h) || MKT_HASH.test(h)) routePredict(h);
   else if (h === '#games' || h === '#hunt' || h === '#spin'){ gx.tab = h === '#hunt' ? 'hunt' : h === '#spin' ? 'spin' : (gx.tab === 'hunt' || gx.tab === 'spin') ? 'coin' : gx.tab; setView('games'); }
-  else if (h === '#faq') setView('help'); });
+  else { const v = HASH_VIEW[h] || (h === '' || h === '#' ? 'home' : null); if (v && v !== st.view) setView(v); window.scrollTo({top: 0}); } });
+// One map from a page address (#…) to its view, used on first load and whenever the address changes.
+const HASH_VIEW = {'#liquidity': 'liq', '#farms': 'farm', '#stats': 'stats', '#leaderboard': 'board', '#launch': 'launch', '#portfolio': 'portfolio', '#faucet': 'faucet', '#nft': 'nft', '#names': 'names', '#games': 'games', '#hunt': 'games', '#spin': 'games', '#faq': 'help', '#send': 'portfolio', '#swap': 'swap', '#home': 'home', '#start': 'home'};
 
 /* ================= price guard =================
    Builds a market price in USD for every token from all pools (anchored on the
@@ -3480,11 +3481,18 @@ const GS_GUESSED = E.utils.id('Guessed(uint32,address,uint64)');
 const board = { rows:null, loading:false, err:null, at:0, range:'7d', tab:'pts' };
 const boardSec = () => board.range === '30d' ? 30 * 86400 : 7 * 86400;
 let txFrom = {}; try{ txFrom = JSON.parse(localStorage.getItem('cavfi.txfrom') || '{}') || {}; }catch(e){ txFrom = {}; }
+// Every CavFi contract (and, with bot=true, the CavFi bot): they move tokens for players but are never players themselves.
+function cavContracts(bot){
+  const out = new Set();
+  for (const [k, v] of Object.entries(A)) if (typeof v === 'string' && /^0x[0-9a-fA-F]{40}$/.test(v) && (bot || k !== 'bot')) out.add(lk(v));
+  if (!bot) out.delete(lk(A.bot || '0x0000000000000000000000000000000000000000'));
+  return out;
+}
 async function loadBoard(){
   if (board.loading || !sx.loaded) return;
   board.loading = true; renderBoard();
   try{
-    const rp = RP(), contracts = new Set([A.router, A.limit, A.launch, A.farm, A.stake].filter(Boolean).map(lk));
+    const rp = RP(), contracts = cavContracts();
     const pairSet = new Set(sx.pools.map(p => lk(p.address)));
     // 1. swaps: one entry per transaction, valued at its first hop, credited to the final recipient
     const byTx = {};
@@ -3610,7 +3618,7 @@ async function loadBoard(){
     if (A.events){ try{   // event badges: Spooktober 2026 = 500 points
       for (const l of await winLogs(A.events, [EV_AWARDED])){ const r = row(lk('0x' + l.topics[2].slice(26))); r.spook = (r.spook || 0) + 1; }
     }catch(e){} }
-    if (A.bot) delete P[lk(A.bot)];   // the CavFi bot's own trades and tips don't count
+    for (const a of cavContracts(true)) delete P[a];   // the CavFi bot and CavFi's own contracts (Auto-buy, Limit, …) are not players
     const base = r => r.swapUsd + r.launchUsd + r.arenaK / 1000 + r.arenaWins * 100 + r.gms * 10 + r.quests * 20 + r.launches * 100 + r.grads * 500
       + (r.preds || 0) * 30 + (r.predWins || 0) * 50 + (r.duels || 0) * 50 + (r.duelWins || 0) * 50 + (r.guesses || 0) * 20 + (r.guessWins || 0) * 300 + (r.calls || 0) * 20 + (r.callWins || 0) * 100 + (r.spook || 0) * 500 + (r.gxPts || 0) + (r.hnPts || 0) + (r.spins || 0) * 10;
     let refMap = {}; try{ refMap = await loadRefMap(); }catch(e){}
@@ -3692,7 +3700,7 @@ function renderStats(){
   const tvl = sx.pools.reduce((x, p) => x + (sxTvl(p) || 0), 0);
   const vol = sum(cur), vPrev = sum(prev);
   $('sxTvl').textContent = sxUsd(tvl);
-  $('sxTvlSub').textContent = `${sx.pools.length} pools`;
+  $('sxTvlSub').textContent = `${sx.pools.length} pools · mostly seeded by CavFi`;
   $('sxVol').textContent = sxUsd(vol);
   const canPrev = R !== '30d';                       // we keep 30 days, so 24h and 7d have a full previous period
   $('sxVolSub').textContent = canPrev && vPrev > 0 ? `${vol >= vPrev ? '▲' : '▼'} ${Math.abs((vol/vPrev - 1)*100).toFixed(0)}% vs previous ${R}` : canPrev ? `no swaps in the ${R} before` : 'last 30 days';
@@ -4057,6 +4065,10 @@ const soC = signer => new E.Contract(A.social, SOCIAL_ABI, signer ? st.signer : 
 })();
 const storedRef = () => { try{ const v = localStorage.getItem(REF_KEY) || ''; return v.startsWith('name:') ? '' : v; }catch(e){ return ''; } };
 const refLink = () => `https://cavfi.com/?ref=${myName.name && myName.addr === lk(st.account || '') ? myName.name + '.cav' : st.account}`;
+// "Share your win": opens X with a ready post and the player's own invite link, so every win can bring a friend.
+const shareWin = (text, path) => { const url = st.account ? refLink() + (path || '') : 'https://cavfi.com/' + (path || '');
+  return `<p class="sw-row"><a class="btn fc-sm sw-btn" href="https://x.com/intent/post?text=${encodeURIComponent(text + ' 👑')}&url=${encodeURIComponent(url)}" target="_blank" rel="noopener">Share your win on 𝕏</a></p>`; };
+const SW_GAMES = ['Coin Flip', 'Dice', 'Limbo', 'the Royal Wheel', 'Plinko', 'Higher or Lower'];
 async function resolveStoredRef(){   // an invite by .cav name is turned into the address it points to
   try{ const v = localStorage.getItem(REF_KEY) || ''; if (!v.startsWith('name:') || !A.names) return;
     const a = await nmC().resolve(v.slice(5)); if (a && a !== E.constants.AddressZero) localStorage.setItem(REF_KEY, a); else localStorage.removeItem(REF_KEY); }catch(e){}
@@ -4168,8 +4180,14 @@ async function renderHuntBar(){
     const c = new E.Contract(A.hunt, HUNT_ABI, RP()), n = (await c.count()).toNumber(); if (!n){ bar.hidden = true; return; }
     const id = n - 1, [h, , , solvers] = await c.get(id), now = Math.floor(Date.now() / 1000);
     const cracked = solvers.filter(x => Number(x) > 0).length, f = $('hmFigHunt'); if (f) f.textContent = `${cracked} / ${h.clues}`;
-    let hidden = false; try{ hidden = localStorage.getItem('cavfi.huntbar') === lk(A.hunt) + id; }catch(e){}
-    if (hidden || now < Number(h.start) || now > Number(h.end) || h.finishers >= 3){ bar.hidden = true; return; }
+    const over = now > Number(h.end) || h.finishers >= 3;
+    let hidden = false; try{ hidden = localStorage.getItem('cavfi.huntbar') === lk(A.hunt) + id + (over ? 'end' : ''); }catch(e){}
+    if (hidden || now < Number(h.start) || (over && now > Number(h.end) + 2 * 86400)){ bar.hidden = true; return; }
+    if (over){   // for two days after the end, the bar shows how it went instead of disappearing silently
+      const fin = Number(h.finishers);
+      bar.innerHTML = `<span>🗝️ <b>The Royal Treasure Hunt is over.</b> ${fin ? `${fin} hunter${fin === 1 ? '' : 's'} solved all ${h.clues} riddles and shared the treasure.` : `Nobody solved all ${h.clues} riddles: ${cracked} of ${h.clues} were cracked.`} Thanks for hunting, more hunts are coming.</span><button class="btn" data-tb="hunt">See the results</button><button class="hb-x" data-hb="x" aria-label="Hide">✕</button>`;
+      bar.hidden = false; bar.dataset.k = lk(A.hunt) + id + 'end'; return;
+    }
     const left = Number(h.end) - now;
     bar.innerHTML = `<span>🗝️ <b>Royal Treasure Hunt:</b> ${sxNum(fl(h.prize, 18))} KingS for the first 3 to solve ${h.clues} riddles hidden around CavFi. ${cracked ? `${cracked} of ${h.clues} riddles cracked so far` : 'Nobody has cracked a riddle yet'} · ends in ${inT(left)}.</span><button class="btn" data-tb="hunt">Start hunting</button><button class="hb-x" data-hb="x" aria-label="Hide">✕</button>`;
     bar.hidden = false; bar.dataset.k = lk(A.hunt) + id;
@@ -5393,11 +5411,12 @@ $('brandHome').addEventListener('click', e => { e.preventDefault(); setView('hom
 const OB_KEY = 'cavfi.firststeps.hidden';
 const ob = { bal:null, usdt:null, at:0 };
 async function loadOnboarding(){
-  if (!st.account || !onRightChain()){ ob.bal = null; ob.usdt = null; return renderOnboarding(); }
+  if (!st.account || !onRightChain()){ ob.bal = null; ob.usdt = null; ob.spun = false; return renderOnboarding(); }
   try{
     const [d, u] = await Promise.all([RP().getBalance(st.account), A.usdt ? new E.Contract(A.usdt, ERC20_ABI, RP()).balanceOf(st.account) : ZERO]);
     ob.bal = d; ob.usdt = u;
     if (A.badges && bd.mask == null){ try{ bd.mask = (await bdC().badgesOf(st.account)).toNumber(); }catch(e){} }
+    if (A.spin && !ob.spun){ try{ ob.spun = (await spC().pageOf(st.account, 0, 1))[0].length > 0; }catch(e){} }
   }catch(e){}
   renderOnboarding();
 }
@@ -5412,7 +5431,8 @@ function obSteps(){
     {done: !!ob.bal && ob.bal.gt(0), t: 'Get free test DOGE', d: 'The DogeOS faucet sends DOGE for gas and swaps. It has no real value.', btn: ['Open faucet', 'https://faucet.testnet.dogeos.com']},
     {done: !!ob.usdt && ob.usdt.gt(0), t: 'Claim 1,000 cUSDT', d: 'CavFi\'s own test dollar, free once an hour.', act: onRightChain() && A.usdt ? ['Claim cUSDT', () => $('claimUsdt').click()] : null},
     {done: !!swapped, t: 'Make your first swap', d: 'Swap a little DOGE for KingS. The CavFi bot then sends you the Royal Swapper badge.', act: ['Go to Swap', () => { setView('swap'); window.scrollTo({top:0, behavior:'smooth'}); }]},
-    {done: !!anyBadge, t: 'Earn a Royal Court badge', d: 'Launch a meme token, stake, add liquidity or vote, then claim the badge in your wallet panel.', act: st.account ? ['See badges', () => openAccount()] : null},
+    A.spin ? {done: !!ob.spun, t: 'Take your free Royal Spin', d: 'One free spin of the wheel every day. Every spin wins KingS, up to 50,000.', act: ['Spin the wheel', () => { gx.tab = 'spin'; setView('games'); window.scrollTo({top:0, behavior:'smooth'}); }]}
+      : {done: !!anyBadge, t: 'Earn a Royal Court badge', d: 'Launch a meme token, stake, add liquidity or vote, then claim the badge in your wallet panel.', act: st.account ? ['See badges', () => openAccount()] : null},
   ];
 }
 function renderOnboarding(){
@@ -5430,6 +5450,8 @@ function renderOnboarding(){
   }).join('');
 }
 $('obList').addEventListener('click', e => { const b = e.target.closest('[data-ob]'); if (!b) return; const s = obSteps()[+b.dataset.ob]; if (s && s.act) s.act[1](); });
+function obShow(){ try{ localStorage.removeItem(OB_KEY); }catch(e){} if (st.view !== 'home') setView('home'); renderOnboarding(); try{ history.replaceState(null, '', '#start'); }catch(e){} setTimeout(() => { const c = $('obCard'); if (c && !c.hidden) c.scrollIntoView({block: 'start', behavior: 'smooth'}); }, 300); }
+window.addEventListener('hashchange', () => { if (location.hash === '#start') obShow(); });
 $('obHide').addEventListener('click', () => { try{ localStorage.setItem(OB_KEY, '1'); }catch(e){} renderOnboarding(); });
 setInterval(() => { if (st.view === 'home' && !document.hidden) loadOnboarding(); }, 15000);
 
@@ -6205,7 +6227,7 @@ async function profilePng(d){
 }
 
 /* ================= PREDICT (DOGE price markets) + ARENA DUELS ================= */
-const pr = { tab:'markets', markets:null, mine:{}, duels:null, round:null, toks:[], busy:'', err:'', at:0, hl:null, names:{}, kbal:null, allowP:null, allowD:null };
+const pr = { tab:'guess', markets:null, mine:{}, duels:null, round:null, toks:[], busy:'', err:'', at:0, hl:null, names:{}, kbal:null, allowP:null, allowD:null };
 const usd8 = b => { const v = Number(b.toString()) / 1e8; return '$' + (v >= 1 ? v.toFixed(2) : v.toPrecision(3)); };
 const inT = s => { s = Math.max(0, Math.round(s)); return s >= 86400 ? `${Math.floor(s/86400)}d ${Math.floor(s%86400/3600)}h` : s >= 3600 ? `${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m` : `${Math.floor(s/60)}m`; };
 async function loadPredict(){
@@ -6391,7 +6413,7 @@ function renderPredict(){
   if (pr.hlm != null && pr.tab === 'markets'){ const el = document.getElementById('mkt-' + pr.hlm); if (el && !pr.scrolled){ pr.scrolled = true; el.scrollIntoView({block: 'center'}); } }
   if (pr.hl != null){ const el = document.getElementById('duel-' + pr.hl); if (el && !pr.scrolled){ pr.scrolled = true; el.scrollIntoView({block: 'center'}); } }
 }
-$('prTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; pr.tab = b.dataset.t; pr.hl = null; pr.hlm = null; renderPredict(); if (pr.tab === 'guess') loadGuess(); try{ history.replaceState(null, '', pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#predict'); }catch(_){} });
+$('prTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; pr.tab = b.dataset.t; pr.hl = null; pr.hlm = null; renderPredict(); if (pr.tab === 'guess') loadGuess(); try{ history.replaceState(null, '', pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#markets'); }catch(_){} });
 const prAmt = v => { try{ const s = String(v || '').trim().replace(',', '.'); return /^\d*\.?\d+$/.test(s) && Number(s) > 0 ? E.utils.parseUnits(s, 18) : null; }catch(e){ return null; } };
 async function prRun(key, fn, okMsg){
   pr.busy = key; renderPredict();
@@ -6672,7 +6694,8 @@ function gxResult(){
   if (!L.done) return `<p class="gx-res">${L.msg || 'Playing… the round closes and the house reveals the seed in about a minute.'}</p>`;
   if (L.anim) return '<p class="gx-res">&nbsp;</p>';
   const b = L.b, paid = fl(b.payout, 18), stake = fl(b.stake, 18);
-  if (b.status === 2 || b.status === 4) return `<p class="gx-res ${paid >= stake ? 'win' : 'lose'}">${paid >= stake ? `You won ${sxNum(paid)} DOGE!` : `${gxRes(b)}: ${sxNum(paid)} DOGE back.`}</p>`;
+  if (b.status === 2 || b.status === 4) return `<p class="gx-res ${paid >= stake ? 'win' : 'lose'}">${paid >= stake ? `You won ${sxNum(paid)} DOGE!` : `${gxRes(b)}: ${sxNum(paid)} DOGE back.`}</p>`
+    + (paid > stake ? shareWin(`I just won ${sxNum(paid)} test DOGE in ${SW_GAMES[b.game] || 'CavFi Games'} on CavFi, on the DogeOS testnet 🎲`, '#games') : '');
   return `<p class="gx-res lose">${gxRes(b)}. Not this time.</p>`;
 }
 /* plays the reveal animation of a settled bet, then shows the result */
@@ -6867,7 +6890,7 @@ function renderSpin(){
     : L && !L.done ? '<button class="btn primary" disabled>Spinning…</button>'
     : !D.can || (L && L.done) ? `<button class="btn primary" disabled>Next free spin in ${inT(nextDay)}</button>`
     : `<button class="btn primary" data-sp="spin" ${sp.busy ? 'disabled' : ''}>${sp.busy ? 'Waiting for the wallet…' : '🎁 Spin for free'}</button>`;
-  const res = done ? `<p class="gx-res win">${L.s.status === 3 ? 'The house was late, so you get the crown: ' : SPIN_SEG[L.s.segment] >= 500 ? '👑 JACKPOT! ' : 'You won '}${sxNum(fl(L.s.prize, 18))} KingS!</p>` : spin ? `<p class="gx-res">${L.msg || 'Spinning… the round closes and the house reveals the seed in about a minute.'}</p>` : L && L.anim ? '<p class="gx-res">&nbsp;</p>' : '';
+  const res = done ? `<p class="gx-res win">${L.s.status === 3 ? 'The house was late, so you get the crown: ' : SPIN_SEG[L.s.segment] >= 500 ? '👑 JACKPOT! ' : 'You won '}${sxNum(fl(L.s.prize, 18))} KingS!</p>${shareWin(`My free Royal Spin on CavFi just won ${sxNum(fl(L.s.prize, 18))} KingS 🎁 One free spin a day on the DogeOS testnet`, '#spin')}` : spin ? `<p class="gx-res">${L.msg || 'Spinning… the round closes and the house reveals the seed in about a minute.'}</p>` : L && L.anim ? '<p class="gx-res">&nbsp;</p>' : '';
   const row = b => `<div class="du-row${st.account && same(b.player, st.account) ? ' me' : ''}"><div><a href="#u/${esc(gx.names[lk(b.player)] || b.player)}"><b>${esc(gxNm(b.player))}</b></a>
       <small>${b.status === 1 ? 'spinning…' : `won ${sxNum(fl(b.prize, 18))} KingS`}</small></div><span class="gx-tag ${b.status === 1 ? 'wait' : 'win'}">${b.status === 1 ? 'spinning' : SPIN_SEG[b.segment] >= 500 ? '👑 jackpot' : 'won'}</span></div>`;
   box.innerHTML = `<section class="sx-card gx-play"><div class="sx-head"><h2>🎁 Royal Spin</h2><span>free once a day · every spin wins</span></div>
@@ -6966,6 +6989,7 @@ function renderHunt(){
       <p class="gs-q">The answers are hidden around CavFi. Solve all ${h.clues} riddles: the first 3 to finish share <b>${sxNum(prize)} KingS</b>.</p>
       <div class="pr-sides hn-pod">${podium}</div>
       <div class="pr-sides"><div><span>Your progress</span><b>${st.account ? `${done} / ${h.clues}` : '–'}</b><small>${st.account ? (done === h.clues ? 'all solved 🎉' : 'riddles solved') : 'connect a wallet to play'}</small></div><div><span>Finished</span><b>${h.finishers}</b><small>wallets solved everything</small></div></div></section>
+    ${st.account && done === h.clues ? shareWin(`I solved all ${h.clues} riddles of the Royal Treasure Hunt on CavFi 🗝️`, '#hunt') : ''}
     ${D.clues.map(clue).join('')}
     <section class="sx-card"><div class="sx-head"><h2>How it works</h2></div><p class="pr-note">Only a hash of each answer is on-chain, so this page can tell you right away if you are right, without a transaction. Answers are one word or number; case, spaces and symbols don't matter. A correct answer counts once you claim it: two transactions, first a hidden commitment, then the answer in the next block, so nobody can copy it from the chain and get ahead of you. The first 3 wallets to solve every riddle are paid at once (50% / 30% / 20%). Leaderboard points: 200 for the 1st to crack a riddle, 150 for the 2nd, 100 for the 3rd, 20 after that, and 300 for finishing. Testnet KingS, no real value.</p></section>`;
 }
@@ -7173,11 +7197,12 @@ paintTheme();
   const lxDeep = location.hash.match(LX_HASH);
   const upPath = decodeURIComponent(location.pathname).match(/^\/u\/([A-Za-z0-9.-]{3,64})\/?$/), upHash = decodeURIComponent(location.hash).match(UP_HASH);
   if (upPath || upHash){ up.id = (upPath || upHash)[1].toLowerCase(); setView('profile'); if (upPath) try{ history.replaceState(null, '', '/#u/' + up.id); }catch(e){} }
-  else if (location.hash === '#predict' || location.hash === '#duels' || location.hash === '#guess' || DUEL_HASH.test(location.hash) || MKT_HASH.test(location.hash)) routePredict(location.hash);
+  else if (location.hash === '#predict' || location.hash === '#markets' || location.hash === '#duels' || location.hash === '#guess' || DUEL_HASH.test(location.hash) || MKT_HASH.test(location.hash)) routePredict(location.hash);
   else if (location.hash === '#u') setView('profile');
-  else setView(location.hash === '#liquidity' ? 'liq' : location.hash === '#farms' ? 'farm' : location.hash === '#stats' ? 'stats' : location.hash === '#leaderboard' ? 'board' : location.hash === '#launch' ? 'launch' : location.hash === '#portfolio' ? 'portfolio' : location.hash === '#faucet' ? 'faucet' : location.hash === '#nft' ? 'nft' : location.hash === '#names' ? 'names' : location.hash === '#games' || location.hash === '#hunt' || location.hash === '#spin' ? 'games' : location.hash === '#faq' ? 'help' : location.hash === '#send' ? 'portfolio' : location.hash === '#swap' ? 'swap' : LX_HASH.test(location.hash) ? 'launch' : 'home');
+  else setView(HASH_VIEW[location.hash] || (LX_HASH.test(location.hash) ? 'launch' : 'home'));
   if (lxDeep) openLaunch(E.utils.getAddress(lxDeep[1].toLowerCase()));
   if (location.hash === '#send') setTimeout(() => { if (st.account) sdOpen(); }, 1500);
+  if (location.hash === '#start') obShow();
   renderShell(); renderSwap(); renderLiq(); renderPools();
   if (!(await wcRestore()) && window.ethereum){
     window.ethereum.request({method:'eth_accounts'}).then(x => { if (x && x[0]) connect(); }).catch(()=>{});

@@ -119,20 +119,28 @@
     var valid = last.filter(function(v){ return v != null; });
     var best = Math.max.apply(null, valid.concat([-Infinity]));
     var tied = valid.length && valid.every(function(v){ return Math.abs(v - valid[0]) < 0.0005; });
+    // End labels: spread them apart so equal or close values never print on top of each other (the DOGE line too).
+    var GAP = 15, lab = [{i: -1, y: y(0)}];
+    series.forEach(function(s, i){ if (s.length) lab.push({i: i, y: y(s[s.length - 1][1])}); });
+    lab.sort(function(a, b){ return a.y - b.y || a.i - b.i; });
+    for (var k = 1; k < lab.length; k++) if (lab[k].y - lab[k - 1].y < GAP) lab[k].y = lab[k - 1].y + GAP;
+    var over = lab.length ? lab[lab.length - 1].y - (H - B) : 0;
+    if (over > 0) lab.forEach(function(o){ o.y -= over; });
+    var labY = {}; lab.forEach(function(o){ labY[o.i] = Math.max(T + 8, o.y); });
     var lines = series.map(function(s, i){
       if (!s.length) return '';
       var d = s.map(function(p, k){ return k ? 'H' + x(p[0]).toFixed(1) + ' V' + y(p[1]).toFixed(1) : 'M' + x(p[0]).toFixed(1) + ' ' + y(p[1]).toFixed(1); }).join(' ');   // prices move in steps
       var e = s[s.length - 1], lead = !tied && Math.abs(e[1] - best) < 0.0005;
       return '<path d="' + d + '" fill="none" stroke="' + COLORS[i % COLORS.length] + '" stroke-width="' + (lead ? 3.2 : 2.2) + '" stroke-linejoin="round" stroke-linecap="round"/>' +
         '<circle class="rc-dot" cx="' + x(e[0]).toFixed(1) + '" cy="' + y(e[1]).toFixed(1) + '" r="5" fill="' + COLORS[i % COLORS.length] + '"/>' +
-        '<text x="' + (x(e[0]) + 10).toFixed(1) + '" y="' + (y(e[1]) + 4).toFixed(1) + '" fill="' + COLORS[i % COLORS.length] + '">' + (lead ? '👑 ' : '') + esc(S.toks[i]) + ' ' + (e[1] >= 0 ? '+' : '') + e[1].toFixed(2) + '%</text>';
+        '<text x="' + (x(e[0]) + 10).toFixed(1) + '" y="' + (labY[i] + 4).toFixed(1) + '" fill="' + COLORS[i % COLORS.length] + '">' + (lead ? '👑 ' : '') + esc(S.toks[i]) + ' ' + (e[1] >= 0 ? '+' : '') + e[1].toFixed(2) + '%</text>';
     }).join('');
     var sw = x(r.start.toNumber() + 600), ew = x(r.end.toNumber() - 600);
     var svg = '<svg class="rc-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Token prices against DOGE during this round">' +
       '<rect x="' + L + '" y="' + T + '" width="' + (sw - L) + '" height="' + (H - T - B) + '" fill="currentColor" opacity=".05"/>' +
       '<rect x="' + ew + '" y="' + T + '" width="' + (W - R - ew) + '" height="' + (H - T - B) + '" fill="currentColor" opacity=".05"/>' +
       '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="currentColor" opacity=".35" stroke-dasharray="4 4"/>' +
-      '<text x="' + (W - R + 6) + '" y="' + (y(0) + 4) + '" fill="currentColor" opacity=".6">DOGE</text>' +
+      '<text x="' + (W - R + 6) + '" y="' + (labY[-1] + 4).toFixed(1) + '" fill="currentColor" opacity=".6">DOGE</text>' +
       '<text x="' + (L + 4) + '" y="' + (H - 8) + '" fill="currentColor" opacity=".55">start price window</text>' +
       '<text x="' + (ew + 4) + '" y="' + (H - 8) + '" fill="currentColor" opacity=".55">end window</text>' +
       lines + '</svg>';
