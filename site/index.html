@@ -8,7 +8,7 @@
 <script>(function(p){var m=p.match(/^\/(u|duel|p)\/([^/]+)\/?$/);if(m)location.replace('/#'+m[1]+'/'+m[2])})(location.pathname)</script>
 <script>(function(){try{var q=location.search+location.hash;if(/[?&]tg=1\b|tgWebApp/.test(q)||sessionStorage.getItem('cavfi.tg')){sessionStorage.setItem('cavfi.tg','1');document.documentElement.classList.add('tg');document.write('<script src="https://telegram.org/js/telegram-web-app.js"><\/script>')}}catch(e){}})()</script>
 <title>CavFi</title>
-<meta name="description" content="CavFi: swap, add liquidity, farm and stake on the DogeOS testnet with DOGE, KingS, LBTC, WETH and stablecoins.">
+<meta name="description" content="CavFi, the game layer of DogeOS: an hourly Arena against DOGE, on-chain treasure hunts, a free daily spin and provably fair games, plus a DEX and meme launchpad. DogeOS testnet.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -21,13 +21,13 @@
 <meta property="og:site_name" content="CavFi">
 <meta property="og:url" content="https://cavfi.com/">
 <meta property="og:title" content="CavFi">
-<meta property="og:description" content="Swap, add liquidity, farm and stake on DogeOS.">
+<meta property="og:description" content="The game layer of DogeOS: hourly Arena, treasure hunts, a free daily spin and provably fair games.">
 <meta property="og:image" content="https://cavfi.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="CavFi">
-<meta name="twitter:description" content="Swap, add liquidity, farm and stake on DogeOS.">
+<meta name="twitter:description" content="The game layer of DogeOS: hourly Arena, treasure hunts, a free daily spin and provably fair games.">
 <meta name="twitter:image" content="https://cavfi.com/og.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -728,7 +728,7 @@ html.spooky{--gold:#F28C28}
 .gx-die{min-width:120px;padding:10px 18px;border-radius:22px;display:grid;place-items:center;font:600 54px var(--mono);background:var(--surface);border:2px solid var(--line);box-shadow:0 10px 24px -12px rgba(0,0,0,.45)}
 .gx-die.spin{animation:gxShake .25s ease-in-out infinite}
 @keyframes gxShake{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
-.gx-res{font:800 18px var(--body);text-align:center;margin:8px 0 0}.sw-row{text-align:center;margin:10px 0 0}.sw-btn{display:inline-flex}.gx-res.win{color:var(--ok)}.gx-res.lose{color:var(--bad)}
+a.hm-card,a.hm-go{text-decoration:none;color:inherit}a.btn.primary.hm-go{color:var(--chestnut-ink)}.gx-res{font:800 18px var(--body);text-align:center;margin:8px 0 0}.sw-row{text-align:center;margin:10px 0 0}.sw-btn{display:inline-flex}.gx-res.win{color:var(--ok)}.gx-res.lose{color:var(--bad)}
 .gx-range{width:100%;accent-color:var(--chestnut)}
 .gx-track{position:relative;height:12px;border-radius:999px;overflow:hidden;background:var(--bad);opacity:.85}
 .gx-track i{position:absolute;top:0;bottom:0;background:var(--ok)}
@@ -788,7 +788,7 @@ html.spooky{--gold:#F28C28}
 .pc-horn{font-size:26px}.pc-ban button{background:none;border:0;color:#FFF4E2;font-size:16px;cursor:pointer;padding:4px}
 @media (prefers-reduced-motion:reduce){.pc-ban{transition:none}}
 /* activity calendar */
-.hm-grid{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;max-width:640px}
+div.hm-grid{grid-template-columns:none;display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;max-width:640px}
 .hm-grid i,.hm-key i{display:block;aspect-ratio:1;border-radius:4px;background:var(--well)}
 .hm-grid .hm-x{background:none}
 .hm-1{background:color-mix(in srgb,var(--chestnut) 30%,var(--well))!important}.hm-2{background:color-mix(in srgb,var(--chestnut) 55%,var(--well))!important}
@@ -1034,10 +1034,11 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     <section class="hm-hero" aria-label="Welcome">
       <div class="hm-copy">
         <span class="hm-kicker"><i class="dot" aria-hidden="true"></i>Live on DogeOS testnet</span>
-        <h1>The royal court of <em>DogeOS</em> DeFi.</h1>
-        <p>Swap, launch memes, back tokens in the Arena and flip a coin, with a crowned Cavalier at your side. Everything settles on-chain, straight from your wallet.</p>
+        <h1>The game layer of <em>DogeOS</em>.</h1>
+        <p>Back the token that beats DOGE in the hourly Arena, crack on-chain treasure hunts, spin the royal wheel for free and play provably fair games, with a crowned Cavalier at your side. Sign in with email or Google, no wallet app needed.</p>
         <div class="hm-cta">
-          <button class="btn primary hm-go" data-go="swap">Start swapping</button>
+          <a class="btn primary hm-go" href="arena.html">🏁 Enter the Arena</a>
+          <button class="btn hm-go" data-tb="spin">🎁 Free spin</button>
           <button class="btn hm-go" data-go="games">🎲 Play games</button>
           <button class="btn hm-install" id="installBtn" hidden>📲 Install app</button>
         </div>
@@ -1078,6 +1079,31 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     <section class="sx-card iv-card" id="ivCard" hidden aria-labelledby="ivH"></section>
     <div class="hm-ticker" id="hmTicker" aria-label="Pool prices"><div class="hm-track" id="hmTrack"><span class="hm-tk muted">Reading pool prices…</span></div></div>
     <section class="hm-grid" aria-label="Choose where to go">
+      <a class="hm-card" href="arena.html">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg></span>
+        <b>The Arena</b><small>Every hour, back the token you think will rise most against DOGE. Winners split the pot.</small>
+        <span class="hm-fig"><span>Live race</span><strong>hourly</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </a>
+      <button class="hm-card" data-tb="spin">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg></span>
+        <b>Free daily spin</b><small>One free spin of the Royal Wheel a day. Every spin wins KingS, up to 50,000.</small>
+        <span class="hm-fig"><span>Spins so far</span><strong id="hmFigSpin">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </button>
+      <button class="hm-card" data-tb="hunt">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><path d="M11 11l9 9M16 16l2-2M18.5 18.5l2-2"/></svg></span>
+        <b>Treasure hunt</b><small>Five riddles hidden around CavFi. The first 3 to solve them all share the KingS prize.</small>
+        <span class="hm-fig"><span>Riddles cracked</span><strong id="hmFigHunt">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </button>
+      <button class="hm-card" data-go="games">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="15" cy="9" r="1.2"/><circle cx="9" cy="15" r="1.2"/></svg></span>
+        <b>Games</b><small>Coin Flip, Dice, Limbo, Royal Wheel, Plinko and Hi-Lo with test DOGE. Provably fair, settled on-chain in about a minute.</small>
+        <span class="hm-fig"><span>Bets played</span><strong id="hmFigGames">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </button>
+      <button class="hm-card" data-go="launch">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2c3 2.5 4.5 6 4.5 10L12 17l-4.5-5C7.5 8 9 4.5 12 2z"/><path d="M8 14l-3 3 3 1M16 14l3 3-3 1M12 17v5"/></svg></span>
+        <b>Launchpad</b><small>Launch a meme token in one click. Fill the curve and it graduates to a CavFi pool.</small>
+        <span class="hm-fig"><span>Tokens launched</span><strong id="hmFigLaunch">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </button>
       <button class="hm-card" data-go="swap">
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></span>
         <b>Swap</b><small>Trade DOGE, KingS, WETH, LBTC and stables in one tap.</small>
@@ -1093,35 +1119,15 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <b>Farms &amp; staking</b><small>Stake LP or single tokens and collect KingS every second.</small>
         <span class="hm-fig"><span>KingS paid out</span><strong id="hmFigFarm">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
       </button>
-      <button class="hm-card" data-go="launch">
-        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2c3 2.5 4.5 6 4.5 10L12 17l-4.5-5C7.5 8 9 4.5 12 2z"/><path d="M8 14l-3 3 3 1M16 14l3 3-3 1M12 17v5"/></svg></span>
-        <b>Launchpad</b><small>Launch a meme token in one click. Fill the curve and it graduates to a CavFi pool.</small>
-        <span class="hm-fig"><span>Tokens launched</span><strong id="hmFigLaunch">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
-      </button>
-      <button class="hm-card" data-go="stats">
-        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
-        <b>Stats</b><small>Volume, fees, prices and every recent trade.</small>
-        <span class="hm-fig"><span>Volume 24h</span><strong id="hmFigStats">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
-      </button>
       <button class="hm-card" data-go="nft">
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 9l2.5-5 3 3.5L12 3l1.5 4.5 3-3.5L19 9z"/><rect x="4" y="11" width="16" height="10" rx="3"/></svg></span>
         <b>Cavaliers NFT</b><small>Mint a crowned Cavalier with on-chain art, then stake it to earn KingS.</small>
         <span class="hm-fig"><span>Minted</span><strong id="hmFigNft">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
       </button>
-      <button class="hm-card" data-tb="spin">
-        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg></span>
-        <b>Free daily spin</b><small>One free spin of the Royal Wheel a day. Every spin wins KingS, up to 50,000.</small>
-        <span class="hm-fig"><span>Spins so far</span><strong id="hmFigSpin">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
-      </button>
-      <button class="hm-card" data-tb="hunt">
-        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><path d="M11 11l9 9M16 16l2-2M18.5 18.5l2-2"/></svg></span>
-        <b>Treasure hunt</b><small>Five riddles hidden around CavFi. The first 3 to solve them all share the KingS prize.</small>
-        <span class="hm-fig"><span>Riddles cracked</span><strong id="hmFigHunt">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
-      </button>
-      <button class="hm-card" data-go="games">
-        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="15" cy="9" r="1.2"/><circle cx="9" cy="15" r="1.2"/></svg></span>
-        <b>Games</b><small>Coin Flip, Dice, Limbo, Royal Wheel, Plinko and Hi-Lo with test DOGE. Provably fair, settled on-chain in about a minute.</small>
-        <span class="hm-fig"><span>Bets played</span><strong id="hmFigGames">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      <button class="hm-card" data-go="stats">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+        <b>Stats</b><small>Volume, fees, prices and every recent trade.</small>
+        <span class="hm-fig"><span>Volume 24h</span><strong id="hmFigStats">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
       </button>
     </section>
     <section class="sx-card aw-card" data-arena-winners data-limit="5" data-link="arena.html" aria-label="Latest Arena rounds"></section>
@@ -1829,6 +1835,8 @@ function tokBtn(el, t, label){ el.innerHTML = coin(t)+`<span>${t.symbol}</span>`
 function errMsg(e){
   const m = (e && (e.reason || e.data?.message || e.error?.message || e.message)) || String(e);
   if (/user rejected|denied|4001/i.test(m)) return 'You rejected the request in your wallet.';
+  if (/handoff_expired/i.test(m + ' ' + ((e && e.code) || ''))) return 'The DogeOS sign-in took too long and expired. Press Connect wallet and sign in again.';
+  if (/session_changed|lifecycle_changed/i.test(m + ' ' + ((e && e.reason) || ''))) return 'Your DogeOS session changed while signing in (another tab?). Try again.';
   if (/must provide an Ethereum address|unknown account/i.test(m)) return 'Your wallet lost track of the connected account. Reload the page and connect your wallet again.';
   if (/wait 1 hour/.test(m)) return 'You already claimed in the last hour. Try again later.';
   if (/INSUFFICIENT_OUTPUT_AMOUNT|INSUFFICIENT_[AB]_AMOUNT/.test(m)) return 'Price moved beyond your slippage tolerance. Raise slippage or try again.';
@@ -1920,7 +1928,7 @@ async function connectDoge(){
     await window.CavDoge.ensureChain().catch(() => {});
     await connect();
     if (st.account) toast(`Signed in with DogeOS: ${short(st.account)} ✓`, 'ok', 8000);
-  }catch(e){ if (!/closed|reject|User|4001/i.test((e && e.message) || '') && e.code !== 4001) toast(errMsg(e), 'bad'); }
+  }catch(e){ if (!/closed|reject|User|4001/i.test((e && e.message) || '') && e.code !== 4001 || /handoff_expired/.test(String(e && e.code))) toast(errMsg(e), 'bad'); }
 }
 async function dogeRestore(){
   try{ if (localStorage.getItem('cavfi.doge') !== '1') return false; }catch(e){ return false; }
@@ -4229,11 +4237,11 @@ async function renderHuntBar(){
     if (hidden || now < Number(h.start) || (over && now > Number(h.end) + 2 * 86400)){ bar.hidden = true; return; }
     if (over){   // for two days after the end, the bar shows how it went instead of disappearing silently
       const fin = Number(h.finishers);
-      bar.innerHTML = `<span>🗝️ <b>The Royal Treasure Hunt is over.</b> ${fin ? `${fin} hunter${fin === 1 ? '' : 's'} solved all ${h.clues} riddles and shared the treasure.` : `Nobody solved all ${h.clues} riddles: ${cracked} of ${h.clues} were cracked.`} Thanks for hunting, more hunts are coming.</span><button class="btn" data-tb="hunt">See the results</button><button class="hb-x" data-hb="x" aria-label="Hide">✕</button>`;
+      bar.innerHTML = `<span>🗝️ <b>${esc(h.title)} is over.</b> ${fin ? `${fin} hunter${fin === 1 ? '' : 's'} solved all ${h.clues} riddles and shared the treasure.` : `Nobody solved all ${h.clues} riddles: ${cracked} of ${h.clues} were cracked.`} Thanks for hunting, more hunts are coming.</span><button class="btn" data-tb="hunt">See the results</button><button class="hb-x" data-hb="x" aria-label="Hide">✕</button>`;
       bar.hidden = false; bar.dataset.k = lk(A.hunt) + id + 'end'; return;
     }
     const left = Number(h.end) - now;
-    bar.innerHTML = `<span>🗝️ <b>Royal Treasure Hunt:</b> ${sxNum(fl(h.prize, 18))} KingS for the first 3 to solve ${h.clues} riddles hidden around CavFi. ${cracked ? `${cracked} of ${h.clues} riddles cracked so far` : 'Nobody has cracked a riddle yet'} · ends in ${inT(left)}.</span><button class="btn" data-tb="hunt">Start hunting</button><button class="hb-x" data-hb="x" aria-label="Hide">✕</button>`;
+    bar.innerHTML = `<span>🗝️ <b>${esc(h.title)}:</b> ${sxNum(fl(h.prize, 18))} KingS for the first 3 to solve ${h.clues} riddles hidden around CavFi. ${cracked ? `${cracked} of ${h.clues} riddles cracked so far` : 'Nobody has cracked a riddle yet'} · ends in ${inT(left)}.</span><button class="btn" data-tb="hunt">Start hunting</button><button class="hb-x" data-hb="x" aria-label="Hide">✕</button>`;
     bar.hidden = false; bar.dataset.k = lk(A.hunt) + id;
   }catch(e){ bar.hidden = true; }
 }

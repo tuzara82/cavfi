@@ -2,6 +2,7 @@
 // Serves the static site unchanged, plus one small API used by quest platforms:
 //
 //   GET  /api/quest?task=swap&address=0x...      -> {"ok":1,"task":"swap","message":"..."}  (Galxe REST credential)
+//   GET  /api/quest/tasks                         -> every task and what the player has to do
 //   POST /api/quest?task=swap   (Zealy API task)  -> 200 {"message":"..."} when done, 400 {"message":"..."} when not
 //
 // Optional query: since=2026-10-25 counts only transactions from that UTC day on (for a campaign).
@@ -28,6 +29,8 @@ const TX_TASKS = {
   callout:{keys: ['callouts'], sel: ['0xf55332ab'], need: 'Call a Launchpad token: open it on cavfi.com/#launch and press Call it.'},
   spin:   {keys: ['spin'], sel: ['0xf0acd7d5'], need: 'Spin the free Royal Wheel on cavfi.com/#spin (once a day).'},
   games:  {keys: ['games', 'gamesV1'], sel: ['0x4fea048e', '0xad53a604'], need: 'Play any game in CavFi Games: cavfi.com/#games'},
+  arenawin:{keys: ['arena'], sel: ['0x379607f5', '0x925489a8'], need: 'Win an Arena round (back the token that beats DOGE) and claim your share: cavfi.com/arena.html'},
+  hunt:   {keys: ['hunt'], sel: ['0x9a42f3aa'], need: 'Crack a riddle of the Royal Treasure Hunt and claim it on-chain: cavfi.com/#hunt', arg0: 'hunt'},
 };
 // tasks checked from contract state
 const STATE_TASKS = {
@@ -63,7 +66,7 @@ async function stateDone(task, A, who){
   if (task === 'quest') return A.quests && word(await call(A.quests, '0x0aae7a6b' + pad(who)), 3) > 0n; // info(): quests done in total
   return false;
 }
-async function txDone(t, A, who, since, explorer){
+async function txDone(t, A, who, since, explorer, arg0){
   const targets = t.keys.map(k => (A[k] || '').toLowerCase()).filter(Boolean);
   if (!targets.length) return false;
   let url = `${explorer}/api/v2/addresses/${who}/transactions?filter=from`;
@@ -76,7 +79,8 @@ async function txDone(t, A, who, since, explorer){
       if (since && ts < since) return false;
       const to = (tx.to && tx.to.hash || '').toLowerCase(), sel = (tx.raw_input || '').slice(0, 10).toLowerCase();
       const ok = tx.status === 'ok' || tx.result === 'success';
-      if (ok && targets.includes(to) && t.sel.includes(sel)) return true;
+      const argOk = arg0 == null || (tx.raw_input || '').length >= 74 && BigInt('0x' + tx.raw_input.slice(10, 74)) === BigInt(arg0);
+      if (ok && argOk && targets.includes(to) && t.sel.includes(sel)) return true;
     }
     if (!j.next_page_params) break;
     url = `${explorer}/api/v2/addresses/${who}/transactions?filter=from&` + new URLSearchParams(j.next_page_params);
@@ -93,7 +97,7 @@ async function quest(request, env, url){
   const isPost = request.method === 'POST';
   const fail = msg => isPost ? json({message: msg}, 400) : json({ok: 0, task, message: msg});
   const task = (url.searchParams.get('task') || '').toLowerCase();
-  let who = url.searchParams.get('address') || '';
+  let who = url.searchParams.get('address') || url.searchParams.get('wallet') || '';
   if (isPost){
     if (env.ZEALY_API_KEY && request.headers.get('x-api-key') !== env.ZEALY_API_KEY) return json({message: 'Invalid API key.'}, 400);
     try{ const b = await request.json(); who = (b.accounts && b.accounts.wallet) || b.address || who; }catch(e){}
@@ -104,7 +108,8 @@ async function quest(request, env, url){
   const since = sinceStr && /^\d{4}-\d{2}-\d{2}$/.test(sinceStr) ? Math.floor(Date.parse(sinceStr + 'T00:00:00Z') / 1000) : 0;
   try{
     const A = await addresses(env, url);
-    const done = TX_TASKS[task] ? await txDone(TX_TASKS[task], A, who, since, env.EXPLORER || EXPLORER) : await stateDone(task, A, who);
+    const t = TX_TASKS[task], a0 = t && t.arg0 && /^\d{1,6}$/.test(url.searchParams.get(t.arg0) || '') ? url.searchParams.get(t.arg0) : null;
+    const done = t ? await txDone(t, A, who, since, env.EXPLORER || EXPLORER, a0) : await stateDone(task, A, who);
     const need = (TX_TASKS[task] || STATE_TASKS[task]).need;
     if (done) return isPost ? json({message: 'Done! Thanks for testing CavFi 👑'}) : json({ok: 1, task, message: 'done'});
     return fail(`Not found yet for ${who.slice(0, 6)}…${who.slice(-4)} on DogeOS testnet. ${need} If you just did it, wait a minute and try again.`);
@@ -221,6 +226,8 @@ export default {
     if (dm && request.method === 'GET') return duelPage(env, url, dm[1]);
     const pm = url.pathname.match(/^\/p\/(\d{1,9})\/?$/);
     if (pm && request.method === 'GET') return marketPage(env, url, pm[1]);
+    if (url.pathname === '/api/quest/tasks')
+      return json({usage: 'GET /api/quest?task=<task>&address=0x…[&since=YYYY-MM-DD][&hunt=<id> for task=hunt] → {"ok":1|0,…}; POST for Zealy', tasks: Object.fromEntries([...Object.entries(TX_TASKS), ...Object.entries(STATE_TASKS)].map(([k, v]) => [k, v.need]))});
     if (url.pathname === '/api/quest'){
       if (request.method === 'OPTIONS') return new Response(null, {headers: {'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST', 'access-control-allow-headers': 'content-type, x-api-key'}});
       return quest(request, env, url);
