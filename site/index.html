@@ -766,6 +766,12 @@ a.hm-card,a.hm-go{text-decoration:none;color:inherit}a.btn.primary.hm-go{color:v
 .hunt-bar .btn{background:#E7B73C;border-color:#E7B73C;color:#2A1A14}
 .hunt-bar .hb-x{background:none;border:0;color:#FFF4E2;font-size:15px;cursor:pointer;padding:4px}
 .hn-q{margin:0;font:400 18px/1.4 var(--display)}
+.rd-bar{position:relative;height:28px;border-radius:14px;background:var(--well);overflow:hidden;border:1px solid var(--line)}
+.rd-bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#c0392b,#e67e22);transition:width .8s ease}
+.rd-bar span{position:relative;display:block;text-align:center;font:800 13px/28px var(--body);color:var(--ink)}
+.rd-hits,.rd-top-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;align-content:start}.rd-col{align-content:start;justify-content:stretch}.rd-top-list a{color:inherit;text-decoration:none;font-weight:700}
+.rd-hits li,.rd-top-list li{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:4px 0;border-bottom:1px dashed var(--line)}
+.rd-top-list{counter-reset:r}.rd-top-list li::before{counter-increment:r;content:counter(r) ".";color:var(--muted);margin-right:6px}.rd-top-list li a{flex:1}
 .hn-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
 .hn-form input{min-width:0;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:12px;padding:10px 12px;font:500 15px var(--body)}
 .hn-ok{margin:0;color:var(--ok);font-weight:800}.hn-bad{margin:0;color:var(--bad);font-size:13px}
@@ -1018,7 +1024,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     <div class="more-grid">
       <button data-tb="home"><span>🏠</span>Home</button><button data-tb="swap"><span>⇄</span>Swap</button><button data-tb="liq"><span>💧</span>Liquidity</button>
       <button data-tb="farm"><span>🌾</span>Farms</button><button data-tb="launch"><span>🚀</span>Launch</button><a href="arena.html"><span>🏟️</span>Arena</a>
-      <button data-tb="predict"><span>🔮</span>Predict</button><button data-tb="games"><span>🎲</span>Games</button><button data-tb="hunt"><span>🗝️</span>Treasure hunt</button><button data-tb="spin"><span>🎁</span>Free spin</button><button data-tb="nft"><span>👑</span>NFTs</button>
+      <button data-tb="predict"><span>🔮</span>Predict</button><button data-tb="games"><span>🎲</span>Games</button><button data-tb="hunt"><span>🗝️</span>Treasure hunt</button><button data-tb="spin"><span>🎁</span>Free spin</button><button data-tb="raid"><span>🐈</span>Fat Cat Raid</button><a href="passport.html"><span>🪪</span>Passport</a><button data-tb="nft"><span>👑</span>NFTs</button>
       <button data-tb="names"><span>🏷️</span>Names</button><button data-tb="board"><span>🏆</span>Leaderboards</button><button data-tb="stats"><span>📊</span>Stats</button>
       <button data-tb="faucet"><span>🚰</span>Faucet</button><button data-tb="portfolio"><span>💼</span>Portfolio</button><button data-tb="help"><span>❓</span>How it works</button>
     </div>
@@ -1083,6 +1089,16 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg></span>
         <b>The Arena</b><small>Every hour, back the token you think will rise most against DOGE. Winners split the pot.</small>
         <span class="hm-fig"><span>Live race</span><strong>hourly</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </a>
+      <button class="hm-card" data-tb="raid">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 20l4-4M14 5l5 5-9 9-5-5z"/><path d="M14 5l2-2 5 5-2 2"/></svg></span>
+        <b>Fat Cat Raid</b><small>A boss everyone fights together. Every action on CavFi hits it. When it falls, all fighters share the KingS.</small>
+        <span class="hm-fig"><span>Boss health</span><strong id="hmFigRaid">–</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
+      </button>
+      <a class="hm-card" href="passport.html">
+        <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/></svg></span>
+        <b>DogeOS Passport</b><small>Paste any wallet and see every DogeOS app it has used, one stamp each. For the whole ecosystem.</small>
+        <span class="hm-fig"><span>Stamps</span><strong>every app</strong></span><span class="hm-arrow" aria-hidden="true">→</span>
       </a>
       <button class="hm-card" data-tb="spin">
         <span class="hm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg></span>
@@ -1491,7 +1507,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
   <!-- ===================== GAMES ===================== -->
   <div class="view" id="viewGames" hidden>
     <div class="sx-bar">
-      <div class="chips" id="gxTabs" role="group" aria-label="Game"><button class="chip" data-t="spin" aria-pressed="false">🎁 Free spin</button><button class="chip" data-t="coin" aria-pressed="true">🪙 Coin Flip</button><button class="chip" data-t="dice" aria-pressed="false">🎲 Dice</button><button class="chip" data-t="limbo" aria-pressed="false">🚀 Limbo</button><button class="chip" data-t="wheel" aria-pressed="false">🎡 Wheel</button><button class="chip" data-t="plinko" aria-pressed="false">🔻 Plinko</button><button class="chip" data-t="hilo" aria-pressed="false">🃏 Hi-Lo</button><button class="chip" data-t="hunt" aria-pressed="false">🗝️ Treasure hunt</button></div>
+      <div class="chips" id="gxTabs" role="group" aria-label="Game"><button class="chip" data-t="spin" aria-pressed="false">🎁 Free spin</button><button class="chip" data-t="coin" aria-pressed="true">🪙 Coin Flip</button><button class="chip" data-t="dice" aria-pressed="false">🎲 Dice</button><button class="chip" data-t="limbo" aria-pressed="false">🚀 Limbo</button><button class="chip" data-t="wheel" aria-pressed="false">🎡 Wheel</button><button class="chip" data-t="plinko" aria-pressed="false">🔻 Plinko</button><button class="chip" data-t="hilo" aria-pressed="false">🃏 Hi-Lo</button><button class="chip" data-t="hunt" aria-pressed="false">🗝️ Treasure hunt</button><button class="chip" data-t="raid" aria-pressed="false">🐈 Raid</button></div>
       <span class="sx-status" id="gxStatus" aria-live="polite"></span>
     </div>
     <div class="pr-body" id="gxBody"></div>
@@ -1584,6 +1600,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
     </div>
     <nav class="sf-links" aria-label="Footer links">
       <a href="#faq" data-goview="help">How it works</a>
+      <a href="passport.html">DogeOS Passport</a>
       <a class="sf-x" href="https://x.com/cavdefi" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.8L23 22h-6.3l-4.9-6.4L6.2 22H3l7.3-8.3L1 2h6.4l4.4 5.9L18.9 2zm-1.1 18h1.7L6.3 3.9H4.5L17.8 20z"/></svg>Follow @cavdefi</a>
       <a href="https://github.com/tuzara82/cavfi" target="_blank" rel="noopener">Open source</a>
       <a href="https://github.com/tuzara82/cavfi/blob/main/contracts/SECURITY.md" target="_blank" rel="noopener">Security review</a>
@@ -1668,7 +1685,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { raid:'', spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 /* WalletConnect (any mobile wallet by QR code). Free project id from https://cloud.reown.com,
    with cavfi.com in its allowed domains. Empty = the option is hidden. */
@@ -1681,7 +1698,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = window.CavRpc ? CavRpc.make(E, A.rpc || NET.add.rpcUrls[0], CHAIN_ID) : new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { raid:'', spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -2184,6 +2201,9 @@ function setView(v){
   } else if (v === 'games' && gx.tab === 'spin'){
     $('ledeH').innerHTML = 'Spin the royal <em>wheel</em>.';
     $('ledeP').textContent = 'One free spin a day for every wallet. Every spin wins KingS, up to the 50,000 KingS crown. No stake, you only pay gas. Testnet, no real value.';
+  } else if (v === 'games' && gx.tab === 'raid'){
+    $('ledeH').innerHTML = 'Raid the <em>Fat Cat</em>.';
+    $('ledeP').textContent = 'A boss everyone on CavFi fights together. Every spin, game, Arena stake, riddle, gm and swap hits it. When it falls, all fighters share the KingS prize. Testnet, no real value.';
   } else if (v === 'games' && gx.tab === 'hunt'){
     $('ledeH').innerHTML = 'Hunt the royal <em>treasure</em>.';
     $('ledeP').textContent = 'Five riddles, answers hidden all around CavFi. Be one of the first three to solve them all and win KingS. Testnet, no real value.';
@@ -2224,12 +2244,12 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? (gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : '#games') : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#markets') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? (gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : gx.tab === 'raid' ? '#raid' : '#games') : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#markets') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
   if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
   if (v === 'swap'){ renderSwapChart(); if (!sx.loaded) loadStats(); }
-  if (v === 'home'){ loadHomeGuess(); loadHomeExtra(); loadOnboarding(); nfHomeFig(); gxHomeFig(); spHomeFig(); loadGm(); loadQuests(); loadRaffle(); loadFeed(); renderInviteCard(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
+  if (v === 'home'){ loadHomeGuess(); loadHomeExtra(); loadOnboarding(); nfHomeFig(); gxHomeFig(); spHomeFig(); if (A.raid && !rd.data) loadRaid(); loadGm(); loadQuests(); loadRaffle(); loadFeed(); renderInviteCard(); if (A.launch && !lx.loaded) loadLaunches().then(renderHome); }
   if (v === 'portfolio') loadPortfolio();
   if (v === 'faucet') loadFaucet();
   if (v === 'nft') loadNft();
@@ -2242,7 +2262,7 @@ function setView(v){
 document.addEventListener('click', e => { const b = e.target.closest('[data-tb]'); if (!b) return; const t = b.dataset.tb;
   if (t === 'more'){ $('moreSheet').hidden = false; return; }
   if (t === 'close'){ $('moreSheet').hidden = true; return; }
-  $('moreSheet').hidden = true; if (t === 'predict'){ pr.hl = null; pr.hlm = null; } if (t === 'hunt' || t === 'spin'){ gx.tab = t; setView('games'); } else setView(t); window.scrollTo({top: 0}); });
+  $('moreSheet').hidden = true; if (t === 'predict'){ pr.hl = null; pr.hlm = null; } if (t === 'hunt' || t === 'spin' || t === 'raid'){ gx.tab = t; setView('games'); } else setView(t); window.scrollTo({top: 0}); });
 $('moreSheet').addEventListener('click', e => { if (e.target.id === 'moreSheet') $('moreSheet').hidden = true; });
 document.querySelectorAll('header nav button').forEach(b => b.addEventListener('click', () => { if (b.dataset.view === 'predict'){ pr.hl = null; pr.hlm = null; } setView(b.dataset.view); }));
 document.addEventListener('click', e => { const a = e.target.closest('[data-goview]'); if (!a) return; e.preventDefault(); setView(a.dataset.goview); window.scrollTo({top:0, behavior:'smooth'}); });
@@ -2254,10 +2274,10 @@ window.addEventListener('hashchange', () => { const h = location.hash, m = h.mat
   else if (u){ if (st.view !== 'profile' || u[1].toLowerCase() !== up.id) openProfile(u[1]); }
   else if (h === '#u'){ up.id = ''; setView('profile'); }
   else if (h === '#predict' || h === '#markets' || h === '#duels' || h === '#guess' || DUEL_HASH.test(h) || MKT_HASH.test(h)) routePredict(h);
-  else if (h === '#games' || h === '#hunt' || h === '#spin'){ gx.tab = h === '#hunt' ? 'hunt' : h === '#spin' ? 'spin' : (gx.tab === 'hunt' || gx.tab === 'spin') ? 'coin' : gx.tab; setView('games'); }
+  else if (h === '#games' || h === '#hunt' || h === '#spin' || h === '#raid'){ gx.tab = h === '#hunt' ? 'hunt' : h === '#spin' ? 'spin' : h === '#raid' ? 'raid' : (gx.tab === 'hunt' || gx.tab === 'spin' || gx.tab === 'raid') ? 'coin' : gx.tab; setView('games'); }
   else { const v = HASH_VIEW[h] || (h === '' || h === '#' ? 'home' : null); if (v && v !== st.view) setView(v); window.scrollTo({top: 0}); } });
 // One map from a page address (#…) to its view, used on first load and whenever the address changes.
-const HASH_VIEW = {'#liquidity': 'liq', '#farms': 'farm', '#stats': 'stats', '#leaderboard': 'board', '#launch': 'launch', '#portfolio': 'portfolio', '#faucet': 'faucet', '#nft': 'nft', '#names': 'names', '#games': 'games', '#hunt': 'games', '#spin': 'games', '#faq': 'help', '#send': 'portfolio', '#swap': 'swap', '#home': 'home', '#start': 'home'};
+const HASH_VIEW = {'#liquidity': 'liq', '#farms': 'farm', '#stats': 'stats', '#leaderboard': 'board', '#launch': 'launch', '#portfolio': 'portfolio', '#faucet': 'faucet', '#nft': 'nft', '#names': 'names', '#games': 'games', '#hunt': 'games', '#spin': 'games', '#raid': 'games', '#faq': 'help', '#send': 'portfolio', '#swap': 'swap', '#home': 'home', '#start': 'home'};
 
 /* ================= price guard =================
    Builds a market price in USD for every token from all pools (anchored on the
@@ -6657,7 +6677,7 @@ const GX_WHEEL = [120, 0, 150, 0, 120, 0, 200, 0, 120, 0, 500, 0, 120, 0, 150, 0
 const GX_PLINKO = [[560, 210, 110, 100, 46, 100, 110, 210, 560], [1300, 300, 126, 70, 40, 70, 126, 300, 1300], [2900, 400, 145, 30, 20, 30, 145, 400, 2900]];
 const GX_RISK = ['Low', 'Medium', 'High'];
 const GX_CARD = c => ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'][c] || '?';
-const gx = {tab: location.hash === '#hunt' ? 'hunt' : location.hash === '#spin' ? 'spin' : 'coin', side: 0, target: 50, over: true, limbo: '2.00', risk: 1, hiDir: 1, card: 0, stake: '1', busy: false, data: null, live: null, names: {}, timer: null};
+const gx = {tab: location.hash === '#hunt' ? 'hunt' : location.hash === '#spin' ? 'spin' : location.hash === '#raid' ? 'raid' : 'coin', side: 0, target: 50, over: true, limbo: '2.00', risk: 1, hiDir: 1, card: 0, stake: '1', busy: false, data: null, live: null, names: {}, timer: null};
 const gxLimboT = () => { const v = Math.round(Number(String(gx.limbo).replace(',', '.')) * 100); return isFinite(v) ? v : 0; };
 /* [winning chance %, payout multiplier] of the current choice (Wheel and Plinko: the top multiplier) */
 function gxOdds(){
@@ -6687,6 +6707,7 @@ const gxNm = a => gx.names[lk(a)] || short(a);
 const gxRow = (it, id) => ({id: Number(id), player: it.player, stake: it.stake, round: Number(it.round), game: Number(it.game), pick: Number(it.pick), over: it.over, card: Number(it.card), result: Number(it.result), status: Number(it.status), payout: it.payout, placedAt: Number(it.placedAt)});
 async function loadGames(){
   if (gx.tab === 'hunt') return loadHunt();
+  if (gx.tab === 'raid') return loadRaid();
   if (gx.tab === 'spin') return loadSpin();
   if (!A.games){ gx.data = {none: true}; return renderGames(); }
   try{
@@ -6788,6 +6809,7 @@ function renderGames(){
   const box = $('gxBody'); if (!box) return;
   document.querySelectorAll('#gxTabs .chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.t === gx.tab)));
   if (gx.tab === 'hunt') return renderHunt();
+  if (gx.tab === 'raid') return renderRaid();
   if (gx.tab === 'spin') return renderSpin();
   const D = gx.data;
   if (!D){ box.innerHTML = '<div class="empty-card">Reading the games…</div>'; return; }
@@ -6853,7 +6875,7 @@ async function gxWatch(id){
 }
 document.addEventListener('click', async e => {
   const t = e.target.closest('#gxTabs .chip');
-  if (t){ gx.tab = t.dataset.t; gx.live = null; try{ history.replaceState(null, '', gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : '#games'); }catch(_){} setView('games'); return; }
+  if (t){ gx.tab = t.dataset.t; gx.live = null; try{ history.replaceState(null, '', gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : gx.tab === 'raid' ? '#raid' : '#games'); }catch(_){} setView('games'); return; }
   const b = e.target.closest('[data-gx]'); if (!b) return;
   const a = b.dataset.gx;
   if (a === 'gate'){ const g = gxGate(); if (g && g.act) g.act(); return; }
@@ -7004,6 +7026,76 @@ const hnStoreKey = id => 'cavfi.hunt.' + lk(A.hunt) + '.' + id;
 const hnFound = id => { try{ return JSON.parse(localStorage.getItem(hnStoreKey(id)) || '{}'); }catch(e){ return {}; } };
 const hnSave = (id, o) => { try{ localStorage.setItem(hnStoreKey(id), JSON.stringify(o)); }catch(e){} };
 const ord = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+/* ================= CavFi Raid: a co-op boss everyone fights together =================
+   Every action on CavFi deals damage (the CavFi bot records it from the chain every few minutes). When the boss
+   falls, everyone who hit it shares the KingS prize by damage dealt. */
+const RAID_ABI = [
+  'function count() view returns (uint256)',
+  'function get(uint256) view returns (tuple(string title, uint64 start, uint64 end, uint64 defeatedAt, uint128 maxHp, uint128 hp, uint256 prize, uint256 claimed, uint256 totalDamage, address finalBlow))',
+  'function damageOf(uint256, address) view returns (uint256)', 'function claimable(uint256, address) view returns (uint256)',
+  'function hasClaimed(uint256, address) view returns (bool)', 'function playerCount(uint256) view returns (uint256)',
+  'function page(uint256 id, uint256 start, uint256 n) view returns (address[] who, uint256[] dmg)', 'function claim(uint256 id) returns (uint256)',
+];
+const RAID_HITS = [['🎁', 'Free spin', 60], ['🗝️', 'Solve a riddle', 200], ['🏆', 'Win an Arena round', 120], ['🏁', 'Back a token in the Arena', 40], ['⚔️', 'Duel', 40],
+  ['🎲', 'Play a game', 25], ['🎯', 'Guess the DOGE price', 25], ['👑', 'Mint a Cavalier or a .cav name', 30], ['⇄', 'Swap or add liquidity', 20], ['🚀', 'Launchpad trade', 20], ['📣', 'Callout', 20], ['☀️', 'gm or gn', 15]];
+const rd = {data: null, busy: false, names: {}};
+const rdC = signer => new E.Contract(A.raid, RAID_ABI, signer ? st.signer : RP());
+async function loadRaid(){
+  if (!A.raid){ rd.data = {none: true}; return renderGames(); }
+  try{
+    const c = rdC(), n = (await c.count()).toNumber();
+    if (!n){ rd.data = {none: true}; return renderGames(); }
+    const id = n - 1, [R, pc] = await Promise.all([c.get(id), c.playerCount(id)]);
+    const [who, dmg] = await c.page(id, 0, Math.min(pc.toNumber(), 500));
+    const top = who.map((a, k) => ({a, d: Number(dmg[k])})).sort((x, y) => y.d - x.d);
+    const [mine, cl, done] = st.account ? await Promise.all([c.damageOf(id, st.account), c.claimable(id, st.account), c.hasClaimed(id, st.account)]) : [E.constants.Zero, E.constants.Zero, false];
+    const ask = [...top.slice(0, 10).map(x => x.a), R.finalBlow].filter(a => a !== E.constants.AddressZero && rd.names[lk(a)] == null);
+    if (A.names && ask.length){ try{ const ns = await nmC().namesOf(ask); ask.forEach((a, k) => rd.names[lk(a)] = nmValid(ns[k]) ? ns[k] + '.cav' : ''); }catch(e){} }
+    rd.data = {id, R, top, players: pc.toNumber(), mine: Number(mine), cl, done, now: (await RP().getBlock('latest')).timestamp};
+  }catch(e){ rd.data = {err: true}; }
+  renderGames(); rdHomeFig();
+}
+function rdHomeFig(){ const f = $('hmFigRaid'), D = rd.data; if (f && D && D.R) f.textContent = D.R.hp.isZero() ? 'defeated' : `${Number(D.R.hp).toLocaleString('en-US')} HP`; }
+function renderRaid(){
+  const box = $('gxBody'), D = rd.data;
+  $('gxStatus').textContent = '';
+  if (!D){ box.innerHTML = '<div class="empty-card">Sharpening the claws…</div>'; return; }
+  if (D.none){ box.innerHTML = '<div class="empty-card">The first CavFi Raid opens soon. Keep an eye on @cavdefi.</div>'; return; }
+  if (D.err){ box.innerHTML = '<div class="empty-card">Could not read the raid right now.</div>'; return; }
+  const R = D.R, max = Number(R.maxHp), hp = Number(R.hp), pct = max ? hp / max * 100 : 0, now = Math.max(D.now, Math.floor(Date.now() / 1000));
+  const won = !R.defeatedAt.isZero(), over = now >= Number(R.end), prize = fl(R.prize, 18), gate = gxGate();
+  const nm = a => esc(rd.names[lk(a)] || short(a));
+  const state = won ? `defeated · ${nm(R.finalBlow)} landed the final blow` : over ? 'escaped: the raid ended with the boss standing' : now < Number(R.start) ? 'starts soon' : `ends in ${inT(Number(R.end) - now)}`;
+  const share = R.totalDamage.isZero() ? 0 : D.mine / Number(R.totalDamage) * prize;
+  let act = '';
+  if (gate) act = `<button class="btn primary" data-rd="gate">${gate.label}</button>`;
+  else if (won && D.cl.gt(0)) act = `<button class="btn primary" data-rd="claim" ${rd.busy ? 'disabled' : ''}>${rd.busy ? 'Claiming…' : `Claim ${sxNum(fl(D.cl, 18))} KingS`}</button>`;
+  else if (won && D.done) act = '<p class="hn-ok">✓ Your share is claimed. Well fought!</p>';
+  else if (!won && !over) act = `<p class="pr-note">Every action you take on CavFi below hits the Fat Cat. The bot records hits every few minutes.</p>`;
+  box.innerHTML = `<section class="sx-card rd-top"><div class="sx-head"><h2>🐈 ${esc(R.title)}</h2><span>${state}</span></div>
+      <p class="gs-q">The Fat Cats guard the vault. Everyone on CavFi fights the same boss: when it falls, all fighters share <b>${sxNum(prize)} KingS</b> by the damage they dealt.</p>
+      <div class="rd-bar" role="img" aria-label="Boss health ${hp} of ${max}"><i style="width:${pct.toFixed(2)}%"></i><span>${hp.toLocaleString('en-US')} / ${max.toLocaleString('en-US')} HP</span></div>
+      <div class="pr-sides"><div><span>Your damage</span><b>${st.account ? D.mine.toLocaleString('en-US') : '–'}</b><small>${st.account ? (D.mine ? `≈ ${sxNum(share)} KingS share` : 'not in the fight yet') : 'connect a wallet to fight'}</small></div>
+        <div><span>Fighters</span><b>${D.players}</b><small>${Number(R.totalDamage).toLocaleString('en-US')} damage dealt</small></div></div>
+      ${act}${won || D.mine ? shareWin(won ? `We took down ${R.title} on CavFi! I dealt ${D.mine.toLocaleString('en-US')} damage 🐈⚔️` : `I'm fighting ${R.title} on CavFi: ${D.mine.toLocaleString('en-US')} damage so far, ${hp.toLocaleString('en-US')} HP to go 🐈⚔️`, '#raid') : ''}</section>
+    <div class="hm-duo" style="display:grid">
+      <section class="sx-card rd-col"><div class="sx-head"><h2>How to hit</h2><span>damage per action</span></div>
+        <ul class="rd-hits">${RAID_HITS.map(([i, t, d]) => `<li><span>${i} ${t}</span><b>${d}</b></li>`).join('')}</ul>
+        <p class="pr-note">Up to ${'600'} damage per wallet per UTC day, so everyone gets a fair swing. CavFi team wallets don't take part.</p></section>
+      <section class="sx-card rd-col"><div class="sx-head"><h2>Top fighters</h2><span>${D.players} in the fight</span></div>
+        ${D.top.length ? `<ol class="rd-top-list">${D.top.slice(0, 10).map(x => `<li><a href="#u/${esc(rd.names[lk(x.a)] || x.a)}">${nm(x.a)}</a><b>${x.d.toLocaleString('en-US')}</b></li>`).join('')}</ol>` : '<p class="pr-note">Nobody has struck yet. Be the first: take your free spin.</p>'}</section>
+    </div>`;
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-rd]'); if (!b) return;
+  if (b.dataset.rd === 'gate'){ const g = gxGate(); if (g && g.act) g.act(); return; }
+  if (b.dataset.rd === 'claim' && !rd.busy){
+    rd.busy = true; renderGames();
+    try{ const tx = await sendTx(() => rdC(true).claim(rd.data.id), 'Claiming…', () => {}); toast(`Your raid share is in your wallet. ${txLink(tx.hash)}`, 'ok', 9000); celebrate(b); }
+    catch(err){ toast(errMsg(err), 'bad'); }
+    rd.busy = false; loadRaid();
+  }
+});
 async function loadHunt(){
   if (!A.hunt){ hn.data = {none: true}; return renderGames(); }
   try{

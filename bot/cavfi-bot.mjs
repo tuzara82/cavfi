@@ -46,6 +46,10 @@ const CFG = {
   questsSource: env('QUESTS_SOURCE', 'explorer'), // 'explorer' (Blockscout API) or 'rpc' (scan blocks; local tests)
   questsDelaySec: Number(env('QUESTS_DELAY_SEC', '300')),
   raffle: env('RAFFLE', '1') === '1',
+  raid: env('RAID', '1') === '1',
+  raidEverySec: Number(env('RAID_EVERY_SEC', '300')),
+  raidDailyCap: Number(env('RAID_DAILY_CAP', '600')),   // most damage one wallet can deal in a UTC day
+  raidExclude: env('RAID_EXCLUDE', '0x1652C4078cd133193B7b4e930Abcb0F9aBB9C76b').split(',').map(x => x.trim().toLowerCase()).filter(Boolean),
   alerts: env('ALERTS', '1') === '1',
   predict: env('PREDICT', '1') === '1',
   predictDaily: env('PREDICT_DAILY', '1') === '1',
@@ -151,6 +155,10 @@ const ABI = {
   hunt: ['function count() view returns (uint256)',
          'function get(uint256) view returns (tuple(uint64 start, uint64 end, uint8 clues, uint32 finishers, uint256 prize, uint256 paid, string title) h, string[] clues, bytes32[] answerKeys, uint32[] solvers, address[3] top)',
          'event Solved(uint256 indexed id, address indexed player, uint8 clue, uint32 order)', 'event Finished(uint256 indexed id, address indexed player, uint32 place, uint256 prize)'],
+  raid: ['function count() view returns (uint256)', 'function attester(address) view returns (bool)',
+         'function get(uint256) view returns (tuple(string title, uint64 start, uint64 end, uint64 defeatedAt, uint128 maxHp, uint128 hp, uint256 prize, uint256 claimed, uint256 totalDamage, address finalBlow))',
+         'function hit(uint256 id, address[] who, uint256[] dmg)',
+         'event Defeated(uint256 indexed id, address indexed finalBlow, uint64 at)'],
   launch: ['event Launched(address indexed token, address indexed creator, string name, string symbol, uint256 target)',
            'event Graduated(address indexed token, address indexed pair, uint256 doge, uint256 amount, uint256 liquidity)'],
 };
@@ -828,6 +836,70 @@ async function questsDaily(){
       (day === CFG.spookDay ? `\n🎃 Spooktober: ${spooked.length} wallet${spooked.length === 1 ? '' : 's'} earned the soulbound Spooktober 2026 badge, and tickets counted double.` : '') + `\nToday's quests: <a href="https://cavfi.com">cavfi.com</a>`);
   }
 }
+// ------------------------------------------------------------------ CavFi Raid: a co-op boss
+// Every few minutes the bot reads the new CavFi transactions from the explorer and turns each action into damage
+// on the current boss (the same contract + function matching as the daily quests). One wallet can deal at most
+// RAID_DAILY_CAP damage per UTC day; the bot, CavFi's contracts and RAID_EXCLUDE (team wallets) deal none.
+const RAID_DMG = [
+  {key: ['spin'], sel: ['0xf0acd7d5'], dmg: 60, what: 'free spin'},
+  {key: ['games', 'gamesV1'], sel: ['0x4fea048e', '0xad53a604'], dmg: 25, what: 'game'},
+  {key: ['arena'], sel: ['0x7b0472f0'], dmg: 40, what: 'Arena stake'},
+  {key: ['arena'], sel: ['0x379607f5', '0x925489a8'], dmg: 120, what: 'Arena win'},
+  {key: ['hunt'], sel: ['0x9a42f3aa'], dmg: 200, what: 'riddle'},
+  {key: ['gm'], sel: ['0xc0129d43', '0x3118f543'], dmg: 15, what: 'gm/gn'},
+  {key: ['router'], sel: ['0x7ff36ab5', '0x18cbafe5', '0x38ed1739', '0xe8e33700', '0xf305d719'], dmg: 20, what: 'swap/liquidity'},
+  {key: ['launch'], sel: ['0xcce7ec13', '0x6a272462', '0x2fde70d1'], dmg: 20, what: 'Launchpad'},
+  {key: ['duel'], sel: ['0xc139da6f', '0x19b05f49'], dmg: 40, what: 'duel'},
+  {key: ['guess', 'guessV2', 'guessV1'], sel: ['0x1e997a6d'], dmg: 25, what: 'guess'},
+  {key: ['callouts'], sel: ['0xf55332ab'], dmg: 20, what: 'callout'},
+  {key: ['nft'], sel: ['0xa0712d68', '0x0fbf0a93', '0x4e71d92d'], dmg: 30, what: 'Cavalier'},
+  {key: ['names'], sel: ['0xf2c298be', '0x38e74feb'], dmg: 30, what: '.cav name'},
+];
+let raidAt = 0;
+async function raidKeeper(){
+  if (!CFG.raid || !A.raid || !wallet || me === ethers.constants.AddressZero || now() - raidAt < CFG.raidEverySec) return;
+  raidAt = now();
+  const r = new ethers.Contract(A.raid, ABI.raid, wallet), n = (await r.count()).toNumber();
+  if (!n) return;
+  const id = n - 1, R = await r.get(id), t = (await provider.getBlock('latest')).timestamp;
+  if (t < Number(R.start) || t >= Number(R.end) || R.hp.isZero()){ state.raidFrom = null; return; }
+  if (!(await r.attester(me))){ log('raid: this wallet is not an attester of the raid contract, skipping'); CFG.raid = false; return; }
+  if (state.raidId !== id){ state.raidId = id; state.raidFrom = Number(R.start); state.raidCap = {}; }
+  const from = state.raidFrom || Number(R.start), to = t - 30;   // leave the last 30 s for the explorer to index
+  if (to <= from) return;
+  const skip = new Set([lk(me), ...CFG.raidExclude, ...Object.values(A).filter(v => typeof v === 'string' && /^0x[0-9a-fA-F]{40}$/.test(v)).map(lk)]);
+  const byContract = {};
+  for (const d of RAID_DMG) for (const k of d.key) if (A[k]) (byContract[lk(A[k])] ||= []).push(d);
+  const txs = (await Promise.all(Object.keys(byContract).map(c => dayTxsExplorer(c, from, to)))).flat();
+  const dmg = {}, used = {}, cap = state.raidCap || {};
+  for (const x of txs){
+    if (!x.ok || !x.from || skip.has(lk(x.from))) continue;
+    const sel = (x.input || '').slice(0, 10).toLowerCase(), d = (byContract[lk(x.to)] || []).find(z => z.sel.includes(sel));
+    if (!d) continue;
+    const who = ethers.utils.getAddress(x.from), ck = who + ':' + Math.floor(x.ts / 86400);
+    const add = Math.min(d.dmg, CFG.raidDailyCap - (cap[ck] || 0) - (used[ck] || 0));
+    if (add <= 0) continue;
+    used[ck] = (used[ck] || 0) + add; dmg[who] = (dmg[who] || 0) + add;
+  }
+  const who = Object.keys(dmg), amt = who.map(w => dmg[w]);
+  if (who.length){
+    for (let i = 0; i < who.length; i += 40){
+      const tx = await send(`raid #${id}: ${who.slice(i, i + 40).length} wallets deal ${amt.slice(i, i + 40).reduce((a, b) => a + b, 0)} damage`, () => r.hit(id, who.slice(i, i + 40), amt.slice(i, i + 40)));
+      if (!tx) return;   // try the same window again next time
+      const rc = await provider.getTransactionReceipt(tx.hash);
+      for (const l of rc.logs){ try{ const e = r.interface.parseLog(l); if (e.name === 'Defeated'){
+        let nm = ''; try{ if (A.names) nm = (await new ethers.Contract(A.names, ABI.names, provider).namesOf([e.args.finalBlow]))[0]; }catch(_){}
+        const by = /^[a-z0-9-]{3,32}$/.test(nm || '') ? nm + '.cav' : short(e.args.finalBlow);
+        await tg(`🐈 <b>${R.title} is defeated!</b>\n${by} landed the final blow. Everyone who dealt damage can now claim a share of ${fmtN(fl(R.prize, 18))} KingS on <a href="https://cavfi.com/#raid">cavfi.com/#raid</a>`);
+      } }catch(_){} }
+    }
+    for (const [ck, v] of Object.entries(used)) cap[ck] = (cap[ck] || 0) + v;
+    for (const k of Object.keys(cap)) if (Number(k.split(':')[1]) < Math.floor(t / 86400) - 1) delete cap[k];
+    state.raidCap = cap;
+  }
+  state.raidFrom = to; saveState();
+}
+
 let raffleAt = 0;
 async function raffleKeeper(){
   if (!CFG.raffle || !A.raffle || !wallet || me === ethers.constants.AddressZero) return;
@@ -1715,6 +1787,7 @@ async function main(){
       await dcaKeeper();
       await questsDaily();
       await raffleKeeper();
+      await raidKeeper();
       await predictKeeper();
       await guessKeeper();
       await duelKeeper();

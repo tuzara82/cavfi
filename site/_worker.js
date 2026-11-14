@@ -39,6 +39,7 @@ const STATE_TASKS = {
   quest:    {need: 'Finish at least one daily quest on cavfi.com. Days are recorded after midnight UTC.'},
   pup:      {need: 'Say gm 7 days in a row on cavfi.com to earn the Early Pup badge.'},
   champion: {need: 'Claim the Arena Champion badge after backing a winning token in the Arena.'},
+  raid:     {need: 'Hit the boss of the current CavFi Raid: any spin, game, Arena stake, riddle, gm or swap on cavfi.com counts (recorded every few minutes): cavfi.com/#raid'},
 };
 
 let addrCache = null, addrAt = 0;
@@ -63,6 +64,8 @@ async function stateDone(task, A, who){
   if (task === 'nft') return A.nft && word(await call(A.nft, '0x70a08231' + pad(who)), 0) > 0n;
   if (task === 'pup') return A.gm && word(await call(A.gm, '0x00fdd58e' + pad(who) + pad('1')), 0) > 0n;
   if (task === 'champion') return A.champion && word(await call(A.champion, '0x00fdd58e' + pad(who) + pad('1')), 0) > 0n;
+  if (task === 'raid'){ if (!A.raid) return false; const n = word(await call(A.raid, '0x06661abd'), 0); if (n === 0n) return false;
+    return word(await call(A.raid, '0x8e9042a9' + pad((n - 1n).toString(16)) + pad(who)), 0) > 0n; }
   if (task === 'quest') return A.quests && word(await call(A.quests, '0x0aae7a6b' + pad(who)), 3) > 0n; // info(): quests done in total
   return false;
 }

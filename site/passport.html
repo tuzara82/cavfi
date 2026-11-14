@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>try{var t=localStorage.getItem('cavfi.theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<title>DogeOS Passport</title>
+<meta name="description" content="DogeOS Passport by CavFi: paste any wallet and see every DogeOS testnet app it has used, with a stamp for each one.">
+<meta property="og:title" content="DogeOS Passport">
+<meta property="og:description" content="Every DogeOS app your wallet has used, one stamp each. Read straight from the chain.">
+<meta property="og:image" content="https://cavfi.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="arena-base.css">
+<style>
+.pp-form{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;margin:0 auto 18px;max-width:720px}
+.pp-form input{min-width:0;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px 14px;font:500 15px var(--mono, monospace)}
+.pp-card{max-width:720px;margin:0 auto 18px;padding:22px;border-radius:22px;border:2px solid var(--gold);background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 12%,var(--card)),var(--card));box-shadow:0 30px 60px -40px rgba(80,30,10,.6)}
+.pp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.pp-head h2{margin:0;font:400 28px var(--display)}
+.pp-head small{color:var(--muted);font:500 13px var(--mono, monospace);word-break:break-all}
+.pp-rank{font:800 13px var(--body);padding:6px 12px;border-radius:999px;background:var(--chestnut);color:var(--chestnut-ink, #fff);white-space:nowrap}
+.pp-figs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}
+.pp-figs div{background:var(--well);border-radius:14px;padding:10px 12px}
+.pp-figs span{display:block;font:700 11px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pp-figs b{font:400 24px var(--display)}
+.pp-stamps{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.pp-stamp{border:2px dashed var(--line);border-radius:16px;padding:12px;text-align:center;transform:rotate(var(--r,0deg))}
+.pp-stamp.on{border-color:var(--chestnut);background:color-mix(in srgb,var(--chestnut) 8%,transparent)}
+.pp-stamp i{display:block;font-style:normal;font-size:28px}
+.pp-stamp b{display:block;font:800 14px var(--body);margin-top:4px;word-break:break-word}
+.pp-stamp small{color:var(--muted);font-size:12px}
+.pp-note{max-width:720px;margin:0 auto;color:var(--muted);font-size:13px;line-height:1.5;text-align:center}
+.pp-share{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px 14px;font:700 14px var(--body);cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--chestnut);border-color:var(--chestnut);color:var(--chestnut-ink, #fff)}
+.pp-empty{max-width:720px;margin:0 auto 18px;padding:18px;border:1px dashed var(--line);border-radius:16px;text-align:center;color:var(--muted)}
+@media (max-width:600px){.pp-form{grid-template-columns:1fr 1fr}.pp-form input{grid-column:1/-1}.pp-figs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <div class="bar">
+    <a class="brand" href="./" aria-label="CavFi home">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="var(--cream)" stroke="var(--gold)" stroke-width="2"/>
+        <path d="M17 41 L14 22 L24 30 L32 17 L40 30 L50 22 L47 41 Z" fill="var(--gold)"/>
+        <rect x="17" y="43" width="30" height="5" rx="2" fill="var(--chestnut)"/>
+        <circle cx="32" cy="34" r="3" fill="var(--chestnut)"/>
+      </svg>
+      <b>Cav<span>Fi</span></b>
+    </a>
+    <nav aria-label="Main">
+      <a href="./">App</a>
+      <a href="arena.html">Arena</a>
+      <a href="passport.html" aria-current="page">Passport</a>
+    </nav>
+    <span class="spacer"></span>
+    <span class="net"><i class="dot"></i>DogeOS <small>testnet</small></span>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="lede">
+    <h1>Your <em>DogeOS</em> Passport</h1>
+    <p>Paste any wallet and see every DogeOS testnet app it has used, one stamp each. Read straight from the chain, no wallet connection needed.</p>
+  </div>
+  <form class="pp-form" id="ppForm">
+    <input id="ppAddr" placeholder="0x… address or name.cav" autocomplete="off" spellcheck="false" aria-label="Wallet address">
+    <button class="btn primary" type="submit">Show passport</button>
+    <button class="btn" type="button" id="ppMine">Use my wallet</button>
+  </form>
+  <div id="ppOut"></div>
+  <p class="pp-note">A stamp is any DogeOS testnet app (a contract with a verified name, or the DogeOS bridge) your wallet sent a successful transaction to. Built by CavFi for the whole DogeOS ecosystem. It reads the public DogeOS explorer and can lag a minute behind the chain.</p>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var EXPLORER = 'https://blockscout.testnet.dogeos.com', SCAN = 'https://dogeos-testnet.l2scan.co', RPC = 'https://rpc.testnet.dogeos.com';
+  var A = {};
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var short = function(a){ return a.slice(0, 6) + '…' + a.slice(-4); };
+  var ICONS = [[/bridge|gateway|messenger|portal/i, '🌉'], [/^King|Cav/i, '👑'], [/swap|router|pair|dex|amm/i, '⇄'], [/nft|721|1155|collect/i, '🖼️'], [/predict|market|bet/i, '🔮'],
+    [/game|raid|hunt|spin|raffle|quest|arena/i, '🎲'], [/name|domain|ens/i, '🏷️'], [/token|erc20|stable|usd/i, '🪙']];
+  function icon(name){ for (var i = 0; i < ICONS.length; i++) if (ICONS[i][0].test(name)) return ICONS[i][1]; return '🐕'; }
+  function rank(apps, days){
+    if (apps >= 8 && days >= 10) return '🏅 DogeOS Legend';
+    if (apps >= 5 && days >= 5) return '🧭 DogeOS Voyager';
+    if (apps >= 3) return '🗺️ DogeOS Explorer';
+    if (apps >= 1) return '🐾 DogeOS Pup';
+    return '🥚 Not hatched yet';
+  }
+  function load(){
+    return fetch('addresses.json', {cache: 'no-store'}).then(function(r){ return r.json(); }).then(function(j){ A = j; }).catch(function(){});
+  }
+  function cavKeys(){
+    var m = {};
+    Object.keys(A).forEach(function(k){ var v = A[k]; if (typeof v === 'string' && /^0x[0-9a-fA-F]{40}$/.test(v) && k !== 'bot') m[v.toLowerCase()] = k; });
+    return m;
+  }
+  function resolveName(s){
+    s = s.trim();
+    if (/^0x[0-9a-fA-F]{40}$/.test(s)) return Promise.resolve(s);
+    var n = s.replace(/\.cav$/i, '').toLowerCase();
+    if (!/^[a-z0-9-]{3,32}$/.test(n) || !A.names) return Promise.reject(new Error('Paste a 0x address or a .cav name.'));
+    var data = '0x461a4478' + ('0000000000000000000000000000000000000000000000000000000000000020') + n.length.toString(16).padStart(64, '0') + Array.from(new TextEncoder().encode(n)).map(function(b){ return b.toString(16).padStart(2, '0'); }).join('').padEnd(64, '0');
+    return fetch(RPC, {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({jsonrpc: '2.0', id: 1, method: 'eth_call', params: [{to: A.names, data: data}, 'latest']})})
+      .then(function(r){ return r.json(); }).then(function(j){
+        var a = '0x' + (j.result || '').slice(26, 66);
+        if (!/^0x[0-9a-f]{40}$/.test(a) || /^0x0{40}$/.test(a)) throw new Error(n + '.cav is not registered.');
+        return a;
+      });
+  }
+  async function txsOf(addr){
+    var out = [], url = EXPLORER + '/api/v2/addresses/' + addr + '/transactions?filter=from';
+    for (var p = 0; p < 20; p++){
+      var r = await fetch(url, {headers: {accept: 'application/json'}});
+      if (!r.ok) throw new Error('The DogeOS explorer is not answering right now. Try again in a minute.');
+      var j = await r.json();
+      (j.items || []).forEach(function(t){ out.push(t); });
+      if (!j.next_page_params) break;
+      url = EXPLORER + '/api/v2/addresses/' + addr + '/transactions?filter=from&' + new URLSearchParams(j.next_page_params);
+    }
+    return out;
+  }
+  async function show(input){
+    var box = $('ppOut');
+    box.innerHTML = '<div class="pp-empty">Reading the chain…</div>';
+    try{
+      var addr = await resolveName(input);
+      var txs = await txsOf(addr), cav = cavKeys(), apps = {}, days = {}, first = null;
+      txs.forEach(function(t){
+        if (t.status !== 'ok' && t.result !== 'success') return;
+        var ts = Date.parse(t.timestamp), to = t.to || {}, h = (to.hash || '').toLowerCase();
+        days[new Date(ts).toISOString().slice(0, 10)] = 1;
+        if (first == null || ts < first) first = ts;
+        if (!to.is_contract) return;
+        var impl = (to.implementations || [])[0] || {}, tag = ((to.public_tags || [])[0] || {}).label || '';
+        var isCav = !!cav[h] || to.name === 'MemeToken';   // CavFi contracts and the meme tokens launched on CavFi
+        var name = isCav ? 'CavFi' : tag || (/proxy/i.test(to.name || '') ? impl.name || '' : to.name || '');
+        if (!name) name = 'Contract ' + short(to.hash);
+        var key = isCav ? 'cavfi' : 'n:' + name;
+        var a = apps[key] || (apps[key] = {name: name, n: 0, last: 0, cav: isCav, feats: {}});
+        a.n++; if (ts > a.last) a.last = ts;
+        if (isCav) a.feats[cav[h] || 'launch'] = 1;
+      });
+      var list = Object.keys(apps).map(function(k){ return apps[k]; }).sort(function(x, y){ return y.n - x.n; });
+      var nd = Object.keys(days).length, nApps = list.length, r = rank(nApps, nd);
+      var label = /^0x/.test(input.trim()) ? short(addr) : esc(input.trim().replace(/\.cav$/i, '') + '.cav');
+      box.innerHTML = '<section class="pp-card"><div class="pp-head"><div><h2>DogeOS Passport</h2><small>' + label + (label.indexOf('0x') === 0 ? '' : ' · ' + short(addr)) + '</small></div><span class="pp-rank">' + r + '</span></div>' +
+        '<div class="pp-figs"><div><span>Apps</span><b>' + nApps + '</b></div><div><span>Transactions</span><b>' + txs.length + (txs.length >= 1000 ? '+' : '') + '</b></div><div><span>Active days</span><b>' + nd + '</b></div><div><span>First seen</span><b>' + (first ? new Date(first).toISOString().slice(5, 10).replace('-', '/') : '–') + '</b></div></div>' +
+        (list.length ? '<div class="pp-stamps">' + list.map(function(a, i){
+          return '<div class="pp-stamp on" style="--r:' + ((i * 37 % 7) - 3) + 'deg"><i>' + icon(a.name) + '</i><b>' + esc(a.name) + '</b><small>' + a.n + ' tx' + (a.n === 1 ? '' : 's') + (a.cav ? ' · ' + Object.keys(a.feats).length + ' features' : '') + '</small></div>';
+        }).join('') + '</div>' : '<div class="pp-empty">No DogeOS app stamps yet. Start with a free spin on <a href="./#spin">CavFi</a>.</div>') +
+        '<div class="pp-share"><a class="btn primary" target="_blank" rel="noopener" href="https://x.com/intent/post?text=' + encodeURIComponent('My DogeOS Passport: ' + nApps + ' app' + (nApps === 1 ? '' : 's') + ' and ' + nd + ' active day' + (nd === 1 ? '' : 's') + ' on the DogeOS testnet. ' + r + ' 🐕') + '&url=' + encodeURIComponent('https://cavfi.com/passport.html?a=' + addr) + '">Share on 𝕏</a>' +
+        '<a class="btn" target="_blank" rel="noopener" href="' + SCAN + '/address/' + addr + '">Open in DogeOS Scan</a></div></section>';
+      try{ history.replaceState(null, '', '?a=' + encodeURIComponent(input.trim())); }catch(e){}
+    }catch(e){ box.innerHTML = '<div class="pp-empty">' + esc(e.message || 'Could not read this wallet right now.') + '</div>'; }
+  }
+  $('ppForm').addEventListener('submit', function(e){ e.preventDefault(); var v = $('ppAddr').value; if (v.trim()) show(v); });
+  $('ppMine').addEventListener('click', async function(){
+    if (!window.ethereum){ $('ppOut').innerHTML = '<div class="pp-empty">No browser wallet here. Paste an address instead.</div>'; return; }
+    try{ var a = (await window.ethereum.request({method: 'eth_requestAccounts'}))[0]; $('ppAddr').value = a; show(a); }catch(e){}
+  });
+  load().then(function(){ var q = new URLSearchParams(location.search).get('a'); if (q){ $('ppAddr').value = q; show(q); } });
+})();
+</script>
+</body>
+</html>
