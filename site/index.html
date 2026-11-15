@@ -847,6 +847,16 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 .btn.yes{background:var(--ok);border-color:var(--ok);color:#fff}.btn.no{background:var(--bad);border-color:var(--bad);color:#fff}
 .pr-res{font-weight:700}.pr-res.yes{color:var(--ok)}.pr-res.no{color:var(--bad)}
 .pr-note{font-size:12.5px;color:var(--muted);margin:0}
+.ev-cats{margin:0 0 14px}
+.ev-os{display:grid;gap:8px}
+.ev-o{background:var(--well);border-radius:12px;padding:9px 10px;display:grid;gap:6px}
+.ev-o.won{outline:2px solid var(--ok)}
+.ev-ot{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.ev-ot b{font-weight:600;min-width:0;overflow-wrap:anywhere}.ev-ot span{font:600 14px var(--mono)}
+.ev-bar{height:6px;border-radius:999px;background:color-mix(in srgb,var(--muted) 18%,transparent);overflow:hidden}.ev-bar i{display:block;height:100%;background:var(--accent,var(--ok));border-radius:999px}
+.ev-om{display:flex;justify-content:space-between;align-items:center;gap:8px}.ev-om small{color:var(--muted);font:500 12px var(--mono)}
+.btn.ev-pick{padding:6px 14px;min-height:0;font-size:13px}
+.ev-act{display:grid;gap:8px}.ev-amt{min-width:0;width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:12px;padding:10px 12px;font:500 15px var(--body)}
+.ev-rules summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
 .pr-warn{border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));background:color-mix(in srgb,var(--warn) 10%,var(--surface));color:var(--ink);border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.5;margin:0 0 14px}
 .du-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .du-form label{display:grid;gap:5px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -1515,9 +1525,10 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 
   <div class="view" id="viewPredict" hidden>
     <div class="sx-bar">
-      <div class="chips" id="prTabs" role="group" aria-label="Markets or duels"><button class="chip" data-t="guess" aria-pressed="true">🎯 Free guess</button><button class="chip" data-t="markets" aria-pressed="false">DOGE markets</button><button class="chip" data-t="duels" aria-pressed="false">Arena duels</button></div>
+      <div class="chips" id="prTabs" role="group" aria-label="Markets or duels"><button class="chip" data-t="events" aria-pressed="false">🌍 Sports &amp; more</button><button class="chip" data-t="guess" aria-pressed="true">🎯 Free guess</button><button class="chip" data-t="markets" aria-pressed="false">DOGE markets</button><button class="chip" data-t="duels" aria-pressed="false">Arena duels</button></div>
       <span class="sx-status" id="prStatus" aria-live="polite"></span>
     </div>
+    <div class="pr-body" id="prEvents" hidden></div>
     <div class="pr-body" id="prMarkets"></div>
     <div class="pr-body" id="prGuess" hidden></div>
     <div class="pr-body" id="prDuels" hidden></div>
@@ -1685,7 +1696,7 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 const N = 'native';
 /* Contract addresses. Loaded from addresses.json, which the deploy scripts write
    next to this file. You can also paste them here by hand. */
-const ADDRESSES = { raid:'', spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const ADDRESSES = { markets:'', raid:'', spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 const CHAIN_ID = 6281971;
 /* WalletConnect (any mobile wallet by QR code). Free project id from https://cloud.reown.com,
    with cavfi.com in its allowed domains. Empty = the option is hidden. */
@@ -1698,7 +1709,7 @@ const NET = {
 /* Read-only connection to DogeOS for pages that work without a wallet (Stats). */
 let _rp = null;
 const RP = () => _rp || (_rp = window.CavRpc ? CavRpc.make(E, A.rpc || NET.add.rpcUrls[0], CHAIN_ID) : new E.providers.StaticJsonRpcProvider(A.rpc || NET.add.rpcUrls[0], CHAIN_ID));
-const A = { raid:'', spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
+const A = { markets:'', raid:'', spin:'', hunt:'', games:'', gamesV1:'', guess:'', predict:'', guessV1:'', predictV1:'', guessV2:'', predictV2:'', events:'', callouts:'', duel:'', dca:'', quests:'', raffle:'', names:'', gm:'', champion:'', arena:'', bot:'', nft:'', social:'', badges:'', vote:'', limit:'', launch:'', rpc:'', router:'', factory:'', wdoge:'', kings:'', usdt:'', usdc:'', legacyFactory:'', farm:'', stake:'', lbtc:'', weth:'', usd1:'', fusdc:'', fusdt:'' };
 let TOKENS = [];
 
 const ROUTER_ABI = [
@@ -2196,8 +2207,8 @@ function setView(v){
     $('ledeH').innerHTML = 'A royal <em>profile</em>.';
     $('ledeP').textContent = 'Living Cavaliers, badges, rank, streaks and wins of any CavFi wallet, read from the chain. Share yours.';
   } else if (v === 'predict'){
-    $('ledeH').innerHTML = 'Call the <em>DOGE</em> price.';
-    $('ledeP').textContent = 'Guess the DOGE price for free every day, back YES or NO on DOGE markets, or duel a friend in the Arena. Played with testnet KingS.';
+    $('ledeH').innerHTML = A.markets ? 'Call <em>anything</em>.' : 'Call the <em>DOGE</em> price.';
+    $('ledeP').textContent = A.markets ? 'Back your pick on football, NBA, crypto prices and DogeOS events, guess the DOGE price for free, or duel a friend in the Arena. Played with testnet KingS.' : 'Guess the DOGE price for free every day, back YES or NO on DOGE markets, or duel a friend in the Arena. Played with testnet KingS.';
   } else if (v === 'games' && gx.tab === 'spin'){
     $('ledeH').innerHTML = 'Spin the royal <em>wheel</em>.';
     $('ledeP').textContent = 'One free spin a day for every wallet. Every spin wins KingS, up to the 50,000 KingS crown. No stake, you only pay gas. Testnet, no real value.';
@@ -2244,7 +2255,7 @@ function setView(v){
     $('ledeH').innerHTML = 'Swap tokens like <em>royalty</em>.';
     $('ledeP').textContent = 'Trade DOGE, KingS, WETH, LBTC and stablecoins on the DogeOS testnet. No account, no deposit. Your funds stay in your wallet until you sign.';
   }
-  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? (gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : gx.tab === 'raid' ? '#raid' : '#games') : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#markets') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
+  try{ history.replaceState(null, '', v === 'liq' ? '#liquidity' : v === 'farm' ? '#farms' : v === 'stats' ? '#stats' : v === 'board' ? '#leaderboard' : v === 'launch' ? (lx.open ? '#t/' + lx.open : '#launch') : v === 'portfolio' ? '#portfolio' : v === 'faucet' ? '#faucet' : v === 'nft' ? '#nft' : v === 'names' ? '#names' : v === 'games' ? (gx.tab === 'hunt' ? '#hunt' : gx.tab === 'spin' ? '#spin' : gx.tab === 'raid' ? '#raid' : '#games') : v === 'help' ? '#faq' : v === 'profile' ? (up.id ? '#u/' + up.id : '#u') : v === 'predict' ? (pr.hl != null ? '#duel/' + pr.hl : pr.hlm != null ? '#p/' + pr.hlm : pr.tab === 'events' ? (evS.hl != null ? '#e/' + evS.hl : '#markets') : pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : A.markets ? '#doge' : '#markets') : v === 'home' ? location.pathname : '#swap'); }catch(e){}
   if (v === 'farm') loadEarn();
   if (v === 'stats' || v === 'home' || v === 'board') loadStats(sx.loaded);
   if (v === 'board'){ renderBoard(); if (sx.loaded) loadBoard(); }
@@ -2256,7 +2267,7 @@ function setView(v){
   if (v === 'names') loadNames();
   if (v === 'games') loadGames();
   if (v === 'profile') loadProfile();
-  if (v === 'predict'){ renderPredict(); loadPredict(); if (pr.tab === 'guess') loadGuess(); }
+  if (v === 'predict'){ renderPredict(); loadPredict(); if (pr.tab === 'guess') loadGuess(); if (pr.tab === 'events') loadEvents(); }
   if (v === 'launch'){ loadLaunches(); if (!sx.loaded) loadStats(); renderLaunch(); }
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-tb]'); if (!b) return; const t = b.dataset.tb;
@@ -2268,12 +2279,14 @@ document.querySelectorAll('header nav button').forEach(b => b.addEventListener('
 document.addEventListener('click', e => { const a = e.target.closest('[data-goview]'); if (!a) return; e.preventDefault(); setView(a.dataset.goview); window.scrollTo({top:0, behavior:'smooth'}); });
 const LX_HASH = /^#t\/(0x[0-9a-fA-F]{40})$/;
 const UP_HASH = /^#u\/([A-Za-z0-9.-]{3,64})$/, DUEL_HASH = /^#duel\/(\d+)$/, MKT_HASH = /^#p\/(\d+)$/;
-function routePredict(h){ const m = h.match(DUEL_HASH), k = h.match(MKT_HASH); pr.hl = m ? Number(m[1]) : null; pr.hlm = k ? Number(k[1]) : null; pr.scrolled = false; pr.tab = m || h === '#duels' ? 'duels' : k || h === '#markets' ? 'markets' : 'guess'; setView('predict'); }
+function routePredict(h){ pr.tabSet = true; const m = h.match(DUEL_HASH), k = h.match(MKT_HASH), ek = h.match(EV_HASH); pr.hl = m ? Number(m[1]) : null; pr.hlm = k ? Number(k[1]) : null; evS.hl = ek ? Number(ek[1]) : null; pr.scrolled = false; evS.scrolled = false;
+  pr.tab = m || h === '#duels' ? 'duels' : k || h === '#doge' ? 'markets' : ek || (h === '#markets' && A.markets) || h === '#events' ? 'events' : h === '#markets' ? 'markets' : h === '#guess' ? 'guess' : A.markets ? 'events' : 'guess'; setView('predict'); }
+const EV_HASH = /^#e\/(\d+)$/;
 window.addEventListener('hashchange', () => { const h = location.hash, m = h.match(LX_HASH), u = decodeURIComponent(h).match(UP_HASH);
   if (m){ setView('launch'); openLaunch(E.utils.getAddress(m[1].toLowerCase())); }
   else if (u){ if (st.view !== 'profile' || u[1].toLowerCase() !== up.id) openProfile(u[1]); }
   else if (h === '#u'){ up.id = ''; setView('profile'); }
-  else if (h === '#predict' || h === '#markets' || h === '#duels' || h === '#guess' || DUEL_HASH.test(h) || MKT_HASH.test(h)) routePredict(h);
+  else if (h === '#predict' || h === '#markets' || h === '#doge' || h === '#events' || h === '#duels' || h === '#guess' || DUEL_HASH.test(h) || MKT_HASH.test(h) || EV_HASH.test(h)) routePredict(h);
   else if (h === '#games' || h === '#hunt' || h === '#spin' || h === '#raid'){ gx.tab = h === '#hunt' ? 'hunt' : h === '#spin' ? 'spin' : h === '#raid' ? 'raid' : (gx.tab === 'hunt' || gx.tab === 'spin' || gx.tab === 'raid') ? 'coin' : gx.tab; setView('games'); }
   else { const v = HASH_VIEW[h] || (h === '' || h === '#' ? 'home' : null); if (v && v !== st.view) setView(v); window.scrollTo({top: 0}); } });
 // One map from a page address (#…) to its view, used on first load and whenever the address changes.
@@ -6382,8 +6395,11 @@ const rsNotice = () => fdNotice() + (rsState.ok === false ? `<div class="pr-warn
 const prKind = m => m.question.startsWith('Weekly') ? 'weekly' : m.question.startsWith('Hourly') ? '⏱ hourly · up or down' : 'daily';
 const prWho = a => pr.names[lk(a)] || short(a);
 function renderPredict(){
+  if (!pr.tabSet && A.markets){ pr.tabSet = true; if (pr.tab === 'guess') pr.tab = 'events'; }
   document.querySelectorAll('#prTabs .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === pr.tab)));
-  $('prMarkets').hidden = pr.tab !== 'markets'; $('prDuels').hidden = pr.tab !== 'duels'; $('prGuess').hidden = pr.tab !== 'guess';
+  $('prMarkets').hidden = pr.tab !== 'markets'; $('prDuels').hidden = pr.tab !== 'duels'; $('prGuess').hidden = pr.tab !== 'guess'; $('prEvents').hidden = pr.tab !== 'events';
+  $('prTabs').querySelector('[data-t="events"]').hidden = !A.markets;
+  if (pr.tab === 'events') renderEvents();
   if (pr.tab === 'guess' && !gs.data) loadGuess();
   $('prStatus').textContent = st.account && pr.kbal ? `You have ${sxNum(fl(pr.kbal, 18))} KingS` : '';
   const gate = walletGate();
@@ -6484,7 +6500,7 @@ function renderPredict(){
   if (pr.hlm != null && pr.tab === 'markets'){ const el = document.getElementById('mkt-' + pr.hlm); if (el && !pr.scrolled){ pr.scrolled = true; el.scrollIntoView({block: 'center'}); } }
   if (pr.hl != null){ const el = document.getElementById('duel-' + pr.hl); if (el && !pr.scrolled){ pr.scrolled = true; el.scrollIntoView({block: 'center'}); } }
 }
-$('prTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; pr.tab = b.dataset.t; pr.hl = null; pr.hlm = null; renderPredict(); if (pr.tab === 'guess') loadGuess(); try{ history.replaceState(null, '', pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : '#markets'); }catch(_){} });
+$('prTabs').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; pr.tabSet = true; pr.tab = b.dataset.t; pr.hl = null; pr.hlm = null; evS.hl = null; renderPredict(); if (pr.tab === 'guess') loadGuess(); if (pr.tab === 'events') loadEvents(); try{ history.replaceState(null, '', pr.tab === 'duels' ? '#duels' : pr.tab === 'guess' ? '#guess' : pr.tab === 'events' ? '#markets' : A.markets ? '#doge' : '#markets'); }catch(_){} });
 const prAmt = v => { try{ const s = String(v || '').trim().replace(',', '.'); return /^\d*\.?\d+$/.test(s) && Number(s) > 0 ? E.utils.parseUnits(s, 18) : null; }catch(e){ return null; } };
 async function prRun(key, fn, okMsg){
   pr.busy = key; renderPredict();
@@ -6548,6 +6564,127 @@ document.addEventListener('click', async e => {
   if (a === 'dcopy'){ const url = `https://cavfi.com/duel/${id}`; try{ await navigator.clipboard.writeText(url); toast('Duel link copied.', 'ok'); }catch(_){ toast(esc(url)); } }
 });
 setInterval(() => { if (st.view === 'predict' && !document.hidden && !pr.busy) loadPredict(); }, 30000);
+
+/* ================= CAVFI MARKETS (football, NBA, crypto prices, DogeOS events) =================
+   Markets with 2 to 6 outcomes. The CavFi bot opens them and, after the event, proposes the result with its public
+   source; anyone can dispute it for 24 h by locking a bond, otherwise it becomes final. */
+const MK_ABI = ['function count() view returns (uint256)', 'function disputeBond() view returns (uint256)',
+  'function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(string question, string category, string rules, string[] outcomes, uint64 closeAt, uint64 resolveAt, uint8 state, uint8 proposed, uint8 winner, uint64 proposedAt, string evidence, address disputer, uint256 total)[] items, uint256[][] pool)',
+  'function get(uint256 id) view returns (tuple(string question, string category, string rules, string[] outcomes, uint64 closeAt, uint64 resolveAt, uint8 state, uint8 proposed, uint8 winner, uint64 proposedAt, string evidence, address disputer, uint256 total) m, uint256[] pool)',
+  'function stakesOf(uint256 id, address user) view returns (uint256[])', 'function claimable(uint256 id, address user) view returns (uint256)', 'function idsOf(address) view returns (uint256[])',
+  'function bet(uint256 id, uint8 outcome, uint256 amount)', 'function claim(uint256 id)', 'function dispute(uint256 id)', 'function finalize(uint256 id)', 'function expire(uint256 id)'];
+const mkC = w => new E.Contract(A.markets, MK_ABI, w ? st.signer : RP());
+const evS = { list:null, mine:{}, busy:'', err:'', cat:'all', hl:null, scrolled:false, allow:null, bond:null, at:0 };
+const EV_CAT = {football: '⚽ Football', basketball: '🏀 NBA', crypto: '📈 Crypto', dogeos: '🐶 DogeOS'};
+const evIcon = c => ({football: '⚽', basketball: '🏀', crypto: '📈', dogeos: '🐶'})[c] || '🔮';
+async function loadEvents(){
+  if (!A.markets) return;
+  const me = st.account, c = mkC();
+  try{
+    const n = (await c.count()).toNumber();
+    const [ids, items, pools] = n ? await c.page(0, Math.min(n, 80)) : [[], [], []];
+    const list = ids.map((id, k) => ({id: id.toNumber(), m: items[k], pool: pools[k].map(p => fl(p, 18))}));
+    if (me){ const mine = (await c.idsOf(me)).map(x => x.toNumber()).filter(i => !list.some(x => x.id === i)).slice(-20);
+      for (const i of mine){ const [m, pool] = await c.get(i); list.push({id: i, m, pool: pool.map(p => fl(p, 18))}); } }
+    if (evS.hl != null && !list.some(x => x.id === evS.hl) && evS.hl < n){ try{ const [m, pool] = await c.get(evS.hl); list.push({id: evS.hl, m, pool: pool.map(p => fl(p, 18))}); }catch(e){} }
+    evS.list = list; evS.mine = {}; evS.err = '';
+    const jobs = [c.disputeBond().then(b => { evS.bond = b; }).catch(() => {})];
+    if (me){
+      if (A.kings) jobs.push(new E.Contract(A.kings, ERC20_ABI, RP()).allowance(me, A.markets).then(a => { evS.allow = a; }).catch(() => {}));
+      jobs.push(...list.filter(x => x.m.state !== 1 || true).slice(0, 60).map(async x => { const [s, cl] = await Promise.all([c.stakesOf(x.id, me), c.claimable(x.id, me)]); evS.mine[x.id] = {s, cl}; }));
+    }
+    await Promise.all(jobs);
+  }catch(e){ evS.err = 'Could not read the markets right now.'; }
+  evS.at = Date.now();
+  if (st.view === 'predict' && pr.tab === 'events') renderEvents();
+}
+function renderEvents(){
+  const box = $('prEvents'); if (!box) return;
+  if (!A.markets){ box.innerHTML = `<div class="empty-card">CavFi Markets are not deployed on this network yet.</div>`; return; }
+  if (!evS.list){ box.innerHTML = `<div class="empty-card">${evS.err ? esc(evS.err) : 'Reading the markets…'}</div>`; return; }
+  const now = Math.floor(Date.now() / 1000) + (pr.skew || 0), gate = walletGate();
+  const cats = ['all', ...Object.keys(EV_CAT).filter(k => evS.list.some(x => x.m.category === k))];
+  const card = x => {
+    const m = x.m, close = Number(m.closeAt), res = Number(m.resolveAt), tot = x.pool.reduce((a, b) => a + b, 0), my = evS.mine[x.id];
+    const open = m.state === 1 && now < close, propAt = Number(m.proposedAt), finalAt = propAt + 86400;
+    const nm = o => o === 255 ? 'Void (refund)' : esc(m.outcomes[o] || '?');
+    let status;
+    if (m.state === 4) status = `<span class="pr-res yes">${nm(m.winner)}</span> won`;
+    else if (m.state === 5) status = 'Refunded: everyone gets their stake back';
+    else if (m.state === 3) status = `⚖️ Result <b>${nm(m.proposed)}</b> is disputed: CavFi reviews it (refund if nobody rules within 7 days)`;
+    else if (m.state === 2) status = now < finalAt ? `Proposed result: <b>${nm(m.proposed)}</b> · final in ${inT(finalAt - now)} unless someone disputes it` : `Proposed result: <b>${nm(m.proposed)}</b> · ready to finalize`;
+    else if (open) status = `Open · betting closes in ${inT(close - now)}`;
+    else if (now < res) status = `Closed · result after ${new Date(res * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+    else if (now > res + 3 * 86400) status = 'No result was proposed in 3 days: anyone can refund it';
+    else status = 'Closed · waiting for the result';
+    const sides = m.outcomes.map((o, i) => {
+      const p = x.pool[i], pct = tot ? p / tot * 100 : 100 / m.outcomes.length, mult = p > 0 ? tot * 0.98 / p : 0;
+      const won = m.state === 4 && m.winner === i, mineS = my && my.s[i] && my.s[i].gt(0) ? fl(my.s[i], 18) : 0;
+      const btn = open && !gate ? `<button class="btn ev-pick" data-ev="bet" data-id="${x.id}" data-o="${i}" ${evS.busy ? 'disabled' : ''}>Back</button>` : '';
+      return `<div class="ev-o${won ? ' won' : ''}"><div class="ev-ot"><b>${esc(o)}</b><span>${pct.toFixed(0)}%</span></div><div class="ev-bar"><i style="width:${pct}%"></i></div>
+        <div class="ev-om"><small>${sxNum(p)} KingS${p ? ' · pays ×' + mult.toFixed(2) : ''}${mineS ? ` · <b>you ${sxNum(mineS)}</b>` : ''}</small>${btn}</div></div>`;
+    }).join('');
+    let act = '';
+    if (open && gate) act = `<button class="btn primary" data-pr="gate">${gate.label}</button>`;
+    else if (open) act = `<input class="ev-amt" inputmode="decimal" placeholder="KingS amount, then press Back" id="evAmt${x.id}" aria-label="KingS to stake" autocomplete="off">`;
+    if (my && my.cl.gt(0)) act += `<button class="btn primary" data-ev="claim" data-id="${x.id}" ${evS.busy ? 'disabled' : ''}>${evS.busy === 'claim' + x.id ? 'Claiming…' : `Claim ${sxNum(fl(my.cl, 18))} KingS`}</button>`;
+    if (m.state === 2 && now < finalAt) act += gate ? '' : `<button class="btn" data-ev="dispute" data-id="${x.id}" ${evS.busy ? 'disabled' : ''}>Dispute (${evS.bond ? sxNum(fl(evS.bond, 18)) : '…'} KingS bond)</button>`;
+    if (m.state === 2 && now >= finalAt && !gate) act += `<button class="btn" data-ev="finalize" data-id="${x.id}">Finalize</button>`;
+    if (m.state === 1 && now > res + 3 * 86400 && !gate) act += `<button class="btn" data-ev="expire" data-id="${x.id}">Refund this market</button>`;
+    const ev = m.evidence ? `<p class="pr-note">Source: ${esc(m.evidence).replace(/(https:\/\/[^\s]+)/, '<a href="$1" target="_blank" rel="noopener">$1</a>')}</p>` : '';
+    const rules = esc(m.rules.replace(/\s*\[[^\]]+\]\s*$/, ''));
+    const share = `https://x.com/intent/post?text=${encodeURIComponent(`${m.question} ${m.outcomes.join(' / ')}? My pick is in 🔮`)}&url=${encodeURIComponent('https://cavfi.com/#e/' + x.id)}`;
+    return `<section class="sx-card ev-card${evS.hl === x.id ? ' pr-hl' : ''}" id="ev-${x.id}"><div class="sx-head"><span class="pr-meta">${evIcon(m.category)} #${x.id} · ${esc(EV_CAT[m.category] ? EV_CAT[m.category].slice(2) : m.category)}</span><span class="pr-meta">${sxNum(tot)} KingS pot</span></div>
+      <h3 class="pr-q">${esc(m.question)}</h3><div class="ev-os">${sides}</div><p class="pr-note">${status}</p>${ev}${act ? `<div class="ev-act">${act}</div>` : ''}
+      <details class="ev-rules"><summary>How it's decided</summary><p class="pr-note">${rules}</p></details>
+      <div class="up-share"><a class="btn fc-sm" href="${share}" target="_blank" rel="noopener">Post on X</a></div></section>`;
+  };
+  const inCat = x => evS.cat === 'all' || x.m.category === evS.cat;
+  const live = evS.list.filter(x => inCat(x) && x.m.state === 1 && now < Number(x.m.closeAt)).sort((a, b) => Number(a.m.closeAt) - Number(b.m.closeAt));
+  const pend = evS.list.filter(x => inCat(x) && !live.includes(x) && (x.m.state === 1 || x.m.state === 2 || x.m.state === 3));
+  const claim = evS.list.filter(x => evS.mine[x.id] && evS.mine[x.id].cl.gt(0) && !live.includes(x) && !pend.includes(x));
+  const done = evS.list.filter(x => inCat(x) && (x.m.state === 4 || x.m.state === 5) && !claim.includes(x)).slice(0, 6);
+  box.innerHTML = `<div class="chips ev-cats" role="group" aria-label="Category">${cats.map(k => `<button class="chip" data-evcat="${k}" aria-pressed="${evS.cat === k}">${k === 'all' ? 'All' : EV_CAT[k]}</button>`).join('')}</div>`
+    + (live.length ? `<div class="pr-grid">${live.map(card).join('')}</div>` : `<div class="empty-card">No open markets in this category right now. The CavFi bot opens new ones every day: football, NBA, crypto prices and DogeOS events.</div>`)
+    + (claim.length ? `<div class="sx-head"><h2>To claim</h2></div><div class="pr-grid">${claim.map(card).join('')}</div>` : '')
+    + (pend.length ? `<div class="sx-head"><h2>Waiting for the result</h2></div><div class="pr-grid">${pend.map(card).join('')}</div>` : '')
+    + (done.length ? `<div class="sx-head"><h2>Decided</h2></div><div class="pr-grid">${done.map(card).join('')}</div>` : '')
+    + `<p class="pr-note"><b>How results are decided:</b> the CavFi bot opens these markets and, after the event, <b>proposes</b> the result on chain with its public source (ESPN's final score for games, Coinbase's 1-minute candle for prices, the raid contract for DogeOS events). For <b>24 hours</b> anyone can dispute it by locking a bond; if nobody does, it becomes final. A disputed result is reviewed by CavFi: if the ruling changes the result, the disputer gets the bond back. If no result is proposed within 3 days, or a dispute is not ruled on within 7, everyone is refunded. Winners share the pot minus a 2% fee. <b>Seeding:</b> the bot puts the same amount of its own KingS (500) on every outcome of a new market so there is always a pot. Football markets count the 90 minutes plus stoppage time. Testnet KingS, no real value.</p>`;
+  if (evS.hl != null && !evS.scrolled){ const el = document.getElementById('ev-' + evS.hl); if (el){ evS.scrolled = true; el.scrollIntoView({block: 'center'}); } }
+}
+async function evRun(key, fn, okMsg){
+  evS.busy = key; renderEvents();
+  try{ const tx = await sendTx(fn, 'Waiting for the block…', () => {}); toast(`${okMsg} ${txLink(tx.hash)}`, 'ok', 8000); }
+  catch(err){ toast(errMsg(err), 'bad', 8000); }
+  evS.busy = ''; await loadEvents(); loadPredict();
+}
+document.addEventListener('click', async e => {
+  const cb = e.target.closest('[data-evcat]'); if (cb){ evS.cat = cb.dataset.evcat; return renderEvents(); }
+  const b = e.target.closest('[data-ev]'); if (!b) return;
+  const a = b.dataset.ev, id = Number(b.dataset.id), x = (evS.list || []).find(q => q.id === id);
+  if (a === 'bet'){
+    const amt = prAmt(($('evAmt' + id) || {}).value);
+    if (!amt) return toast('Type how many KingS to stake, then press Back.', 'bad');
+    if (pr.kbal && pr.kbal.lt(amt)) return toast('You don\'t have that many KingS. Get some on the Faucet or Swap page.', 'bad');
+    evS.busy = 'bet'; renderEvents();
+    if (!(await prApprove(A.markets, evS.allow, amt))){ evS.busy = ''; return renderEvents(); }
+    const o = Number(b.dataset.o);
+    return evRun('bet', () => mkC(true).bet(id, o, amt), `Backed ${x ? esc(x.m.outcomes[o]) : 'your pick'}.`);
+  }
+  if (a === 'claim') return evRun('claim' + id, () => mkC(true).claim(id), 'Claimed.');
+  if (a === 'finalize') return evRun('fin', () => mkC(true).finalize(id), 'Result is final: winners can claim.');
+  if (a === 'expire') return evRun('exp', () => mkC(true).expire(id), 'Market refunded: claim your stake.');
+  if (a === 'dispute'){
+    if (!x) return;
+    const bond = evS.bond || E.utils.parseEther('1000');
+    if (pr.kbal && pr.kbal.lt(bond)) return toast(`A dispute locks ${sxNum(fl(bond, 18))} KingS. You get it back if the result is changed.`, 'bad');
+    if (!confirm(`Dispute the result "${x.m.proposed === 255 ? 'void' : x.m.outcomes[x.m.proposed]}"? This locks ${sxNum(fl(bond, 18))} KingS: you get it back if CavFi's review changes the result, otherwise it goes to the fee wallet.`)) return;
+    evS.busy = 'dispute'; renderEvents();
+    if (!(await prApprove(A.markets, evS.allow, bond))){ evS.busy = ''; return renderEvents(); }
+    return evRun('dispute', () => mkC(true).dispute(id), 'Disputed: CavFi will review the result.');
+  }
+});
+setInterval(() => { if (st.view === 'predict' && pr.tab === 'events' && !document.hidden && !evS.busy) loadEvents(); }, 30000);
 
 /* ================= LIVE ACTIVITY (home) =================
    The latest things people did on CavFi, read straight from contract events (last ~16 hours).
@@ -7037,7 +7174,7 @@ const RAID_ABI = [
   'function page(uint256 id, uint256 start, uint256 n) view returns (address[] who, uint256[] dmg)', 'function claim(uint256 id) returns (uint256)',
 ];
 const RAID_HITS = [['🎁', 'Free spin', 60], ['🗝️', 'Solve a riddle', 200], ['🏆', 'Win an Arena round', 120], ['🏁', 'Back a token in the Arena', 40], ['⚔️', 'Duel', 40],
-  ['🎲', 'Play a game', 25], ['🎯', 'Guess the DOGE price', 25], ['👑', 'Mint a Cavalier or a .cav name', 30], ['⇄', 'Swap or add liquidity', 20], ['🚀', 'Launchpad trade', 20], ['📣', 'Callout', 20], ['☀️', 'gm or gn', 15]];
+  ['🎲', 'Play a game', 25], ['🎯', 'Guess the DOGE price', 25], ['🌍', 'Back a pick on Markets', 25], ['👑', 'Mint a Cavalier or a .cav name', 30], ['⇄', 'Swap or add liquidity', 20], ['🚀', 'Launchpad trade', 20], ['📣', 'Callout', 20], ['☀️', 'gm or gn', 15]];
 const rd = {data: null, busy: false, names: {}};
 const rdC = signer => new E.Contract(A.raid, RAID_ABI, signer ? st.signer : RP());
 async function loadRaid(){
@@ -7340,7 +7477,7 @@ paintTheme();
   const lxDeep = location.hash.match(LX_HASH);
   const upPath = decodeURIComponent(location.pathname).match(/^\/u\/([A-Za-z0-9.-]{3,64})\/?$/), upHash = decodeURIComponent(location.hash).match(UP_HASH);
   if (upPath || upHash){ up.id = (upPath || upHash)[1].toLowerCase(); setView('profile'); if (upPath) try{ history.replaceState(null, '', '/#u/' + up.id); }catch(e){} }
-  else if (location.hash === '#predict' || location.hash === '#markets' || location.hash === '#duels' || location.hash === '#guess' || DUEL_HASH.test(location.hash) || MKT_HASH.test(location.hash)) routePredict(location.hash);
+  else if (location.hash === '#predict' || location.hash === '#markets' || location.hash === '#doge' || location.hash === '#events' || location.hash === '#duels' || location.hash === '#guess' || DUEL_HASH.test(location.hash) || MKT_HASH.test(location.hash) || EV_HASH.test(location.hash)) routePredict(location.hash);
   else if (location.hash === '#u') setView('profile');
   else setView(HASH_VIEW[location.hash] || (LX_HASH.test(location.hash) ? 'launch' : 'home'));
   if (lxDeep) openLaunch(E.utils.getAddress(lxDeep[1].toLowerCase()));

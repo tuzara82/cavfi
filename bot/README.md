@@ -47,3 +47,25 @@ powershell -ExecutionPolicy Bypass -File install-task.ps1   # once: starts now a
 
 Logs are in `logs\bot-YYYY-MM-DD.log`. Only one bot runs at a time: a second copy exits right away.
 The PC must be on and not asleep for the bot to work (Settings → System → Power → Sleep: Never, when plugged in).
+
+## CavFi Markets (football, NBA, crypto prices, DogeOS events)
+
+The bot is the resolver of CavFi Markets (`markets` in `site/addresses.json`). Every 10 minutes it:
+
+- opens markets for football (1 / X / 2 after 90 minutes) and NBA games starting in the next 48 hours, from ESPN's public scoreboard (at most `MARKETS_DAILY_MAX` = 8 a day, `MARKETS_LEAGUE_MAX` = 3 per league);
+- keeps one "above the line on Friday 20:00 UTC" market open for each of `MARKETS_COINS` (BTC, ETH, DOGE), priced from Coinbase (Binance as a fallback);
+- opens "Will the Fat Cat fall before the raid ends?" for the current raid;
+- puts `MARKETS_SEED` (500) KingS on every outcome of a new market;
+- after each event proposes the result with its source; after the 24 h dispute window it finalizes it.
+
+Your own questions, and rulings on disputed results, go through `market.mjs` with the owner (deployer) key:
+
+```powershell
+$s = Read-Host "Private key (deployer)" -AsSecureString
+$env:PRIVATE_KEY = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))
+node market.mjs list
+node market.mjs create dogeos "Will DogeOS post Chapter 6 by Nov 22?" "Yes,No" 2026-11-21T18:00Z 2026-11-22T20:00Z "YES if @DogeOS posts Chapter 6 of The Grand Heist on X before Nov 22 20:00 UTC."
+node market.mjs propose 12 0 "https://x.com/DogeOS/status/..."
+node market.mjs rule 12 1
+Remove-Item Env:PRIVATE_KEY; Remove-Variable s
+```

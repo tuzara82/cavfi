@@ -47,6 +47,13 @@ const CFG = {
   questsDelaySec: Number(env('QUESTS_DELAY_SEC', '300')),
   raffle: env('RAFFLE', '1') === '1',
   raid: env('RAID', '1') === '1',
+  markets: env('MARKETS', '1') === '1',                          // CavFi Markets: football, NBA, crypto prices, DogeOS events
+  marketsEverySec: Number(env('MARKETS_EVERY_SEC', '600')),
+  marketsLeagues: env('MARKETS_LEAGUES', 'soccer/uefa.champions,soccer/eng.1,soccer/esp.1,basketball/nba,soccer/ita.1,soccer/ger.1,soccer/uefa.europa,soccer/fra.1').split(',').map(x => x.trim()).filter(Boolean),
+  marketsDailyMax: Number(env('MARKETS_DAILY_MAX', '8')),         // new sports markets a UTC day
+  marketsLeagueMax: Number(env('MARKETS_LEAGUE_MAX', '3')),       // ...and per league a day
+  marketsCoins: env('MARKETS_COINS', 'BTC,ETH,DOGE').split(',').map(x => x.trim().toUpperCase()).filter(Boolean),
+  marketsSeed: Number(env('MARKETS_SEED', '500')),                // KingS the bot puts on every outcome of a new market (0 = none)
   raidEverySec: Number(env('RAID_EVERY_SEC', '300')),
   raidDailyCap: Number(env('RAID_DAILY_CAP', '600')),   // most damage one wallet can deal in a UTC day
   raidExclude: env('RAID_EXCLUDE', '0x1652C4078cd133193B7b4e930Abcb0F9aBB9C76b').split(',').map(x => x.trim().toLowerCase()).filter(Boolean),
@@ -155,6 +162,11 @@ const ABI = {
   hunt: ['function count() view returns (uint256)',
          'function get(uint256) view returns (tuple(uint64 start, uint64 end, uint8 clues, uint32 finishers, uint256 prize, uint256 paid, string title) h, string[] clues, bytes32[] answerKeys, uint32[] solvers, address[3] top)',
          'event Solved(uint256 indexed id, address indexed player, uint8 clue, uint32 order)', 'event Finished(uint256 indexed id, address indexed player, uint32 place, uint256 prize)'],
+  markets: ['function create(string category, string question, string[] outcomes, string rules, uint64 closeAt, uint64 resolveAt) returns (uint256)',
+            'function bet(uint256 id, uint8 outcome, uint256 amount)', 'function propose(uint256 id, uint8 outcome, string evidence)',
+            'function finalize(uint256 id)', 'function expire(uint256 id)', 'function count() view returns (uint256)', 'function resolver() view returns (address)',
+            'function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(string question, string category, string rules, string[] outcomes, uint64 closeAt, uint64 resolveAt, uint8 state, uint8 proposed, uint8 winner, uint64 proposedAt, string evidence, address disputer, uint256 total)[] items, uint256[][] pool)',
+            'event Created(uint256 indexed id, string category, string question, string[] outcomes, uint64 closeAt, uint64 resolveAt)'],
   raid: ['function count() view returns (uint256)', 'function attester(address) view returns (bool)',
          'function get(uint256) view returns (tuple(string title, uint64 start, uint64 end, uint64 defeatedAt, uint128 maxHp, uint128 hp, uint256 prize, uint256 claimed, uint256 totalDamage, address finalBlow))',
          'function hit(uint256 id, address[] who, uint256[] dmg)',
@@ -338,7 +350,7 @@ async function txFeeNow(){
   try{ v = fl(await new ethers.Contract(L1_ORACLE, ['function getL1Fee(bytes) view returns (uint256)'], provider).getL1Fee('0x' + 'ab'.repeat(260)), 18); }catch(e){}
   feeCache = {at: now(), v}; return v;
 }
-const feeTier = label => /^(arena noise|fix |approve)|seed (YES|NO)/.test(label) ? 'optional' : /^arena poke/.test(label) ? 'poke' : 'essential';
+const feeTier = label => /^(arena noise|fix |approve|markets: seed)|seed (YES|NO)/.test(label) ? 'optional' : /^arena poke/.test(label) ? 'poke' : 'essential';
 // one transaction at a time: the games loop and the main loop share the wallet (and its nonce)
 let sendLock = Promise.resolve();
 function send(label, fn){
@@ -854,6 +866,7 @@ const RAID_DMG = [
   {key: ['callouts'], sel: ['0xf55332ab'], dmg: 20, what: 'callout'},
   {key: ['nft'], sel: ['0xa0712d68', '0x0fbf0a93', '0x4e71d92d'], dmg: 30, what: 'Cavalier'},
   {key: ['names'], sel: ['0xf2c298be', '0x38e74feb'], dmg: 30, what: '.cav name'},
+  {key: ['markets'], sel: ['0xcf87935c'], dmg: 25, what: 'market pick'},
 ];
 let raidAt = 0;
 async function raidKeeper(){
@@ -898,6 +911,175 @@ async function raidKeeper(){
     state.raidCap = cap;
   }
   state.raidFrom = to; saveState();
+}
+
+// ------------------------------------------------------------------ CavFi Markets (predictions on anything)
+// The bot is the disclosed resolver of CavFi Markets. It opens markets on:
+//   - football (1 / X / 2 after 90 minutes) and NBA games, from ESPN's public scoreboard;
+//   - BTC / ETH / DOGE above a line at Friday 20:00 UTC, from Coinbase's 1-minute candles (Binance as a fallback);
+//   - DogeOS / CavFi events it can read on chain (will the Fat Cat fall before the raid ends?).
+// After the event it PROPOSES the result with a link to the source. Anyone has 24 hours to dispute it on chain;
+// without a dispute the bot (or anyone) finalizes it. Each market carries a machine tag at the end of its rules
+// ("[espn:soccer/eng.1:401879233]", "[cb:BTC-USD:95000]", "[raid:0x…:0]") so the bot needs no local state.
+const MK_STATE = ['None', 'Open', 'Proposed', 'Disputed', 'Resolved', 'Refund'];
+const espnUrl = (lg, q) => `https://site.api.espn.com/apis/site/v2/sports/${lg}/${q}`;
+const LEAGUE_NAME = {'soccer/uefa.champions': 'Champions League', 'soccer/eng.1': 'Premier League', 'soccer/esp.1': 'LaLiga', 'soccer/ita.1': 'Serie A',
+  'soccer/ger.1': 'Bundesliga', 'soccer/fra.1': 'Ligue 1', 'soccer/uefa.europa': 'Europa League', 'basketball/nba': 'NBA'};
+const ymd = t => new Date(t * 1000).toISOString().slice(0, 10).replace(/-/g, '');
+async function espnDay(lg, t){
+  const j = await getJson(espnUrl(lg, 'scoreboard?dates=' + ymd(t)));
+  return (j.events || []).map(e => {
+    const c = e.competitions[0], home = c.competitors.find(x => x.homeAway === 'home'), away = c.competitors.find(x => x.homeAway === 'away');
+    return {id: e.id, at: Math.floor(Date.parse(e.date) / 1000), status: e.status.type.name, done: !!e.status.type.completed,
+      home: home.team.displayName, away: away.team.displayName, hs: Number(home.score || 0), as: Number(away.score || 0)};
+  });
+}
+async function espnEvent(lg, id){
+  const j = await getJson(espnUrl(lg, 'summary?event=' + id));
+  const c = j.header.competitions[0], home = c.competitors.find(x => x.homeAway === 'home'), away = c.competitors.find(x => x.homeAway === 'away');
+  return {id, status: c.status.type.name, done: !!c.status.type.completed, home: home.team.displayName, away: away.team.displayName,
+    hs: Number(home.score || 0), as: Number(away.score || 0)};
+}
+async function priceAt(pair, ts){   // the open of the 1-minute candle that starts at ts
+  const iso = x => new Date(x * 1000).toISOString();
+  try{
+    const j = await getJson(`https://api.exchange.coinbase.com/products/${pair}/candles?granularity=60&start=${iso(ts)}&end=${iso(ts + 60)}`);
+    const c = (j || []).find(x => x[0] === ts); if (c && +c[3] > 0) return {p: +c[3], src: `Coinbase ${pair} 1-minute candle at ${isoT(ts)}`};
+  }catch(e){ log('coinbase candle:', e.message); }
+  const sym = pair.replace('-USD', 'USDT');
+  const j = await getJson(`https://api.binance.com/api/v3/klines?symbol=${sym}&interval=1m&startTime=${ts * 1000}&limit=1`);
+  if (j[0] && j[0][0] === ts * 1000 && +j[0][1] > 0) return {p: +j[0][1], src: `Binance ${sym} 1-minute candle at ${isoT(ts)}`};
+  throw new Error('no candle for ' + pair + ' at ' + iso(ts));
+}
+async function priceNow(pair){
+  try{ const j = await getJson(`https://api.exchange.coinbase.com/products/${pair}/ticker`); if (+j.price > 0) return +j.price; }catch(e){}
+  const j = await getJson(`https://api.binance.com/api/v3/ticker/price?symbol=${pair.replace('-USD', 'USDT')}`); if (+j.price > 0) return +j.price;
+  throw new Error('no price for ' + pair);
+}
+const niceLine = p => Number(p.toPrecision(3));   // the line: today's price to 3 significant digits
+const usdLine = p => p >= 100 ? '$' + p.toLocaleString('en-US') : '$' + String(+p.toPrecision(3));
+const nextFriday20 = t => { const d = new Date(t * 1000); d.setUTCHours(20, 0, 0, 0); let x = Math.floor(d.getTime() / 1000);
+  while (new Date(x * 1000).getUTCDay() !== 5 || x - t < 3 * 86400) x += 86400; return x; };
+let marketsAt = 0, marketsLowWarned = false;
+async function marketsKeeper(){
+  if (!CFG.markets || !A.markets || !wallet || me === ethers.constants.AddressZero || now() - marketsAt < CFG.marketsEverySec) return;
+  marketsAt = now();
+  const mk = new ethers.Contract(A.markets, ABI.markets, wallet);
+  if (lk(await mk.resolver()) !== lk(me)){ log('markets: this wallet is not the resolver of ' + short(A.markets) + ', skipping'); CFG.markets = false; return; }
+  const t = (await provider.getBlock('latest')).timestamp;
+  const [ids, items] = await mk.page(0, 150);
+  const tags = new Set(), list = items.map((m, i) => ({m, id: ids[i].toNumber(), tag: (m.rules.match(/\[([^\]]+)\]\s*$/) || [])[1] || ''}));
+  for (const x of list) tags.add(x.tag);
+  // 1. results: propose, finalize, expire
+  for (const {m, id, tag} of list){
+    const st = MK_STATE[m.state], resolveAt = Number(m.resolveAt);
+    if (st === 'Proposed' && t >= Number(m.proposedAt) + 86400){ await send(`markets: finalize #${id}`, () => mk.finalize(id)); continue; }
+    if (st === 'Open' && t > resolveAt + 3 * 86400){ await send(`markets: expire #${id}`, () => mk.expire(id)); continue; }
+    if (st !== 'Open' || t < resolveAt) continue;
+    let res = null;
+    try{ res = await marketResult(tag, m); }catch(e){ log(`markets: no result yet for #${id}:`, (e.message || '').slice(0, 100)); }
+    if (!res) continue;
+    const tx = await send(`markets: propose #${id} = ${res.outcome === 255 ? 'void' : m.outcomes[res.outcome]}`, () => mk.propose(id, res.outcome, res.evidence));
+    if (tx) await tg(`📊 <b>Result proposed</b> for “${esc(m.question)}”: <b>${res.outcome === 255 ? 'void (everyone refunded)' : esc(m.outcomes[res.outcome])}</b>\nSource: ${esc(res.evidence)}\nWrong? Anyone can dispute it for 24 h on <a href="https://cavfi.com/#markets">cavfi.com/#markets</a>.`);
+  }
+  // 2. new markets
+  const made = [];
+  const day = Math.floor(t / 86400);
+  if (state.mkDay !== day){ state.mkDay = day; state.mkMade = 0; state.mkLeague = {}; }
+  // sports: games starting in 1 to 48 hours
+  for (const lg of CFG.marketsLeagues){
+    if ((state.mkMade || 0) >= CFG.marketsDailyMax) break;
+    let evs = [];
+    for (const d of [t, t + 86400, t + 2 * 86400]){ try{ evs.push(...await espnDay(lg, d)); }catch(e){ log(`markets: ESPN ${lg}:`, e.message); } }
+    const seen = new Set();
+    evs = evs.filter(e => !seen.has(e.id) && seen.add(e.id) && e.status === 'STATUS_SCHEDULED' && e.at > t + 3600 && e.at < t + 48 * 3600).sort((a, b) => a.at - b.at);
+    for (const e of evs){
+      if ((state.mkMade || 0) >= CFG.marketsDailyMax || ((state.mkLeague || {})[lg] || 0) >= CFG.marketsLeagueMax) break;
+      const tag = `espn:${lg}:${e.id}`;
+      if (tags.has(tag)) continue;
+      const soccer = lg.startsWith('soccer/'), name = LEAGUE_NAME[lg] || lg.split('/')[1];
+      const outcomes = soccer ? [e.home, 'Draw', e.away] : [e.home, e.away];
+      const rules = soccer
+        ? `${name}, kick-off ${isoT(e.at)}. Result after 90 minutes plus stoppage time (extra time and penalties don't count), from ESPN's final score. Postponed or abandoned = refund. [${tag}]`
+        : `${name}, tip-off ${isoT(e.at)}. Winner of the game including overtime, from ESPN's final score. Postponed = refund. [${tag}]`;
+      const q = soccer ? `${e.home} vs ${e.away}` : `${e.away} at ${e.home}: who wins?`;
+      const tx = await send(`markets: open ${name} ${e.home} vs ${e.away}`, () => mk.create(soccer ? 'football' : 'basketball', q.slice(0, 200), outcomes.map(x => x.slice(0, 40)), rules.slice(0, 400), e.at, e.at + (soccer ? 3 : 4) * 3600));
+      if (!tx) return;
+      state.mkMade = (state.mkMade || 0) + 1; (state.mkLeague ||= {})[lg] = (state.mkLeague[lg] || 0) + 1; saveState();
+      tags.add(tag); made.push({tx, q, cat: soccer ? '⚽' : '🏀', n: outcomes.length});
+    }
+  }
+  // crypto: one open "above the line on Friday 20:00 UTC" market per coin
+  for (const coin of CFG.marketsCoins){
+    const pair = coin + '-USD';
+    if (list.some(x => x.tag.startsWith(`cb:${pair}:`) && MK_STATE[x.m.state] === 'Open' && t < Number(x.m.closeAt))) continue;
+    let p; try{ p = await priceNow(pair); }catch(e){ log('markets:', e.message); continue; }
+    const at = nextFriday20(t), line = niceLine(p), tag = `cb:${pair}:${line}:${at}`;
+    if (tags.has(tag)) continue;
+    const when = new Date(at * 1000).toLocaleString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC'}) + ', 20:00 UTC';
+    const q = `Will ${coin} be above ${usdLine(line)} on ${when}?`;
+    const rules = `YES if the ${pair} price at ${isoT(at)} (open of Coinbase's 1-minute candle, Binance ${coin}USDT if Coinbase has none) is above ${usdLine(line)}. Betting closes 24 h before. [${tag}]`;
+    const tx = await send(`markets: open ${coin} above ${usdLine(line)}`, () => mk.create('crypto', q, ['Yes', 'No'], rules, at - 86400, at));
+    if (!tx) return;
+    tags.add(tag); made.push({tx, q, cat: '📈', n: 2});
+  }
+  // DogeOS: will the Fat Cat fall before the raid ends?
+  if (A.raid){
+    try{
+      const r = new ethers.Contract(A.raid, ABI.raid, provider), n = (await r.count()).toNumber();
+      if (n){
+        const rid = n - 1, R = await r.get(rid), end = Number(R.end), tag = `raid:${lk(A.raid)}:${rid}`;
+        if (!tags.has(tag) && !R.hp.isZero() && end - t > 2 * 86400){
+          const q = `Will ${R.title} fall before the raid ends?`;
+          const rules = `YES if the CavFi Raid boss (${R.title}, raid #${rid}) reaches 0 HP before ${isoT(end)}, as recorded on chain in the raid contract ${short(A.raid)}. Betting closes 24 h before the end. [${tag}]`;
+          const tx = await send(`markets: open raid #${rid}`, () => mk.create('dogeos', q, ['Yes', 'No'], rules, end - 86400, end));
+          if (tx){ tags.add(tag); made.push({tx, q, cat: '🐈', n: 2}); }
+        }
+      }
+    }catch(e){ log('markets: raid market:', (e.message || '').slice(0, 100)); }
+  }
+  // seed the new markets so they are not empty (disclosed on the site as "seeded by CavFi")
+  if (made.length && CFG.marketsSeed > 0){
+    const amt = ethers.utils.parseEther(String(CFG.marketsSeed));
+    const kc = new ethers.Contract(A.kings, ABI.erc20, wallet);
+    for (const x of made){
+      const rc = await provider.getTransactionReceipt(x.tx.hash);
+      const ev = rc.logs.map(l => { try{ return mk.interface.parseLog(l); }catch(e){ return null; } }).find(e => e && e.name === 'Created');
+      if (!ev) continue;
+      if ((await kc.balanceOf(me)).lt(amt.mul(x.n))){ if (!marketsLowWarned){ marketsLowWarned = true; log('markets: not enough KingS to seed markets'); } break; }
+      await ensureAllowance(A.kings, A.markets, amt.mul(x.n));
+      for (let o = 0; o < x.n; o++) if (!(await send(`markets: seed #${ev.args.id} outcome ${o}`, () => mk.bet(ev.args.id, o, amt)))) break;
+    }
+  }
+  if (made.length) await tg(`📊 <b>New on CavFi Markets</b>\n${made.map(x => `${x.cat} ${esc(x.q)}`).join('\n')}\nBack your pick with KingS: <a href="https://cavfi.com/#markets">cavfi.com/#markets</a>`);
+}
+// the result of a market from its tag, or null if not known yet: {outcome (255 = void), evidence}
+async function marketResult(tag, m){
+  let x;
+  if ((x = tag.match(/^espn:([a-z]+\/[a-z0-9.]+):(\d+)$/))){
+    const [, lg, id] = x, e = await espnEvent(lg, id), url = `https://www.espn.com/${lg.split('/')[0]}/match/_/gameId/${id}`;
+    if (/POSTPONED|CANCELED|CANCELLED|ABANDONED|FORFEIT|SUSPENDED/.test(e.status)) return {outcome: 255, evidence: `${e.status.replace('STATUS_', '').toLowerCase()} · ${url}`};
+    if (!e.done) return null;
+    const soccer = lg.startsWith('soccer/');
+    if (soccer){
+      // a match that needed extra time or penalties was level after 90 minutes
+      const et = /AET|PEN|EXTRA|SHOOTOUT/.test(e.status);
+      const o = et || e.hs === e.as ? 1 : e.hs > e.as ? 0 : 2;
+      return {outcome: o, evidence: `${e.home} ${e.hs}-${e.as} ${e.away}${et ? ' (after extra time; level after 90 min)' : ''} · ${url}`};
+    }
+    if (e.hs === e.as) return null;
+    return {outcome: e.hs > e.as ? 0 : 1, evidence: `${e.away} ${e.as}-${e.hs} ${e.home} · ${url}`};
+  }
+  if ((x = tag.match(/^cb:([A-Z]+-USD):([\d.]+):(\d+)$/))){
+    const [, pair, line, at] = x, r = await priceAt(pair, Number(at));
+    return {outcome: r.p > Number(line) ? 0 : 1, evidence: `${pair} ${r.p} vs line ${line} · ${r.src}`};
+  }
+  if ((x = tag.match(/^raid:(0x[0-9a-f]{40}):(\d+)$/))){
+    const R = await new ethers.Contract(x[1], ABI.raid, provider).get(Number(x[2]));
+    const fell = Number(R.defeatedAt) > 0 && Number(R.defeatedAt) < Number(R.end);
+    return {outcome: fell ? 0 : 1, evidence: fell ? `defeated at ${isoT(Number(R.defeatedAt))} · cavfi.com/#raid` : `${R.hp} HP left at the end · cavfi.com/#raid`};
+  }
+  return null;   // manual markets: the owner proposes with tools
 }
 
 let raffleAt = 0;
@@ -1793,6 +1975,7 @@ async function main(){
       await questsDaily();
       await raffleKeeper();
       await raidKeeper();
+      await marketsKeeper();
       await predictKeeper();
       await guessKeeper();
       await duelKeeper();
