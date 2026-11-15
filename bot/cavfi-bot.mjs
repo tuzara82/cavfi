@@ -164,7 +164,7 @@ const ABI = {
          'event Solved(uint256 indexed id, address indexed player, uint8 clue, uint32 order)', 'event Finished(uint256 indexed id, address indexed player, uint32 place, uint256 prize)'],
   markets: ['function create(string category, string question, string[] outcomes, string rules, uint64 closeAt, uint64 resolveAt) returns (uint256)',
             'function bet(uint256 id, uint8 outcome, uint256 amount)', 'function propose(uint256 id, uint8 outcome, string evidence)',
-            'function finalize(uint256 id)', 'function expire(uint256 id)', 'function count() view returns (uint256)', 'function resolver() view returns (address)',
+            'function finalize(uint256 id)', 'function expire(uint256 id)', 'function count() view returns (uint256)', 'function resolver() view returns (address)', 'function stakesOf(uint256 id, address user) view returns (uint256[])',
             'function page(uint256 start, uint256 n) view returns (uint256[] ids, tuple(string question, string category, string rules, string[] outcomes, uint64 closeAt, uint64 resolveAt, uint8 state, uint8 proposed, uint8 winner, uint64 proposedAt, string evidence, address disputer, uint256 total)[] items, uint256[][] pool)',
             'event Created(uint256 indexed id, string category, string question, string[] outcomes, uint64 closeAt, uint64 resolveAt)'],
   raid: ['function count() view returns (uint256)', 'function attester(address) view returns (bool)',
@@ -350,7 +350,7 @@ async function txFeeNow(){
   try{ v = fl(await new ethers.Contract(L1_ORACLE, ['function getL1Fee(bytes) view returns (uint256)'], provider).getL1Fee('0x' + 'ab'.repeat(260)), 18); }catch(e){}
   feeCache = {at: now(), v}; return v;
 }
-const feeTier = label => /^(arena noise|fix |approve|markets: seed)|seed (YES|NO)/.test(label) ? 'optional' : /^arena poke/.test(label) ? 'poke' : 'essential';
+const feeTier = label => /^(arena noise|fix |approve)|seed (YES|NO)/.test(label) ? 'optional' : /^arena poke/.test(label) ? 'poke' : 'essential';
 // one transaction at a time: the games loop and the main loop share the wallet (and its nonce)
 let sendLock = Promise.resolve();
 function send(label, fn){
@@ -926,8 +926,13 @@ const espnUrl = (lg, q) => `https://site.api.espn.com/apis/site/v2/sports/${lg}/
 const LEAGUE_NAME = {'soccer/uefa.champions': 'Champions League', 'soccer/eng.1': 'Premier League', 'soccer/esp.1': 'LaLiga', 'soccer/ita.1': 'Serie A',
   'soccer/ger.1': 'Bundesliga', 'soccer/fra.1': 'Ligue 1', 'soccer/uefa.europa': 'Europa League', 'basketball/nba': 'NBA'};
 const ymd = t => new Date(t * 1000).toISOString().slice(0, 10).replace(/-/g, '');
+async function espnJson(url){
+  const r = await fetch(url, {headers: {accept: 'application/json', 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36', 'accept-language': 'en-US,en;q=0.9', referer: 'https://www.espn.com/'}});
+  if (!r.ok) throw new Error(`ESPN ${r.status}`);
+  return r.json();
+}
 async function espnDay(lg, t){
-  const j = await getJson(espnUrl(lg, 'scoreboard?dates=' + ymd(t)));
+  const j = await espnJson(espnUrl(lg, 'scoreboard?dates=' + ymd(t)));
   return (j.events || []).map(e => {
     const c = e.competitions[0], home = c.competitors.find(x => x.homeAway === 'home'), away = c.competitors.find(x => x.homeAway === 'away');
     return {id: e.id, at: Math.floor(Date.parse(e.date) / 1000), status: e.status.type.name, done: !!e.status.type.completed,
@@ -935,7 +940,7 @@ async function espnDay(lg, t){
   });
 }
 async function espnEvent(lg, id){
-  const j = await getJson(espnUrl(lg, 'summary?event=' + id));
+  const j = await espnJson(espnUrl(lg, 'summary?event=' + id));
   const c = j.header.competitions[0], home = c.competitors.find(x => x.homeAway === 'home'), away = c.competitors.find(x => x.homeAway === 'away');
   return {id, status: c.status.type.name, done: !!c.status.type.completed, home: home.team.displayName, away: away.team.displayName,
     hs: Number(home.score || 0), as: Number(away.score || 0)};
@@ -990,7 +995,8 @@ async function marketsKeeper(){
   for (const lg of CFG.marketsLeagues){
     if ((state.mkMade || 0) >= CFG.marketsDailyMax) break;
     let evs = [];
-    for (const d of [t, t + 86400, t + 2 * 86400]){ try{ evs.push(...await espnDay(lg, d)); }catch(e){ log(`markets: ESPN ${lg}:`, e.message); } }
+    try{ for (const d of [t, t + 86400, t + 2 * 86400]) evs.push(...await espnDay(lg, d)); }
+    catch(e){ if (now() - (state.mkEspnWarn || 0) > 3 * 3600){ state.mkEspnWarn = now(); log(`markets: ESPN ${lg}:`, e.message); } continue; }
     const seen = new Set();
     evs = evs.filter(e => !seen.has(e.id) && seen.add(e.id) && e.status === 'STATUS_SCHEDULED' && e.at > t + 3600 && e.at < t + 48 * 3600).sort((a, b) => a.at - b.at);
     for (const e of evs){
@@ -1038,17 +1044,19 @@ async function marketsKeeper(){
       }
     }catch(e){ log('markets: raid market:', (e.message || '').slice(0, 100)); }
   }
-  // seed the new markets so they are not empty (disclosed on the site as "seeded by CavFi")
-  if (made.length && CFG.marketsSeed > 0){
-    const amt = ethers.utils.parseEther(String(CFG.marketsSeed));
-    const kc = new ethers.Contract(A.kings, ABI.erc20, wallet);
-    for (const x of made){
-      const rc = await provider.getTransactionReceipt(x.tx.hash);
-      const ev = rc.logs.map(l => { try{ return mk.interface.parseLog(l); }catch(e){ return null; } }).find(e => e && e.name === 'Created');
-      if (!ev) continue;
-      if ((await kc.balanceOf(me)).lt(amt.mul(x.n))){ if (!marketsLowWarned){ marketsLowWarned = true; log('markets: not enough KingS to seed markets'); } break; }
-      await ensureAllowance(A.kings, A.markets, amt.mul(x.n));
-      for (let o = 0; o < x.n; o++) if (!(await send(`markets: seed #${ev.args.id} outcome ${o}`, () => mk.bet(ev.args.id, o, amt)))) break;
+  // seed every open market the bot has not seeded yet, so none is empty (disclosed on the site as "seeded by CavFi")
+  if (CFG.marketsSeed > 0){
+    const amt = ethers.utils.parseEther(String(CFG.marketsSeed)), kc = new ethers.Contract(A.kings, ABI.erc20, wallet);
+    const todo = list.filter(x => MK_STATE[x.m.state] === 'Open' && t < Number(x.m.closeAt) - 600).slice(0, 10);
+    for (const x of todo){
+      const mine = await mk.stakesOf(x.id, me), miss = mine.map((v, o) => v.isZero() ? o : -1).filter(o => o >= 0);
+      if (!miss.length) continue;
+      const n = miss.length;
+      if ((await kc.balanceOf(me)).lt(amt.mul(n))){ if (!marketsLowWarned){ marketsLowWarned = true; log('markets: not enough KingS to seed markets'); } break; }
+      if ((await kc.allowance(me, A.markets)).lt(amt.mul(n)) && !(await send('markets: allow KingS', () => kc.approve(A.markets, ethers.constants.MaxUint256)))) break;
+      let ok = true;
+      for (const o of miss){ ok = !!(await send(`markets: seed #${x.id} outcome ${o}`, () => mk.bet(x.id, o, amt))); if (!ok) break; }
+      if (!ok) break;
     }
   }
   if (made.length) await tg(`📊 <b>New on CavFi Markets</b>\n${made.map(x => `${x.cat} ${esc(x.q)}`).join('\n')}\nBack your pick with KingS: <a href="https://cavfi.com/#markets">cavfi.com/#markets</a>`);
