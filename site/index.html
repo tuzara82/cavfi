@@ -854,7 +854,11 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 .ev-ot{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.ev-ot b{font-weight:600;min-width:0;overflow-wrap:anywhere}.ev-ot span{font:600 14px var(--mono)}
 .ev-bar{height:6px;border-radius:999px;background:color-mix(in srgb,var(--muted) 18%,transparent);overflow:hidden}.ev-bar i{display:block;height:100%;background:var(--accent,var(--ok));border-radius:999px}
 .ev-om{display:flex;justify-content:space-between;align-items:center;gap:8px}.ev-om small{color:var(--muted);font:500 12px var(--mono)}
-.btn.ev-pick{padding:6px 14px;min-height:0;font-size:13px}
+button.ev-o{font:inherit;color:inherit;text-align:left;border:2px solid transparent;cursor:pointer;width:100%}
+button.ev-o:hover{border-color:color-mix(in srgb,var(--accent,var(--ok)) 45%,transparent)}
+.ev-o.sel{border-color:var(--accent,var(--ok));background:color-mix(in srgb,var(--accent,var(--ok)) 10%,var(--well))}
+.ev-betrow{display:grid;grid-template-columns:minmax(0,110px) minmax(0,1fr);gap:8px}.ev-betrow .btn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-hint{text-align:center}
 .ev-act{display:grid;gap:8px}.ev-amt{min-width:0;width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:12px;padding:10px 12px;font:500 15px var(--body)}
 .ev-rules summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
 .pr-warn{border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));background:color-mix(in srgb,var(--warn) 10%,var(--surface));color:var(--ink);border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.5;margin:0 0 14px}
@@ -6574,7 +6578,7 @@ const MK_ABI = ['function count() view returns (uint256)', 'function disputeBond
   'function stakesOf(uint256 id, address user) view returns (uint256[])', 'function claimable(uint256 id, address user) view returns (uint256)', 'function idsOf(address) view returns (uint256[])',
   'function bet(uint256 id, uint8 outcome, uint256 amount)', 'function claim(uint256 id)', 'function dispute(uint256 id)', 'function finalize(uint256 id)', 'function expire(uint256 id)'];
 const mkC = w => new E.Contract(A.markets, MK_ABI, w ? st.signer : RP());
-const evS = { list:null, mine:{}, busy:'', err:'', cat:'all', hl:null, scrolled:false, allow:null, bond:null, at:0 };
+const evS = { list:null, mine:{}, busy:'', err:'', cat:'all', hl:null, scrolled:false, allow:null, bond:null, at:0, pick:{}, amt:{} };
 const EV_CAT = {football: '⚽ Football', basketball: '🏀 NBA', crypto: '📈 Crypto', dogeos: '🐶 DogeOS'};
 const evIcon = c => ({football: '⚽', basketball: '🏀', crypto: '📈', dogeos: '🐶'})[c] || '🔮';
 async function loadEvents(){
@@ -6620,13 +6624,15 @@ function renderEvents(){
     const sides = m.outcomes.map((o, i) => {
       const p = x.pool[i], pct = tot ? p / tot * 100 : 100 / m.outcomes.length, mult = p > 0 ? tot * 0.98 / p : 0;
       const won = m.state === 4 && m.winner === i, mineS = my && my.s[i] && my.s[i].gt(0) ? fl(my.s[i], 18) : 0;
-      const btn = open && !gate ? `<button class="btn ev-pick" data-ev="bet" data-id="${x.id}" data-o="${i}" ${evS.busy ? 'disabled' : ''}>Back</button>` : '';
-      return `<div class="ev-o${won ? ' won' : ''}"><div class="ev-ot"><b>${esc(o)}</b><span>${pct.toFixed(0)}%</span></div><div class="ev-bar"><i style="width:${pct}%"></i></div>
-        <div class="ev-om"><small>${sxNum(p)} KingS${p ? ' · pays ×' + mult.toFixed(2) : ''}${mineS ? ` · <b>you ${sxNum(mineS)}</b>` : ''}</small>${btn}</div></div>`;
+      const sel = open && evS.pick[x.id] === i, tag = open ? 'button' : 'div';
+      return `<${tag} class="ev-o${won ? ' won' : ''}${open ? ' can' : ''}${sel ? ' sel' : ''}"${open ? ` type="button" data-ev="pick" data-id="${x.id}" data-o="${i}" aria-pressed="${sel}"` : ''}><div class="ev-ot"><b>${sel ? '✓ ' : ''}${esc(o)}</b><span>${p ? '×' + mult.toFixed(2) : pct.toFixed(0) + '%'}</span></div><div class="ev-bar"><i style="width:${pct}%"></i></div>
+        <div class="ev-om"><small>${pct.toFixed(0)}% · ${sxNum(p)} KingS${mineS ? ` · <b>you ${sxNum(mineS)}</b>` : ''}</small></div></${tag}>`;
     }).join('');
     let act = '';
     if (open && gate) act = `<button class="btn primary" data-pr="gate">${gate.label}</button>`;
-    else if (open) act = `<input class="ev-amt" inputmode="decimal" placeholder="KingS amount, then press Back" id="evAmt${x.id}" aria-label="KingS to stake" autocomplete="off">`;
+    else if (open){ const pk = evS.pick[x.id];
+      act = pk == null ? `<p class="pr-note ev-hint">👆 Tap your pick</p>`
+        : `<div class="ev-betrow"><input class="ev-amt" inputmode="decimal" placeholder="KingS" id="evAmt${x.id}" data-evamt="${x.id}" value="${esc(evS.amt[x.id] || '')}" aria-label="KingS to stake" autocomplete="off"><button class="btn primary" data-ev="bet" data-id="${x.id}" data-o="${pk}" ${evS.busy ? 'disabled' : ''}>${evS.busy === 'bet' ? 'Placing…' : `Bet on ${esc(m.outcomes[pk])}`}</button></div>`; }
     if (my && my.cl.gt(0)) act += `<button class="btn primary" data-ev="claim" data-id="${x.id}" ${evS.busy ? 'disabled' : ''}>${evS.busy === 'claim' + x.id ? 'Claiming…' : `Claim ${sxNum(fl(my.cl, 18))} KingS`}</button>`;
     if (m.state === 2 && now < finalAt) act += gate ? '' : `<button class="btn" data-ev="dispute" data-id="${x.id}" ${evS.busy ? 'disabled' : ''}>Dispute (${evS.bond ? sxNum(fl(evS.bond, 18)) : '…'} KingS bond)</button>`;
     if (m.state === 2 && now >= finalAt && !gate) act += `<button class="btn" data-ev="finalize" data-id="${x.id}">Finalize</button>`;
@@ -6662,14 +6668,16 @@ document.addEventListener('click', async e => {
   const cb = e.target.closest('[data-evcat]'); if (cb){ evS.cat = cb.dataset.evcat; return renderEvents(); }
   const b = e.target.closest('[data-ev]'); if (!b) return;
   const a = b.dataset.ev, id = Number(b.dataset.id), x = (evS.list || []).find(q => q.id === id);
+  if (a === 'pick'){ const o = Number(b.dataset.o); if (evS.pick[id] === o) delete evS.pick[id]; else evS.pick[id] = o; renderEvents(); const el = $('evAmt' + id); if (el && !el.value) el.focus(); return; }
   if (a === 'bet'){
     const amt = prAmt(($('evAmt' + id) || {}).value);
-    if (!amt) return toast('Type how many KingS to stake, then press Back.', 'bad');
+    if (!amt) return toast('Type how many KingS to stake.', 'bad');
     if (pr.kbal && pr.kbal.lt(amt)) return toast('You don\'t have that many KingS. Get some on the Faucet or Swap page.', 'bad');
     evS.busy = 'bet'; renderEvents();
     if (!(await prApprove(A.markets, evS.allow, amt))){ evS.busy = ''; return renderEvents(); }
     const o = Number(b.dataset.o);
-    return evRun('bet', () => mkC(true).bet(id, o, amt), `Backed ${x ? esc(x.m.outcomes[o]) : 'your pick'}.`);
+    delete evS.amt[id]; delete evS.pick[id];
+    return evRun('bet', () => mkC(true).bet(id, o, amt), `Bet placed on ${x ? esc(x.m.outcomes[o]) : 'your pick'}.`);
   }
   if (a === 'claim') return evRun('claim' + id, () => mkC(true).claim(id), 'Claimed.');
   if (a === 'finalize') return evRun('fin', () => mkC(true).finalize(id), 'Result is final: winners can claim.');
@@ -6684,7 +6692,8 @@ document.addEventListener('click', async e => {
     return evRun('dispute', () => mkC(true).dispute(id), 'Disputed: CavFi will review the result.');
   }
 });
-setInterval(() => { if (st.view === 'predict' && pr.tab === 'events' && !document.hidden && !evS.busy) loadEvents(); }, 30000);
+document.addEventListener('input', e => { const i = e.target.closest('[data-evamt]'); if (i) evS.amt[i.dataset.evamt] = i.value; });
+setInterval(() => { if (st.view === 'predict' && pr.tab === 'events' && !document.hidden && !evS.busy && !(document.activeElement && document.activeElement.matches('[data-evamt]'))) loadEvents(); }, 30000);
 
 /* ================= LIVE ACTIVITY (home) =================
    The latest things people did on CavFi, read straight from contract events (last ~16 hours).
