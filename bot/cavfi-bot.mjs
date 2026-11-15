@@ -1492,7 +1492,7 @@ const gamesChains = {};
 function gamesChainFor(addr, ver, n, len){
   const k = lk(addr);
   let c = gamesChains[k];
-  if (c && c.n === n && c.len === len) return c;
+  if (c && c.n === n && c.len === len && c.ver === ver) return c;
   const t0 = Date.now();
   const base = ver >= 2
     ? ethers.utils.defaultAbiCoder.encode(['bytes32', 'string', 'address', 'uint256'], [wallet.privateKey, 'cavfi-games', addr, n])
@@ -1500,7 +1500,7 @@ function gamesChainFor(addr, ver, n, len){
   let h = ethers.utils.arrayify(ethers.utils.keccak256(base));
   const step = 500, pts = [h];
   for (let i = 1; i <= len; i++){ h = ethers.utils.arrayify(ethers.utils.keccak256(h)); if (i % step === 0) pts.push(h); }
-  c = gamesChains[k] = {n, len, pts, step, top: h};
+  c = gamesChains[k] = {n, len, pts, step, top: h, ver};
   log(`games${ver >= 2 ? ' v' + ver : ''}: hash chain #${n} ready (${len} rounds, ${Date.now() - t0} ms)`);
   return c;
 }
@@ -1511,7 +1511,12 @@ function gamesSeed(c, i){
 }
 const gamesVer = {};
 async function gamesVersion(addr){
-  if (gamesVer[lk(addr)] == null){ try{ gamesVer[lk(addr)] = (await new ethers.Contract(addr, ['function VERSION() view returns (uint256)'], provider).VERSION()).toNumber(); }catch(e){ gamesVer[lk(addr)] = 1; } }
+  // only a real revert (no VERSION() on the contract) means v1; a network hiccup must not pin the wrong version,
+  // or the bot builds the wrong hash chain and stops revealing the games (Coin Flip, Dice...) until a restart
+  if (gamesVer[lk(addr)] == null){
+    try{ gamesVer[lk(addr)] = (await new ethers.Contract(addr, ['function VERSION() view returns (uint256)'], provider).VERSION()).toNumber(); }
+    catch(e){ if (e.code === 'CALL_EXCEPTION' && /revert/i.test(String(e.message || e.reason || ''))) gamesVer[lk(addr)] = 1; else throw e; }
+  }
   return gamesVer[lk(addr)];
 }
 const GAME_NAMES = ['Coin Flip', 'Dice', 'Limbo', 'Royal Wheel', 'Plinko', 'Higher or Lower'];
