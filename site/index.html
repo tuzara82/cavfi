@@ -6600,7 +6600,7 @@ const MK_ABI = ['function count() view returns (uint256)', 'function disputeBond
   'function bet(uint256 id, uint8 outcome, uint256 amount)', 'function claim(uint256 id)', 'function dispute(uint256 id)', 'function finalize(uint256 id)', 'function expire(uint256 id)'];
 const mkC = w => new E.Contract(A.markets, MK_ABI, w ? st.signer : RP());
 const evS = { list:null, mine:{}, busy:'', err:'', cat:'all', hl:null, scrolled:false, allow:null, bond:null, at:0, pick:{}, amt:{} };
-const EV_CAT = {football: '⚽ Football', basketball: '🏀 NBA', crypto: '📈 Crypto', dogeos: '🐶 DogeOS'};
+const EV_CAT = {football: '⚽ Football', basketball: '🏀 NBA', nfl: '🏈 NFL', political: '🗳️ Politics', crypto: '📈 Crypto', dogeos: '🐶 DogeOS'};
 /* Match look: team logos, team colours and the live score come from ESPN's public scoreboard (the same source the
    result is read from), keyed by the [espn:league:event] tag the bot leaves at the end of a market's rules. */
 const evMeta = {};
@@ -6630,7 +6630,7 @@ function evTint(hex, fallback){
   return hex;
 }
 const evTeamFor = (meta, name) => meta && meta.teams ? meta.teams.find(t => t.name === name) || null : null;
-const evIcon = c => ({football: '⚽', basketball: '🏀', crypto: '📈', dogeos: '🐶'})[c] || '🔮';
+const evIcon = c => ({football: '⚽', basketball: '🏀', nfl: '🏈', political: '🗳️', crypto: '📈', dogeos: '🐶'})[c] || '🔮';
 async function loadEvents(){
   if (!A.markets) return;
   const me = st.account, c = mkC();
@@ -6674,7 +6674,7 @@ function renderEvents(){
     const isMatch = m.category === 'football' || m.category === 'basketball', meta = isMatch ? evMeta[x.id] : null;
     if (isMatch) evFetchMeta(x);
     const coin = m.category === 'crypto' ? (m.question.match(/^Will ([A-Z]{2,6}) /) || [])[1] : '';
-    const theme = { football: '#1E8E5A', basketball: '#D9652B', crypto: coin && EV_COIN[coin] ? EV_COIN[coin][0] : '#2D5BFF', dogeos: '#6B3FD4' }[m.category] || '#B4532A';
+    const theme = { football: '#1E8E5A', basketball: '#D9652B', nfl: '#7A2E2E', political: '#4A4A78', crypto: coin && EV_COIN[coin] ? EV_COIN[coin][0] : '#2D5BFF', dogeos: '#6B3FD4' }[m.category] || '#B4532A';
     const icon = (o, i) => {
       const t = evTeamFor(meta, o);
       if (t && t.logo) return `<img class="ev-logo" src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('i'),{className:'ev-ic',textContent:'${esc(t.ab || o.slice(0, 3)).toUpperCase()}'}))">`;

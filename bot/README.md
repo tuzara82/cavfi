@@ -48,7 +48,24 @@ powershell -ExecutionPolicy Bypass -File install-task.ps1   # once: starts now a
 Logs are in `logs\bot-YYYY-MM-DD.log`. Only one bot runs at a time: a second copy exits right away.
 The PC must be on and not asleep for the bot to work (Settings → System → Power → Sleep: Never, when plugged in).
 
-## CavFi Markets (football, NBA, crypto prices, DogeOS events)
+## CavFi Markets (football, NFL, NBA, crypto prices, DogeOS events, political — manual)
+
+### Political markets (manual, same 24h-dispute rule as everything else)
+
+There's no free, reliable, unbiased API for political odds/results, so these are **never**
+opened or resolved automatically — the bot never touches category `political`. You create
+and settle them yourself with `market.mjs`, exactly like the DogeOS "hand-made" markets:
+
+```
+node market.mjs create political "Who wins the 2026 X election?" "Candidate A,Candidate B,Other" 2026-11-30T23:59Z 2026-12-01T12:00Z "YES per the official result, link posted when proposed."
+node market.mjs propose <id> <outcome> "https://... (the official/certified source)"
+```
+
+After you `propose`, the normal 24h on-chain dispute window applies before anyone can
+`finalize` — same as any other market. Keep rules precise and the evidence link to an
+official/certified source (election authority, government site), never a news headline,
+so a dispute has something solid to check against. The bot still seeds these with KingS
+like every other open market, and they show up on the site under the 🗳️ Politics filter.
 
 The bot is the resolver of CavFi Markets (`markets` in `site/addresses.json`). Every 10 minutes it:
 

@@ -49,7 +49,7 @@ const CFG = {
   raid: env('RAID', '1') === '1',
   markets: env('MARKETS', '1') === '1',                          // CavFi Markets: football, NBA, crypto prices, DogeOS events
   marketsEverySec: Number(env('MARKETS_EVERY_SEC', '600')),
-  marketsLeagues: env('MARKETS_LEAGUES', 'soccer/uefa.champions,soccer/eng.1,soccer/esp.1,basketball/nba,soccer/ita.1,soccer/ger.1,soccer/uefa.europa,soccer/fra.1').split(',').map(x => x.trim()).filter(Boolean),
+  marketsLeagues: env('MARKETS_LEAGUES', 'soccer/uefa.champions,soccer/eng.1,soccer/esp.1,basketball/nba,soccer/ita.1,soccer/ger.1,soccer/uefa.europa,soccer/fra.1,football/nfl').split(',').map(x => x.trim()).filter(Boolean),
   marketsDailyMax: Number(env('MARKETS_DAILY_MAX', '8')),         // new sports markets a UTC day
   marketsLeagueMax: Number(env('MARKETS_LEAGUE_MAX', '3')),       // ...and per league a day
   marketsCoins: env('MARKETS_COINS', 'BTC,ETH,DOGE').split(',').map(x => x.trim().toUpperCase()).filter(Boolean),
@@ -924,7 +924,7 @@ async function raidKeeper(){
 const MK_STATE = ['None', 'Open', 'Proposed', 'Disputed', 'Resolved', 'Refund'];
 const espnUrl = (lg, q) => `https://site.api.espn.com/apis/site/v2/sports/${lg}/${q}`;
 const LEAGUE_NAME = {'soccer/uefa.champions': 'Champions League', 'soccer/eng.1': 'Premier League', 'soccer/esp.1': 'LaLiga', 'soccer/ita.1': 'Serie A',
-  'soccer/ger.1': 'Bundesliga', 'soccer/fra.1': 'Ligue 1', 'soccer/uefa.europa': 'Europa League', 'basketball/nba': 'NBA'};
+  'soccer/ger.1': 'Bundesliga', 'soccer/fra.1': 'Ligue 1', 'soccer/uefa.europa': 'Europa League', 'basketball/nba': 'NBA', 'football/nfl': 'NFL'};
 const ymd = t => new Date(t * 1000).toISOString().slice(0, 10).replace(/-/g, '');
 async function espnJson(url){
   const r = await fetch(url, {headers: {accept: 'application/json', 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36', 'accept-language': 'en-US,en;q=0.9', referer: 'https://www.espn.com/'}});
@@ -1003,16 +1003,18 @@ async function marketsKeeper(){
       if ((state.mkMade || 0) >= CFG.marketsDailyMax || ((state.mkLeague || {})[lg] || 0) >= CFG.marketsLeagueMax) break;
       const tag = `espn:${lg}:${e.id}`;
       if (tags.has(tag)) continue;
-      const soccer = lg.startsWith('soccer/'), name = LEAGUE_NAME[lg] || lg.split('/')[1];
+      const kind = lg.startsWith('soccer/') ? 'soccer' : lg.startsWith('football/') ? 'nfl' : 'basketball';
+      const soccer = kind === 'soccer', name = LEAGUE_NAME[lg] || lg.split('/')[1];
       const outcomes = soccer ? [e.home, 'Draw', e.away] : [e.home, e.away];
       const rules = soccer
         ? `${name}, kick-off ${isoT(e.at)}. Result after 90 minutes plus stoppage time (extra time and penalties don't count), from ESPN's final score. Postponed or abandoned = refund. [${tag}]`
-        : `${name}, tip-off ${isoT(e.at)}. Winner of the game including overtime, from ESPN's final score. Postponed = refund. [${tag}]`;
+        : `${name}, kick-off ${isoT(e.at)}. Winner of the game including overtime, from ESPN's final score. Postponed = refund. [${tag}]`;
       const q = soccer ? `${e.home} vs ${e.away}` : `${e.away} at ${e.home}: who wins?`;
-      const tx = await send(`markets: open ${name} ${e.home} vs ${e.away}`, () => mk.create(soccer ? 'football' : 'basketball', q.slice(0, 200), outcomes.map(x => x.slice(0, 40)), rules.slice(0, 400), e.at, e.at + (soccer ? 3 : 4) * 3600));
+      const cat = kind === 'soccer' ? 'football' : kind === 'nfl' ? 'nfl' : 'basketball';
+      const tx = await send(`markets: open ${name} ${e.home} vs ${e.away}`, () => mk.create(cat, q.slice(0, 200), outcomes.map(x => x.slice(0, 40)), rules.slice(0, 400), e.at, e.at + (soccer ? 3 : 4) * 3600));
       if (!tx) return;
       state.mkMade = (state.mkMade || 0) + 1; (state.mkLeague ||= {})[lg] = (state.mkLeague[lg] || 0) + 1; saveState();
-      tags.add(tag); made.push({tx, q, cat: soccer ? '⚽' : '🏀', n: outcomes.length});
+      tags.add(tag); made.push({tx, q, cat: kind === 'soccer' ? '⚽' : kind === 'nfl' ? '🏈' : '🏀', n: outcomes.length});
     }
   }
   // crypto: one open "above the line on Friday 20:00 UTC" market per coin
