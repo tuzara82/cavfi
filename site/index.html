@@ -848,15 +848,36 @@ html.tg .lede{padding-top:6px}html.tg .lede h1{font-size:30px}
 .pr-res{font-weight:700}.pr-res.yes{color:var(--ok)}.pr-res.no{color:var(--bad)}
 .pr-note{font-size:12.5px;color:var(--muted);margin:0}
 .ev-cats{margin:0 0 14px}
+.ev-card{border-top:4px solid var(--th);overflow:hidden}
+.ev-cat{display:inline-block;background:color-mix(in srgb,var(--th) 14%,transparent);color:var(--th);border-radius:999px;padding:2px 9px;font-weight:700}
+.ev-pot{color:var(--th)}
+.ev-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:-2px -4px 4px;padding:14px 12px;border-radius:16px;
+  background:linear-gradient(100deg,color-mix(in srgb,var(--c1) 22%,var(--well)) 0%,var(--well) 50%,color-mix(in srgb,var(--c2) 22%,var(--well)) 100%)}
+.ev-head-coin{grid-template-columns:auto 1fr;justify-items:start}
+.ev-team{display:grid;justify-items:center;gap:6px;font:800 13px var(--mono);letter-spacing:.06em}
+.ev-team:last-child{}
+.ev-crest{width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
+i.ev-crest{display:grid;place-items:center;border-radius:50%;background:var(--surface);font:800 16px var(--mono);font-style:normal}
+.ev-mid{display:grid;justify-items:center;gap:2px;text-align:center}.ev-mid small{color:var(--muted);font:500 12px var(--mono);white-space:nowrap}
+.ev-vs{font:400 22px var(--display);color:var(--muted)}
+.ev-score{font:500 30px/1 var(--mono);letter-spacing:.02em}.ev-score span{color:var(--muted);margin:0 3px}.ev-score.live+small{color:var(--bad);font-weight:700}
+.ev-coin{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;color:#fff;font:700 26px/1 var(--body);font-style:normal;box-shadow:0 8px 20px -8px rgba(0,0,0,.4)}
 .ev-os{display:grid;gap:8px}
-.ev-o{background:var(--well);border-radius:12px;padding:9px 10px;display:grid;gap:6px}
+.ev-o{background:var(--well);border-radius:14px;padding:9px 10px 9px 9px;display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;align-items:center;position:relative}
+.ev-o:before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:0 4px 4px 0;background:var(--oc)}
+.ev-ob{display:grid;gap:6px;min-width:0}
+.ev-logo{width:40px;height:40px;object-fit:contain}
+.ev-ic{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:color-mix(in srgb,var(--oc) 18%,var(--surface));color:var(--oc);font:800 12px var(--mono);font-style:normal}
+.ev-ic.yes{background:color-mix(in srgb,var(--ok) 16%,var(--surface));color:var(--ok);font-size:18px}.ev-ic.no{background:color-mix(in srgb,var(--bad) 14%,var(--surface));color:var(--bad);font-size:16px}
+.ev-ic.ev-draw{font-size:18px}
 .ev-o.won{outline:2px solid var(--ok)}
-.ev-ot{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.ev-ot b{font-weight:600;min-width:0;overflow-wrap:anywhere}.ev-ot span{font:600 14px var(--mono)}
-.ev-bar{height:6px;border-radius:999px;background:color-mix(in srgb,var(--muted) 18%,transparent);overflow:hidden}.ev-bar i{display:block;height:100%;background:var(--accent,var(--ok));border-radius:999px}
+.ev-ot{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.ev-ot b{font-weight:600;min-width:0;overflow-wrap:anywhere}.ev-ot span{font:700 14px var(--mono);color:var(--oc)}
+.ev-bar{height:6px;border-radius:999px;background:color-mix(in srgb,var(--muted) 18%,transparent);overflow:hidden}.ev-bar i{display:block;height:100%;background:var(--oc);border-radius:999px}
 .ev-om{display:flex;justify-content:space-between;align-items:center;gap:8px}.ev-om small{color:var(--muted);font:500 12px var(--mono)}
 button.ev-o{font:inherit;color:inherit;text-align:left;border:2px solid transparent;cursor:pointer;width:100%}
-button.ev-o:hover{border-color:color-mix(in srgb,var(--accent,var(--ok)) 45%,transparent)}
-.ev-o.sel{border-color:var(--accent,var(--ok));background:color-mix(in srgb,var(--accent,var(--ok)) 10%,var(--well))}
+button.ev-o:hover{border-color:color-mix(in srgb,var(--oc) 55%,transparent)}
+.ev-o.sel{border-color:var(--oc);background:color-mix(in srgb,var(--oc) 12%,var(--well))}
+.ev-betrow .btn.primary{background:var(--th);border-color:var(--th)}
 .ev-betrow{display:grid;grid-template-columns:minmax(0,110px) minmax(0,1fr);gap:8px}.ev-betrow .btn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ev-hint{text-align:center}
 .ev-act{display:grid;gap:8px}.ev-amt{min-width:0;width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--well);color:var(--ink);border-radius:12px;padding:10px 12px;font:500 15px var(--body)}
@@ -6580,6 +6601,35 @@ const MK_ABI = ['function count() view returns (uint256)', 'function disputeBond
 const mkC = w => new E.Contract(A.markets, MK_ABI, w ? st.signer : RP());
 const evS = { list:null, mine:{}, busy:'', err:'', cat:'all', hl:null, scrolled:false, allow:null, bond:null, at:0, pick:{}, amt:{} };
 const EV_CAT = {football: '⚽ Football', basketball: '🏀 NBA', crypto: '📈 Crypto', dogeos: '🐶 DogeOS'};
+/* Match look: team logos, team colours and the live score come from ESPN's public scoreboard (the same source the
+   result is read from), keyed by the [espn:league:event] tag the bot leaves at the end of a market's rules. */
+const evMeta = {};
+const EV_COIN = {BTC: ['#F7931A', '₿'], ETH: ['#627EEA', 'Ξ'], DOGE: ['#C2A633', 'Ð'], SOL: ['#9945FF', '◎']};
+const evTag = m => (m.rules.match(/\[([^\]]+)\]\s*$/) || [])[1] || '';
+async function evFetchMeta(x){
+  const t = evTag(x.m).match(/^espn:([a-z]+\/[a-z0-9.]+):(\d+)$/); if (!t) return;
+  const k = x.id, cur = evMeta[k], liveish = cur && /IN_PROGRESS|HALFTIME|END_PERIOD|DELAYED/.test(cur.status || '');
+  if (cur && (cur.done || (!liveish && Date.now() - cur.at < 600000) || (liveish && Date.now() - cur.at < 45000))) return;
+  evMeta[k] = Object.assign(cur || {}, {at: Date.now()});
+  try{
+    const j = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${t[1]}/summary?event=${t[2]}`).then(r => r.json());
+    const c = j.header.competitions[0], st = c.status.type;
+    const teams = c.competitors.map(q => ({ha: q.homeAway, name: q.team.displayName, ab: q.team.abbreviation, logo: q.team.logos && q.team.logos[0] ? q.team.logos[0].href : (q.team.logo || ''),
+      color: q.team.color ? '#' + q.team.color : '', alt: q.team.alternateColor ? '#' + q.team.alternateColor : '', score: q.score}));
+    evMeta[k] = {at: Date.now(), teams, status: st.name, detail: st.shortDetail || st.detail || '', done: !!st.completed, live: st.state === 'in'};
+    renderEventsSoon();
+  }catch(e){ evMeta[k] = Object.assign(evMeta[k] || {}, {at: Date.now(), bad: true}); }
+}
+let evRT = 0;
+function renderEventsSoon(){ clearTimeout(evRT); evRT = setTimeout(() => { if (st.view === 'predict' && pr.tab === 'events' && !(document.activeElement && document.activeElement.matches('[data-evamt]'))) renderEvents(); }, 120); }
+/* a readable version of a team colour for bars and tints: lighten very dark ones a little, darken near-white */
+function evTint(hex, fallback){
+  if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return fallback;
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255, lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  if (lum > 0.86) return fallback;
+  return hex;
+}
+const evTeamFor = (meta, name) => meta && meta.teams ? meta.teams.find(t => t.name === name) || null : null;
 const evIcon = c => ({football: '⚽', basketball: '🏀', crypto: '📈', dogeos: '🐶'})[c] || '🔮';
 async function loadEvents(){
   if (!A.markets) return;
@@ -6621,13 +6671,38 @@ function renderEvents(){
     else if (now < res) status = `Closed · result after ${new Date(res * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`;
     else if (now > res + 3 * 86400) status = 'No result was proposed in 3 days: anyone can refund it';
     else status = 'Closed · waiting for the result';
+    const isMatch = m.category === 'football' || m.category === 'basketball', meta = isMatch ? evMeta[x.id] : null;
+    if (isMatch) evFetchMeta(x);
+    const coin = m.category === 'crypto' ? (m.question.match(/^Will ([A-Z]{2,6}) /) || [])[1] : '';
+    const theme = { football: '#1E8E5A', basketball: '#D9652B', crypto: coin && EV_COIN[coin] ? EV_COIN[coin][0] : '#2D5BFF', dogeos: '#6B3FD4' }[m.category] || '#B4532A';
+    const icon = (o, i) => {
+      const t = evTeamFor(meta, o);
+      if (t && t.logo) return `<img class="ev-logo" src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('i'),{className:'ev-ic',textContent:'${esc(t.ab || o.slice(0, 3)).toUpperCase()}'}))">`;
+      if (isMatch && /^draw$/i.test(o)) return `<i class="ev-ic ev-draw">=</i>`;
+      if (isMatch) return `<i class="ev-ic">${esc(o.slice(0, 3)).toUpperCase()}</i>`;
+      if (m.category === 'crypto' || m.category === 'dogeos'){ const yes = /^yes$/i.test(o); return `<i class="ev-ic ${yes ? 'yes' : 'no'}">${yes ? '✓' : '✕'}</i>`; }
+      return `<i class="ev-ic">${i + 1}</i>`;
+    };
+    const barColor = (o, i) => { const t = evTeamFor(meta, o); if (t) return evTint(t.color, theme); if (isMatch && /^draw$/i.test(o)) return '#8C8A99'; if (/^yes$/i.test(o)) return 'var(--ok)'; if (/^no$/i.test(o)) return 'var(--bad)'; return theme; };
     const sides = m.outcomes.map((o, i) => {
       const p = x.pool[i], pct = tot ? p / tot * 100 : 100 / m.outcomes.length, mult = p > 0 ? tot * 0.98 / p : 0;
       const won = m.state === 4 && m.winner === i, mineS = my && my.s[i] && my.s[i].gt(0) ? fl(my.s[i], 18) : 0;
-      const sel = open && evS.pick[x.id] === i, tag = open ? 'button' : 'div';
-      return `<${tag} class="ev-o${won ? ' won' : ''}${open ? ' can' : ''}${sel ? ' sel' : ''}"${open ? ` type="button" data-ev="pick" data-id="${x.id}" data-o="${i}" aria-pressed="${sel}"` : ''}><div class="ev-ot"><b>${sel ? '✓ ' : ''}${esc(o)}</b><span>${p ? '×' + mult.toFixed(2) : pct.toFixed(0) + '%'}</span></div><div class="ev-bar"><i style="width:${pct}%"></i></div>
-        <div class="ev-om"><small>${pct.toFixed(0)}% · ${sxNum(p)} KingS${mineS ? ` · <b>you ${sxNum(mineS)}</b>` : ''}</small></div></${tag}>`;
+      const sel = open && evS.pick[x.id] === i, tag = open ? 'button' : 'div', col = barColor(o, i);
+      return `<${tag} class="ev-o${won ? ' won' : ''}${open ? ' can' : ''}${sel ? ' sel' : ''}" style="--oc:${col}"${open ? ` type="button" data-ev="pick" data-id="${x.id}" data-o="${i}" aria-pressed="${sel}"` : ''}>${icon(o, i)}<div class="ev-ob"><div class="ev-ot"><b>${sel ? '✓ ' : ''}${esc(o)}</b><span>${p ? '×' + mult.toFixed(2) : pct.toFixed(0) + '%'}</span></div><div class="ev-bar"><i style="width:${pct}%"></i></div>
+        <div class="ev-om"><small>${pct.toFixed(0)}% · ${sxNum(p)} KingS${mineS ? ` · <b>you ${sxNum(mineS)}</b>` : ''}</small></div></div></${tag}>`;
     }).join('');
+    // match header: both crests, kick-off or the live score
+    let head = '';
+    if (isMatch){
+      const home = meta && meta.teams ? meta.teams.find(t => t.ha === 'home') : null, away = meta && meta.teams ? meta.teams.find(t => t.ha === 'away') : null;
+      const c1 = evTint(home && home.color, theme), c2 = evTint(away && away.color, theme);
+      const crest = t => t && t.logo ? `<img class="ev-crest" src="${esc(t.logo)}" alt="${esc(t.name)}" loading="lazy">` : `<i class="ev-crest ev-ic">${esc((t && t.ab) || '?')}</i>`;
+      const kick = new Date(Number(m.resolveAt) * 1000 - (m.category === 'football' ? 3 : 4) * 3600000);
+      const mid = meta && (meta.live || meta.done) ? `<b class="ev-score${meta.live ? ' live' : ''}">${esc(home ? home.score : '')}<span>:</span>${esc(away ? away.score : '')}</b><small>${meta.live ? '● ' : ''}${esc(meta.detail || (meta.done ? 'Final' : 'Live'))}</small>`
+        : `<b class="ev-vs">vs</b><small>${kick.toLocaleString('en-GB', {weekday: 'short', hour: '2-digit', minute: '2-digit'})}</small>`;
+      head = `<div class="ev-head" style="--c1:${c1};--c2:${c2}"><div class="ev-team">${crest(home)}<span>${esc(home ? home.ab : (m.outcomes[0] || '').slice(0, 3))}</span></div><div class="ev-mid">${mid}</div><div class="ev-team">${crest(away)}<span>${esc(away ? away.ab : (m.outcomes[m.outcomes.length - 1] || '').slice(0, 3))}</span></div></div>`;
+    } else if (coin && EV_COIN[coin]) head = `<div class="ev-head ev-head-coin" style="--c1:${theme};--c2:${theme}"><i class="ev-coin" style="background:${theme}">${EV_COIN[coin][1]}</i><div class="ev-mid"><b class="ev-vs">${esc(coin)}</b><small>Friday 20:00 UTC · Coinbase</small></div></div>`;
+    else if (m.category === 'dogeos') head = `<div class="ev-head ev-head-coin" style="--c1:${theme};--c2:#D9452B"><i class="ev-coin" style="background:${theme}">🐈</i><div class="ev-mid"><b class="ev-vs">DogeOS</b><small>decided on chain</small></div></div>`;
     let act = '';
     if (open && gate) act = `<button class="btn primary" data-pr="gate">${gate.label}</button>`;
     else if (open){ const pk = evS.pick[x.id];
@@ -6640,8 +6715,8 @@ function renderEvents(){
     const ev = m.evidence ? `<p class="pr-note">Source: ${esc(m.evidence).replace(/(https:\/\/[^\s]+)/, '<a href="$1" target="_blank" rel="noopener">$1</a>')}</p>` : '';
     const rules = esc(m.rules.replace(/\s*\[[^\]]+\]\s*$/, ''));
     const share = `https://x.com/intent/post?text=${encodeURIComponent(`${m.question} ${m.outcomes.join(' / ')}? My pick is in 🔮`)}&url=${encodeURIComponent('https://cavfi.com/#e/' + x.id)}`;
-    return `<section class="sx-card ev-card${evS.hl === x.id ? ' pr-hl' : ''}" id="ev-${x.id}"><div class="sx-head"><span class="pr-meta">${evIcon(m.category)} #${x.id} · ${esc(EV_CAT[m.category] ? EV_CAT[m.category].slice(2) : m.category)}</span><span class="pr-meta">${sxNum(tot)} KingS pot</span></div>
-      <h3 class="pr-q">${esc(m.question)}</h3><div class="ev-os">${sides}</div><p class="pr-note">${status}</p>${ev}${act ? `<div class="ev-act">${act}</div>` : ''}
+    return `<section class="sx-card ev-card ev-${esc(m.category)}${evS.hl === x.id ? ' pr-hl' : ''}" id="ev-${x.id}" style="--th:${theme}"><div class="sx-head"><span class="pr-meta"><span class="ev-cat">${evIcon(m.category)} ${esc(EV_CAT[m.category] ? EV_CAT[m.category].slice(2) : m.category)}</span> #${x.id}</span><span class="pr-meta"><b class="ev-pot">${sxNum(tot)} KingS</b> pot</span></div>
+      ${head}<h3 class="pr-q">${esc(m.question)}</h3><div class="ev-os">${sides}</div><p class="pr-note">${status}</p>${ev}${act ? `<div class="ev-act">${act}</div>` : ''}
       <details class="ev-rules"><summary>How it's decided</summary><p class="pr-note">${rules}</p></details>
       <div class="up-share"><a class="btn fc-sm" href="${share}" target="_blank" rel="noopener">Post on X</a></div></section>`;
   };
